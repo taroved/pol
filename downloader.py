@@ -5,7 +5,11 @@ from twisted.internet import reactor, endpoints
 from twisted.web.client import HTTPClientFactory, _makeGetterFactory 
 from twisted.web.server import NOT_DONE_YET
 
-from decompression import DecompressionMiddleware
+from scrapy.http.response import Response
+from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
+from scrapy.selector import Selector
+
+from lxml import etree
 
 
 def getPageFactory(url, contextFactory=None, *args, **kwargs):
@@ -22,13 +26,44 @@ def getPageFactory(url, contextFactory=None, *args, **kwargs):
         *args, **kwargs)
 
 
-def downloadDone(response, request=None, page_factory=None):
-    response = DecompressionMiddleware().process_response(response)
+def setBaseAndRemoveScripts(selector, url):
+    tree = selector._root.getroottree()
+    
+    # set base url to html document
+    head = tree.xpath("//head")
+    if head:
+        head = head[0]
+        base = head.xpath("./base")
+        if base:
+            base = base[0]
+        else:
+            base = etree.Element("base")
+            head.append(base)
+        base.set('href', url)
 
-    request.write(response)
+    for bad in tree.xpath("//*"):
+        # remove scripts
+        if bad.tag == 'script':
+            bad.getparent().remove(bad)
+        # remove html events
+        for attr in bad.attrib:
+            if attr.startswith('on'):
+                del bad.attrib[attr]
+    
+    return etree.tostring(tree, pretty_print=True)
+
+def downloadDone(response_str, request=None, page_factory=None, url=None):
+    response = Response(url, body=response_str)
+    response = DecompressionMiddleware().process_response(None, response, None)
+
+    sel = Selector(response)
+    response_str = setBaseAndRemoveScripts(sel, url)
+
+    request.write(response_str)
     request.finish()
 
 def downloadError(error, request=None, page_factory=None):
+    import pdb; pdb.set_trace()
     request.write('Downloader error: ' + error.value)
     request.finish()
 
@@ -45,9 +80,12 @@ class Counter(resource.Resource):
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, sdch',
                     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
-                    })
+                    },
+                redirectLimit=13,
+                timeout=5
+                )
         d = page_factory.deferred
-        d.addCallback(downloadDone, request=request, page_factory=page_factory)
+        d.addCallback(downloadDone, request=request, page_factory=page_factory, url=url)
         d.addErrback(downloadError, request=request, page_factory=page_factory)
         return NOT_DONE_YET
 
