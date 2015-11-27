@@ -1,0 +1,64 @@
+@import "bootstrap2/bootstrap";
+@import "bootstrap2/responsive";
+
+// Set the correct sprite paths
+@iconSpritePath: "../images/glyphicons-halflings.png";
+@iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
+
+// Set the Font Awesome (Font Awesome is default. You can disable by commenting below lines)
+@fontAwesomeEotPath: url(fontawesome-webfont.eot);
+@fontAwesomeEotPath_iefix: url(fontawesome-webfont.eot?#iefix);
+@fontAwesomeWoffPath: url(fontawesome-webfont.woff);
+@fontAwesomeTtfPath: url(fontawesome-webfont.ttf);
+@fontAwesomeSvgPath: url(fontawesome-webfont.svg#fontawesomeregular);
+
+// Font Awesome
+@import "fontawesome/font-awesome";
+
+// Glyphicons
+//@import "twitter/bootstrap/sprites.less";
+
+// Your custom LESS stylesheets goes here
+//
+// Since bootstrap was imported above you have access to its mixins which
+// you may use and inherit here
+//
+// If you'd like to override bootstrap's own variables, you can do so here as well
+// See http://twitter.github.com/bootstrap/customize.html#variables for their names and documentation
+//
+// Example:
+// @linkColor: #ff0000;
+
+.navbar {
+  .brand-pic{float:left;display:block;margin-left:-20px;max-height: 40px}
+  .nav > li > span {display: block; padding: 10px 15px 10px;}
+  .nav > li > .lang:nth-of-type(1) {padding: 10px 0 10px 15px;}
+}
+
+
+#go-btn {
+  .buttonBackground(@btnPrimaryBackground, @btnPrimaryBackgroundHighlight);
+}
+
+footer {
+  text-align: center;
+}
+
+#error_explanation {
+  color: @red;
+  ul {
+    list-style: none;
+    margin: 0 0 18px 0;
+  }
+  h2 {
+    font-size: @baseFontSize;
+    line-height: @baseLineHeight;
+    font-weight: inherit;
+    .alert();
+    .alert-error();
+  }
+}
+
+.field_with_errors {
+  .control-group.error();
+}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<div class="welcom">
+    <img src="{% static 'frontend/images/pol.png' %}" alt="Hi!" />
+    <h1>{% trans "brand" %}</h1>
+
+    <p>{% trans "hello" %}</p>
+    {% if form.url.errors %}
+    <div class="alert alert-error">
+        {{ form.url.errors }}
+    </div>
+    {% endif %}
+    <form method="get" class="form-horizontal">
+        <div class="control-group <%= 'error' if defined?(@error) %>">
+            <div class="input-append">
+                {{ form.url }} 
+                <span class="normal">
+                    <input type="submit" id="go-btn" value="{% trans 'go' %}" class="btn btn-primary btn-primary-reload" />
+                </span>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

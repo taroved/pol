@@ -89,5 +89,27 @@ class Counter(resource.Resource):
         d.addErrback(downloadError, request=request, page_factory=page_factory)
         return NOT_DONE_YET
 
-endpoints.serverFromString(reactor, "tcp:8080").listen(server.Site(Counter()))
+    def render_GET(self, request):
+        '''
+        Render page for frontend
+        '''
+        url = request.args['url'][0]
+
+        page_factory = getPageFactory(url,
+                headers={
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, sdch',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
+                    },
+                redirectLimit=13,
+                timeout=5
+                )
+        d = page_factory.deferred
+        d.addCallback(downloadDone, request=request, page_factory=page_factory, url=url)
+        d.addErrback(downloadError, request=request, page_factory=page_factory)
+        return NOT_DONE_YET
+
+
+
+endpoints.serverFromString(reactor, "tcp:1234").listen(server.Site(Counter()))
 reactor.run()

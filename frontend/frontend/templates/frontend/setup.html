@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Feed setup</h1>
+</div>
+
+<div class="container">
+    <div class="btn-group" style="display: none">
+        <button class="btn btn-large btn-primary disabled">Title</button>
+        <button class="btn btn-large btn-info disabled">Description</button>
+    </div>
+</div>
+
+<iframe src="{{ external_page_url }}" frameborder="0" style="width:100%;/*for footer*/">
+
+</iframe>
+
+    <script type="text/javascript">
+        // Based on: http://www.quirksmode.org/js/findpos.html
+        var getCumulativeOffset = function (obj) {
+            var left, top;
+            left = top = 0;
+            if (obj.offsetParent) {
+                do {
+                    left += obj.offsetLeft;
+                    top += obj.offsetTop;
+                } while (obj = obj.offsetParent);
+            }
+            return {
+                x: left,
+                y: top
+            };
+        };
+
+        var iframe_element = null;
+
+        function update_iframe_heignt()
+        {
+            var y_offset = getCumulativeOffset(iframe_element).y,
+                footer_height = $('#footer').height();
+            var height = $(window).height()-y_offset-footer_height;
+            if (height < 100)
+            {
+                iframe_element.style.height = (iframe_element.contentWindow.document.body.offsetHeight) + 'px';
+            }
+            else
+                iframe_element.style.height = height + 'px';
+            console.log(iframe_element.style.height);
+        }
+
+        $(window).resize(function () {
+            if (iframe_element) //iframe is loaded
+            {
+                update_iframe_heignt();
+            }
+        });
+
+        $('iframe').load(function() {
+            iframe_element = this;
+            update_iframe_heignt();
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,66 @@
+// Place all the styles related to the wizard controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+.welcom {
+  img {
+    width: 320px;
+  }
+  margin: 60px 0;
+  text-align: center;
+  h1 {
+    font-size: 5em;
+  }
+  line-height: 1;
+  font-style: italic;
+}
+
+
+/* Large desktop */
+@media (min-width: 1200px) {
+}
+
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) {
+  .welcom {
+    img {
+      width: 250px;
+    }
+    h1 {
+      font-size: 4em;
+    }
+  }
+}
+
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+  .welcom {
+    img {
+      width: 250px;
+    }
+    h1 {
+      font-size: 3em;
+    }
+  }
+}
+
+/* Landscape phones and down */
+@media (max-width: 480px) {
+  .welcom {
+    img {
+      width: 150px;
+    }
+    h1 {
+      font-size: 2em;
+    }
+  }
+}
+
+#footer {
+  text-align: center;
+}
+
+.console, .console pre {
+  background: gray;
+  color: white;
+  border: none;
+}

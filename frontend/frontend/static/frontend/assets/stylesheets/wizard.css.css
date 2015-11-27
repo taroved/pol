@@ -1,0 +1,38 @@
+.welcom {
+  margin: 60px 0;
+  text-align: center;
+  line-height: 1;
+  font-style: italic; }
+  .welcom img {
+    width: 320px; }
+  .welcom h1 {
+    font-size: 5em; }
+
+/* Large desktop */
+/* Portrait tablet to landscape and desktop */
+@media (min-width: 768px) and (max-width: 979px) {
+  .welcom img {
+    width: 250px; }
+  .welcom h1 {
+    font-size: 4em; } }
+/* Landscape phone to portrait tablet */
+@media (max-width: 767px) {
+  .welcom img {
+    width: 250px; }
+  .welcom h1 {
+    font-size: 3em; } }
+/* Landscape phones and down */
+@media (max-width: 480px) {
+  .welcom img {
+    width: 150px; }
+  .welcom h1 {
+    font-size: 2em; } }
+#footer {
+  text-align: center; }
+
+.console, .console pre {
+  background: gray;
+  color: white;
+  border: none; }
+
+/*# sourceMappingURL=wizard.css.css.map */
