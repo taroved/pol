@@ -5,9 +5,12 @@ from twisted.internet import reactor, endpoints
 from twisted.web.client import HTTPClientFactory, _makeGetterFactory 
 from twisted.web.server import NOT_DONE_YET
 
-from scrapy.http.response import Response
+from scrapy.http.response.text import TextResponse
 from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
 from scrapy.selector import Selector
+
+from scrapy.http import Headers
+from scrapy.responsetypes import responsetypes
 
 from lxml import etree
 
@@ -26,8 +29,8 @@ def getPageFactory(url, contextFactory=None, *args, **kwargs):
         *args, **kwargs)
 
 
-def setBaseAndRemoveScripts(selector, url):
-    tree = selector._root.getroottree()
+def setBaseAndRemoveScriptsAndMore(response, url):
+    tree = response.selector._root.getroottree()
     
     # set base url to html document
     head = tree.xpath("//head")
@@ -38,13 +41,18 @@ def setBaseAndRemoveScripts(selector, url):
             base = base[0]
         else:
             base = etree.Element("base")
-            head.append(base)
+            head.insert(0, base)
         base.set('href', url)
 
     for bad in tree.xpath("//*"):
         # remove scripts
         if bad.tag == 'script':
             bad.getparent().remove(bad)
+        # sanitize anchors
+        elif bad.tag == 'a' and 'href' in bad.attrib:
+            bad.attrib['origin-href'] = bad.attrib['href']
+            del bad.attrib['href']
+
         # remove html events
         for attr in bad.attrib:
             if attr.startswith('on'):
@@ -52,12 +60,19 @@ def setBaseAndRemoveScripts(selector, url):
     
     return etree.tostring(tree, pretty_print=True)
 
+def buildScrapyResponse(page_factory, body):
+    status = int(page_factory.status)
+    headers = Headers(page_factory.response_headers)
+    respcls = responsetypes.from_args(headers=headers, url=page_factory.url)
+    return respcls(url=page_factory.url, status=status, headers=headers, body=body)
+
 def downloadDone(response_str, request=None, page_factory=None, url=None):
-    response = Response(url, body=response_str)
+    response = buildScrapyResponse(page_factory, response_str)
+
     response = DecompressionMiddleware().process_response(None, response, None)
 
-    sel = Selector(response)
-    response_str = setBaseAndRemoveScripts(sel, url)
+    if (isinstance(response, TextResponse)):
+        response_str = setBaseAndRemoveScriptsAndMore(response, url)
 
     request.write(response_str)
     request.finish()
@@ -71,43 +86,38 @@ def downloadError(error, request=None, page_factory=None):
 class Counter(resource.Resource):
     isLeaf = True
 
-    def render_POST(self, request):
-        obj = json.load(request.content)
-        url = obj[0].encode('utf-8')
-
+    def startRequest(self, request, url):
         page_factory = getPageFactory(url,
                 headers={
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, sdch',
                     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
                     },
-                redirectLimit=13,
-                timeout=5
+                redirectLimit=5,
+                timeout=10
                 )
         d = page_factory.deferred
         d.addCallback(downloadDone, request=request, page_factory=page_factory, url=url)
         d.addErrback(downloadError, request=request, page_factory=page_factory)
+
+    def render_POST(self, request):
+        obj = json.load(request.content)
+        url = obj[0].encode('utf-8')
+
+        self.startRequest(request, url)
         return NOT_DONE_YET
 
     def render_GET(self, request):
         '''
         Render page for frontend
         '''
-        url = request.args['url'][0]
+        if 'url' in request.args:
+            url = request.args['url'][0]
 
-        page_factory = getPageFactory(url,
-                headers={
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Encoding': 'gzip, deflate, sdch',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
-                    },
-                redirectLimit=13,
-                timeout=5
-                )
-        d = page_factory.deferred
-        d.addCallback(downloadDone, request=request, page_factory=page_factory, url=url)
-        d.addErrback(downloadError, request=request, page_factory=page_factory)
-        return NOT_DONE_YET
+            self.startRequest(request, url)
+            return NOT_DONE_YET
+        else:
+            return 'Url is required'
 
 
 
