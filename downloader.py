@@ -58,7 +58,7 @@ def setBaseAndRemoveScriptsAndMore(response, url):
             if attr.startswith('on'):
                 del bad.attrib[attr]
     
-    return etree.tostring(tree, pretty_print=True)
+    return etree.tostring(tree, method='html')
 
 def buildScrapyResponse(page_factory, body):
     status = int(page_factory.status)
