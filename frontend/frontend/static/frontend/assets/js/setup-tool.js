@@ -5,8 +5,8 @@ var MODE_INACTIVE = 1,
     MODE_PICKED = 3;
 
 var itemsData = {
-    title: { id: null, elementHoverBg: 'yellow', elementSelectedBg: '#006dcc', mode: MODE_INACTIVE },
-    description: { id: null, elementHoverBg: 'yellow', elementSelectedBg: '#2f96b4', mode: MODE_INACTIVE }
+    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', mode: MODE_INACTIVE },
+    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', mode: MODE_INACTIVE }
 };
 
 function updateButtonAndData(itemData, new_mode, tag_id){
@@ -14,12 +14,12 @@ function updateButtonAndData(itemData, new_mode, tag_id){
         itemData.mode = new_mode;
     switch (itemData.mode) {
         case MODE_INACTIVE:
-            $('#st-title').css('color', 'white');
+            $('#st-title').css('color', '#FFEB0D');
             $('#st-title').addClass('disabled');
             itemData.id = null;
             break;
         case MODE_PICKING:
-            $('#st-title').css('color', 'yellow');
+            $('#st-title').css('color', '#FFEB0D');
             $('#st-title').removeClass('disabled');
             itemData.id = null;
             break;

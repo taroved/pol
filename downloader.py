@@ -62,6 +62,10 @@ def setBaseAndRemoveScriptsAndMore(response, url):
         for attr in bad.attrib:
             if attr.startswith('on'):
                 del bad.attrib[attr]
+        
+        # sanitize forms
+        if bad.tag == 'form':
+            bad.attrib['onsubmit'] = "return false"
     
     return etree.tostring(tree, method='html')
 
