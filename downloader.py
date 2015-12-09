@@ -44,7 +44,12 @@ def setBaseAndRemoveScriptsAndMore(response, url):
             head.insert(0, base)
         base.set('href', url)
 
+    i = 1
     for bad in tree.xpath("//*"):
+        # set tag-id attribute
+        bad.attrib['tag-id'] = str(i)
+        i += 1
+        
         # remove scripts
         if bad.tag == 'script':
             bad.getparent().remove(bad)
