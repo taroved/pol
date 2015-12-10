@@ -5,26 +5,107 @@ var MODE_INACTIVE = 1,
     MODE_PICKED = 3;
 
 var itemsData = {
-    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', mode: MODE_INACTIVE },
-    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', mode: MODE_INACTIVE }
+    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', mode: MODE_INACTIVE, name: 'title' },
+    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', mode: MODE_INACTIVE, name: 'description' }
 };
+
+var curItemData = null;
+
+////
+// +++ calculation of all selections on server side
+////
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// generate json [tag_name, {attributes_dict}, [children]]
+
+var iframeHtmlJson = null;
+
+function buildJsonFromHtml(doc) {
+    function tag2json(tag) {
+        if (tag.attr('tag-id')) {
+            var tagJson = [tag.prop("tagName").toLowerCase(), {'tag-id': tag.attr('tag-id')}],
+                children = [];
+            tag.children().each(function(_, t){
+                var res = tag2json($(t));
+                Array.prototype.push.apply(children, res);
+            });
+            tagJson.push(children);
+            return [ tagJson ]
+        }
+        else {
+            var tagListJson = [];
+            tag.children().each(function(_, t){
+                var res = tag2json($(t));
+                Array.prototype.push.apply(tagListJson, res);
+            });
+            return tagsListJson;
+        }
+    }
+
+    if (!iframeHtmlJson)
+        iframeHtmlJson = tag2json(doc.find(':root'));
+    return iframeHtmlJson;
+}
+
+function calcAllSelections() {
+    var htmlJson = buildJsonFromHtml($('iframe').contents());
+
+    var name_ids = {};
+    for (var name in itemsData) {
+        if (!!itemsData[name].id)
+            name_ids[name] = itemData.id;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: "/setup_generate_selected_ids",
+        data: JSON.stringify({ html: htmlJson, names: name_ids }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        headers: {"X-CSRFToken": getCookie('csrftoken')},
+        success: function(data){console.log(data);},
+        failure: function(errMsg) {
+            console.log('Error:'+ errMsg);
+        }
+    });
+    console.log(JSON.stringify(htmlJson));
+}
+////
+// --- calculation of all selections on server side
+////
+
 
 function updateButtonAndData(itemData, new_mode, tag_id){
     if (new_mode)
         itemData.mode = new_mode;
+    var button = $('#st-'+ itemData.name);
     switch (itemData.mode) {
         case MODE_INACTIVE:
-            $('#st-title').css('color', '#FFEB0D');
-            $('#st-title').addClass('disabled');
+            button.css('color', 'white');
+            button.addClass('disabled');
             itemData.id = null;
             break;
         case MODE_PICKING:
-            $('#st-title').css('color', '#FFEB0D');
-            $('#st-title').removeClass('disabled');
+            button.css('color', '#FFEB0D');
+            button.removeClass('disabled');
             itemData.id = null;
             break;
         case MODE_PICKED:
-            $('#st-title').css('color', 'white');
+            button.css('color', 'white');
             itemData.id = tag_id;
             break;
     }
@@ -32,27 +113,51 @@ function updateButtonAndData(itemData, new_mode, tag_id){
 
 
 var BG_DATA_KEY = 'st-origin-background';
+var PICKED_NAMES_KEY = 'st-picked-item-names';
 
-function setBg(element, bg) {
-    if (!$(element).data(BG_DATA_KEY))
-        $(element).data(BG_DATA_KEY, $(element).css('background')); // backup
+function setBg(element, bg, pick) {
+    // save origin background if it's not saved
+    if (typeof($(element).data(BG_DATA_KEY)) == 'undefined')
+        $(element).data(BG_DATA_KEY, $(element).css('background'));
+    // if it's picked element we push the item id into array
+    if (pick) { // redo for multiselect
+        if (typeof($(element).data(PICKED_NAMES_KEY)) == 'undefined')
+            $(element).data(PICKED_NAMES_KEY, []);
+        $(element).data(PICKED_NAMES_KEY).push(curItemData.name);
+    }
+
     $(element).css({'background': bg});
 }
-function clearBg(element) {
-    if ($(element).data(BG_DATA_KEY))
+function clearBg(element, unpick) {
+    if (unpick) { // redo for multiselect
+        var picked_names = $(element).data(PICKED_NAMES_KEY);
+        // remove current item id from element
+        if (picked_names.indexOf(curItemData.name) > -1)
+            picked_names.splice(picked_names.indexOf(curItemData.name), 1);
+    }
+
+    // for first take selection color if element was selected
+    var picked_names = $(element).data(PICKED_NAMES_KEY);
+    if (typeof(picked_names) != 'undefined' && picked_names.length) {
+        var name = picked_names[picked_names.length-1];
+        $(element).css({'background': itemsData[name].elementSelectedBg});
+    }
+    // get original background if it saved
+    else if (typeof($(element).data(BG_DATA_KEY)) != 'undefined')
         $(element).css({'background': $(element).data(BG_DATA_KEY)});
 }
 
 function selectElement(element, itemData) {
-    setBg(element, itemData.elementSelectedBg);
+    setBg(element, itemData.elementSelectedBg, true);
+    calcAllSelections();
 }
 
 function unselectElement(element) {
-    clearBg(element);
+    clearBg(element, true);
 }
 
 function styleHoverElement(element) {
-    setBg(element, itemsData.title.elementHoverBg);
+    setBg(element, curItemData.elementHoverBg);
 }
 
 function unstyleHoverElement(element) {
@@ -62,19 +167,22 @@ function unstyleHoverElement(element) {
 function onIframeElementClick(event) {
     event.stopPropagation();
 
+    if (!curItemData)
+        return;
+
     if (!$(this).attr('tag-id'))
         return;
 
     // unpick by click
-    if (itemsData.title.mode == MODE_PICKED && itemsData.title.id == $(this).attr('tag-id')) {
-        unselectElement($('iframe').contents().find('*[tag-id='+ itemsData.title.id +']')[0]);
-        updateButtonAndData(itemsData.title, MODE_PICKING);
+    if (curItemData.mode == MODE_PICKED && curItemData.id == $(this).attr('tag-id')) {
+        unselectElement($('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0]);
+        updateButtonAndData(curItemData, MODE_PICKING);
         styleHoverElement(this);
     }
     // pick by click
-    else if (itemsData.title.mode == MODE_PICKING) {
-        selectElement(this, itemsData.title);
-        updateButtonAndData(itemsData.title, MODE_PICKED, $(this).attr('tag-id'));
+    else if (curItemData.mode == MODE_PICKING) {
+        selectElement(this, curItemData);
+        updateButtonAndData(curItemData, MODE_PICKED, $(this).attr('tag-id'));
     }
 }
 
@@ -83,13 +191,14 @@ var previous_hover_element = [];
 function onIframeElementHover(event) {
     event.stopPropagation();
 
-    //console.log(event.type + $(this).attr('tag-id'));
-    
+    if (!curItemData)
+        return;
+
     if (!$(this).attr('tag-id')) // tag is not from original html
         return;
 
     if ($(this).prop("tagName")) // is not document object
-        if (itemsData.title.mode == MODE_PICKING)
+        if (curItemData.mode == MODE_PICKING)
             if (event.type == 'mouseenter') {
                 styleHoverElement(this);
                 if (this != previous_hover_element)
@@ -104,24 +213,36 @@ function onIframeElementHover(event) {
 var events_ready = false;
 
 function onItemButtonClick(event) {
-    if (itemsData.title.mode == MODE_INACTIVE) { // start
+    var item_name = $(this).attr('id').substring('st-'.length);
+
+    if (curItemData && curItemData != itemsData[item_name]) {
+        // disable another button if it was active
+        if (curItemData.mode == MODE_PICKING)
+            updateButtonAndData(curItemData, MODE_INACTIVE);
+    }
+
+    curItemData = itemsData[item_name];
+
+    if (curItemData.mode == MODE_INACTIVE) { // start
         if (!events_ready) { // temp logic: attche events on first button click
             $('iframe').contents().on('mouseenter mouseleave', '*', onIframeElementHover);
             $('iframe').contents().on('click', '*', onIframeElementClick);
             events_ready = true;
         }
         
-        updateButtonAndData(itemsData.title, MODE_PICKING);
+        updateButtonAndData(curItemData, MODE_PICKING);
     }
     else { // stop picking
-        if (itemsData.title.mode == MODE_PICKED)
-            unselectElement($('iframe').contents().find('*[tag-id='+ itemsData.title.id +']')[0]);
-        updateButtonAndData(itemsData.title, MODE_INACTIVE);
+        if (curItemData.mode == MODE_PICKED)
+            unselectElement($('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0]);
+        updateButtonAndData(curItemData, MODE_INACTIVE);
+
+        curItemData = null;
     }
 }
 
 $(document).ready(function(){
-    $(document).on('click', '#st-title', onItemButtonClick);
+    $(document).on('click', '*[id^="st-"]', onItemButtonClick);
 });
 
 })();

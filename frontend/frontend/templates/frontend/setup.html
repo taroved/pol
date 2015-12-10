@@ -2,16 +2,16 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Feed setup</h1>
+    <h1 style="display: inline">Feed setup:</h1>
+    <b id="setup-tool-string">
+        You will create feed with 
+        <button id="st-title" class="btn btn-large btn-primary disabled has-tooltip" title="Click on the button and move cursor to the below document and pick item you interested in.">Title</button> and 
+        <button id="st-description" class="btn btn-large btn-info disabled">Description</button>.
+    </b>
 </div>
 
-<div class="container" id="setup-tool-string">
-    I will create feed with 
-    <button id="st-title" class="btn btn-large btn-primary disabled has-tooltip" title="Click on the button and move cursor to the below document and pick item you interested in.">Title</button> and 
-    <button class="btn btn-large btn-info disabled">Description</button>.
-</div>
 
-<iframe src="{{ external_page_url }}" frameborder="0" style="width:100%;/*for footer*/">
+<iframe src="{{ external_page_url }}" frameborder="0" style="width:100%;/*for footer*/; border:solid">
 
 </iframe>
 

@@ -1,5 +1,7 @@
 import urllib
+import json
 
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.core.validators import URLValidator
@@ -8,6 +10,8 @@ from django.core.urlresolvers import reverse
 
 from .forms import IndexForm
 from .settings import DOWNLOADER_PAGE_URL
+
+from .setup_tool import get_selection_tag_ids
 
 def index(request):
     if request.method == 'GET' and 'url' in request.GET:
@@ -25,7 +29,7 @@ def index(request):
 
     return render(request, 'frontend/index.html', {'form': form})
 
-
+@ensure_csrf_cookie
 def setup(request):
     if request.method == 'GET' and 'url' in request.GET:
         external_page_url = DOWNLOADER_PAGE_URL + urllib.quote(request.GET['url'], safe='')
@@ -33,3 +37,10 @@ def setup(request):
 
     return HttpResponse('Url is required')
 
+def setup_generate_selected_ids(request):
+    if request.method == 'POST':
+        obj = json.loads(request.body)
+        html_json = obj['html']
+        item_names = obj['names']
+
+        return HttpResponse(json.dumps(get_selection_tag_ids(item_names, html_json)))
