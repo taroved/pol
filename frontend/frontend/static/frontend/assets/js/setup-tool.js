@@ -52,12 +52,12 @@ function buildJsonFromHtml(doc) {
                 var res = tag2json($(t));
                 Array.prototype.push.apply(tagListJson, res);
             });
-            return tagsListJson;
+            return tagListJson;
         }
     }
 
     if (!iframeHtmlJson)
-        iframeHtmlJson = tag2json(doc.find(':root'));
+        iframeHtmlJson = tag2json(doc.find(':root'))[0];
     return iframeHtmlJson;
 }
 
@@ -67,7 +67,7 @@ function calcAllSelections() {
     var name_ids = {};
     for (var name in itemsData) {
         if (!!itemsData[name].id)
-            name_ids[name] = itemData.id;
+            name_ids[name] = itemsData[name].id;
     }
 
     $.ajax({
@@ -149,7 +149,6 @@ function clearBg(element, unpick) {
 
 function selectElement(element, itemData) {
     setBg(element, itemData.elementSelectedBg, true);
-    calcAllSelections();
 }
 
 function unselectElement(element) {
@@ -183,6 +182,7 @@ function onIframeElementClick(event) {
     else if (curItemData.mode == MODE_PICKING) {
         selectElement(this, curItemData);
         updateButtonAndData(curItemData, MODE_PICKED, $(this).attr('tag-id'));
+        calcAllSelections();
     }
 }
 
