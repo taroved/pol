@@ -5,8 +5,8 @@ var MODE_INACTIVE = 1,
     MODE_PICKED = 3;
 
 var itemsData = {
-    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', mode: MODE_INACTIVE, name: 'title' },
-    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', mode: MODE_INACTIVE, name: 'description' }
+    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', elementCalcSelectedBg:"#0044CC", mode: MODE_INACTIVE, name: 'title' },
+    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', elementCalcSelectedBg:"#5bc0de", mode: MODE_INACTIVE, name: 'description' }
 };
 
 var curItemData = null;
@@ -15,6 +15,7 @@ var curItemData = null;
 // +++ calculation of all selections on server side
 ////
 
+// used only for getting of csrftoken and putting it into request header; I'm not sure if it's required
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -61,6 +62,29 @@ function buildJsonFromHtml(doc) {
     return iframeHtmlJson;
 }
 
+var calculatedSelection = {
+    _selected_elements: {
+        'title': [],
+        'description': []
+    },
+
+    selectIds: function(data) {
+        // unselect old elements
+        alert('To be implemented'); 
+        // select current elements
+    }
+};
+
+function updateCalculatedSelection(data) {
+    for (var name in data) {
+        var ids = data[name],
+            itemData_ = itemsData[name];
+        ids.forEach(function(id){
+            $('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0];
+        });
+    }
+}
+
 function calcAllSelections() {
     var htmlJson = buildJsonFromHtml($('iframe').contents());
 
@@ -77,7 +101,9 @@ function calcAllSelections() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         headers: {"X-CSRFToken": getCookie('csrftoken')},
-        success: function(data){console.log(data);},
+        success: function(data){
+            console.log(data);
+        },
         failure: function(errMsg) {
             console.log('Error:'+ errMsg);
         }
@@ -113,54 +139,86 @@ function updateButtonAndData(itemData, new_mode, tag_id){
 
 
 var BG_DATA_KEY = 'st-origin-background';
-var PICKED_NAMES_KEY = 'st-picked-item-names';
+var PICKED_NAMES_KEY = 'st-selected-item-names';
+var CALC_SELECTED_NAMES_KEY = 'st-calculated-selected-item-names';
 
-function setBg(element, bg, pick) {
+var BG_TYPE_HOVER = 1
+    BG_TYPE_SELECT = 2,
+    BG_TYPE_CALC_SELECT = 3;
+
+function setBg(element, bg, type) {
     // save origin background if it's not saved
     if (typeof($(element).data(BG_DATA_KEY)) == 'undefined')
         $(element).data(BG_DATA_KEY, $(element).css('background'));
-    // if it's picked element we push the item id into array
-    if (pick) { // redo for multiselect
-        if (typeof($(element).data(PICKED_NAMES_KEY)) == 'undefined')
-            $(element).data(PICKED_NAMES_KEY, []);
-        $(element).data(PICKED_NAMES_KEY).push(curItemData.name);
+    var key = null;
+    switch (type) {
+        BG_TYPE_HOVER:
+            break;
+        BG_TYPE_SELECT:
+            key = PICKED_NAMES_KEY;
+            break;
+        BG_TYPE_CALC_SELECT:
+            key = CALC_SELECTED_NAMES_KEY;
+            break;
     }
+    // if it's picked element we push the item id into array
+    if (key) { // redo for multiselect
+        if (typeof($(element).data(key)) == 'undefined')
+            $(element).data(key, []);
+        $(element).data(key).push(curItemData.name);
+    }
+
 
     $(element).css({'background': bg});
 }
-function clearBg(element, unpick) {
-    if (unpick) { // redo for multiselect
+function clearBg(element, type) {
+    if (type == BG_TYPE_SELECT) { // redo for multiselect
         var picked_names = $(element).data(PICKED_NAMES_KEY);
         // remove current item id from element
         if (picked_names.indexOf(curItemData.name) > -1)
             picked_names.splice(picked_names.indexOf(curItemData.name), 1);
     }
 
+    var pop = true;
+    
     // for first take selection color if element was selected
-    var picked_names = $(element).data(PICKED_NAMES_KEY);
-    if (typeof(picked_names) != 'undefined' && picked_names.length) {
-        var name = picked_names[picked_names.length-1];
-        $(element).css({'background': itemsData[name].elementSelectedBg});
-    }
+    [PICKED_NAMES_KEY, CALC_SELECTED_NAMES_KEY].forEach(function(key){
+        if (pop) {
+            var picked_names = $(element).data(key);
+            if (typeof(picked_names) != 'undefined' && picked_names.length) {
+                var name = picked_names[picked_names.length-1];
+                $(element).css({'background': itemsData[name].elementSelectedBg});
+            }
+            pop = false;
+        }
+    });
     // get original background if it saved
-    else if (typeof($(element).data(BG_DATA_KEY)) != 'undefined')
+    if (pop && typeof($(element).data(BG_DATA_KEY)) != 'undefined')
         $(element).css({'background': $(element).data(BG_DATA_KEY)});
 }
 
+function selectCalcElement(element, itemData) {
+    setBg(element, itemData.elementSelectedBg, BG_TYPE_CALC_SELECT);
+}
+
+function UnselectCalcElement(element) {
+    clearBg(element, BG_TYPE_CALC_SELECT);
+}
+
 function selectElement(element, itemData) {
-    setBg(element, itemData.elementSelectedBg, true);
+    setBg(element, itemData.elementSelectedBg, BG_TYPE_SELECT);
 }
 
 function unselectElement(element) {
-    clearBg(element, true);
+    clearBg(element, BG_TYPE_SELECT);
 }
 
 function styleHoverElement(element) {
-    setBg(element, curItemData.elementHoverBg);
+    setBg(element, curItemData.elementHoverBg, BG_TYPE_HOVER);
 }
 
 function unstyleHoverElement(element) {
-    clearBg(element);
+    clearBg(element, BG_TYPE_HOVER);
 }
 
 function onIframeElementClick(event) {
