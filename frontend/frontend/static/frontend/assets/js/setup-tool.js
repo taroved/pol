@@ -1,8 +1,8 @@
 (function(){
 
 var MODE_INACTIVE = 1,
-    MODE_PICKING = 2,
-    MODE_PICKED = 3;
+    MODE_SELECTING = 2,
+    MODE_SELECTED = 3;
 
 var itemsData = {
     title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', elementCalcSelectedBg:"#0044CC", mode: MODE_INACTIVE, name: 'title' },
@@ -10,6 +10,19 @@ var itemsData = {
 };
 
 var curItemData = null;
+
+function blinkButton(element, times) {
+    times *= 2;
+    var show = true;
+    function toggle() {
+        element.tooltip(show ? 'show' : 'hide');
+        times --;
+        show = !show;
+        if (times)
+            setTimeout(toggle, 1000);
+    }
+    toggle();
+}
 
 ////
 // +++ calculation of all selections on server side
@@ -62,28 +75,50 @@ function buildJsonFromHtml(doc) {
     return iframeHtmlJson;
 }
 
-var calculatedSelection = {
-    _selected_elements: {
-        'title': [],
-        'description': []
-    },
+var calculatedSelection = function(){
+    return {
+        _selected_elements: {
+            'title': [],
+            'description': []
+        },
 
-    selectIds: function(data) {
-        // unselect old elements
-        alert('To be implemented'); 
-        // select current elements
-    }
-};
+        selectIds: function(data) {
+            var that = this;
+            // unselect old elements
+            for (var name in this._selected_elements) {
+                this._selected_elements[name].forEach(function(elem){
+                    that._unselectCalcElement(elem); 
+                });
+                this._selected_elements[name] = [];
+            }
 
-function updateCalculatedSelection(data) {
-    for (var name in data) {
-        var ids = data[name],
-            itemData_ = itemsData[name];
-        ids.forEach(function(id){
-            $('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0];
-        });
-    }
-}
+            // select current elements
+            for (var name in data) {
+                data[name].forEach(function(id){
+                    var elem = $('iframe').contents().find('*[tag-id='+ id +']')[0];
+                    if (id != itemsData[name].id) {
+                        that._selectCalcElement(elem, itemsData[name]);
+                        that._selected_elements[name].push(elem);
+                    }
+                });
+            }
+        },
+
+        unselectItem: function(name) {
+            this._selected_elements[name].forEach(function(element){
+                clearBg(element, BG_TYPE_CALC_SELECT);
+            });
+        },
+
+        _selectCalcElement: function(element, itemData){
+            setBg(element, itemData.elementSelectedBg, BG_TYPE_CALC_SELECT);
+        },
+
+        _unselectCalcElement: function(element){
+            clearBg(element, BG_TYPE_CALC_SELECT);
+        }
+    };
+}();
 
 function calcAllSelections() {
     var htmlJson = buildJsonFromHtml($('iframe').contents());
@@ -96,13 +131,13 @@ function calcAllSelections() {
 
     $.ajax({
         type: 'POST',
-        url: "/setup_generate_selected_ids",
+        url: "/setup_get_selected_ids",
         data: JSON.stringify({ html: htmlJson, names: name_ids }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         headers: {"X-CSRFToken": getCookie('csrftoken')},
         success: function(data){
-            console.log(data);
+            calculatedSelection.selectIds(data);
         },
         failure: function(errMsg) {
             console.log('Error:'+ errMsg);
@@ -125,12 +160,12 @@ function updateButtonAndData(itemData, new_mode, tag_id){
             button.addClass('disabled');
             itemData.id = null;
             break;
-        case MODE_PICKING:
+        case MODE_SELECTING:
             button.css('color', '#FFEB0D');
             button.removeClass('disabled');
             itemData.id = null;
             break;
-        case MODE_PICKED:
+        case MODE_SELECTED:
             button.css('color', 'white');
             itemData.id = tag_id;
             break;
@@ -139,10 +174,10 @@ function updateButtonAndData(itemData, new_mode, tag_id){
 
 
 var BG_DATA_KEY = 'st-origin-background';
-var PICKED_NAMES_KEY = 'st-selected-item-names';
+var SELECTED_NAMES_KEY = 'st-selected-item-names';
 var CALC_SELECTED_NAMES_KEY = 'st-calculated-selected-item-names';
 
-var BG_TYPE_HOVER = 1
+var BG_TYPE_HOVER = 1,
     BG_TYPE_SELECT = 2,
     BG_TYPE_CALC_SELECT = 3;
 
@@ -152,12 +187,12 @@ function setBg(element, bg, type) {
         $(element).data(BG_DATA_KEY, $(element).css('background'));
     var key = null;
     switch (type) {
-        BG_TYPE_HOVER:
+        case BG_TYPE_HOVER:
             break;
-        BG_TYPE_SELECT:
-            key = PICKED_NAMES_KEY;
+        case BG_TYPE_SELECT:
+            key = SELECTED_NAMES_KEY;
             break;
-        BG_TYPE_CALC_SELECT:
+        case BG_TYPE_CALC_SELECT:
             key = CALC_SELECTED_NAMES_KEY;
             break;
     }
@@ -173,36 +208,27 @@ function setBg(element, bg, type) {
 }
 function clearBg(element, type) {
     if (type == BG_TYPE_SELECT) { // redo for multiselect
-        var picked_names = $(element).data(PICKED_NAMES_KEY);
+        var picked_names = $(element).data(SELECTED_NAMES_KEY);
         // remove current item id from element
         if (picked_names.indexOf(curItemData.name) > -1)
             picked_names.splice(picked_names.indexOf(curItemData.name), 1);
     }
 
     var pop = true;
-    
     // for first take selection color if element was selected
-    [PICKED_NAMES_KEY, CALC_SELECTED_NAMES_KEY].forEach(function(key){
+    [SELECTED_NAMES_KEY, CALC_SELECTED_NAMES_KEY].forEach(function(key){
         if (pop) {
             var picked_names = $(element).data(key);
             if (typeof(picked_names) != 'undefined' && picked_names.length) {
                 var name = picked_names[picked_names.length-1];
                 $(element).css({'background': itemsData[name].elementSelectedBg});
+                pop = false;
             }
-            pop = false;
         }
     });
     // get original background if it saved
     if (pop && typeof($(element).data(BG_DATA_KEY)) != 'undefined')
         $(element).css({'background': $(element).data(BG_DATA_KEY)});
-}
-
-function selectCalcElement(element, itemData) {
-    setBg(element, itemData.elementSelectedBg, BG_TYPE_CALC_SELECT);
-}
-
-function UnselectCalcElement(element) {
-    clearBg(element, BG_TYPE_CALC_SELECT);
 }
 
 function selectElement(element, itemData) {
@@ -231,15 +257,15 @@ function onIframeElementClick(event) {
         return;
 
     // unpick by click
-    if (curItemData.mode == MODE_PICKED && curItemData.id == $(this).attr('tag-id')) {
+    if (curItemData.mode == MODE_SELECTED && curItemData.id == $(this).attr('tag-id')) {
         unselectElement($('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0]);
-        updateButtonAndData(curItemData, MODE_PICKING);
+        updateButtonAndData(curItemData, MODE_SELECTING);
         styleHoverElement(this);
     }
     // pick by click
-    else if (curItemData.mode == MODE_PICKING) {
+    else if (curItemData.mode == MODE_SELECTING) {
         selectElement(this, curItemData);
-        updateButtonAndData(curItemData, MODE_PICKED, $(this).attr('tag-id'));
+        updateButtonAndData(curItemData, MODE_SELECTED, $(this).attr('tag-id'));
         calcAllSelections();
     }
 }
@@ -256,7 +282,7 @@ function onIframeElementHover(event) {
         return;
 
     if ($(this).prop("tagName")) // is not document object
-        if (curItemData.mode == MODE_PICKING)
+        if (curItemData.mode == MODE_SELECTING)
             if (event.type == 'mouseenter') {
                 styleHoverElement(this);
                 if (this != previous_hover_element)
@@ -275,7 +301,7 @@ function onItemButtonClick(event) {
 
     if (curItemData && curItemData != itemsData[item_name]) {
         // disable another button if it was active
-        if (curItemData.mode == MODE_PICKING)
+        if (curItemData.mode == MODE_SELECTING)
             updateButtonAndData(curItemData, MODE_INACTIVE);
     }
 
@@ -288,12 +314,13 @@ function onItemButtonClick(event) {
             events_ready = true;
         }
         
-        updateButtonAndData(curItemData, MODE_PICKING);
+        updateButtonAndData(curItemData, MODE_SELECTING);
     }
     else { // stop picking
-        if (curItemData.mode == MODE_PICKED)
+        if (curItemData.mode == MODE_SELECTED)
             unselectElement($('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0]);
         updateButtonAndData(curItemData, MODE_INACTIVE);
+        calculatedSelection.unselectItem(curItemData.name);
 
         curItemData = null;
     }
@@ -301,6 +328,10 @@ function onItemButtonClick(event) {
 
 $(document).ready(function(){
     $(document).on('click', '*[id^="st-"]', onItemButtonClick);
+
+    blinkButton($('#st-title'), 3);
+    $('#st-title').tooltip('show');
 });
+
 
 })();

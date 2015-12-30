@@ -25,4 +25,4 @@ urlpatterns = i18n_patterns(
     url(r'^admin/', include(admin.site.urls)),
 )
 
-urlpatterns.append(url(r'^setup_generate_selected_ids$', views.setup_generate_selected_ids, name='setup_generate_selected_ids'))
+urlpatterns.append(url(r'^setup_get_selected_ids$', views.setup_get_selected_ids, name='setup_get_selected_ids'))

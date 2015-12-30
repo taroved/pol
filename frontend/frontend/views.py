@@ -2,7 +2,7 @@ import urllib
 import json
 
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
@@ -35,12 +35,32 @@ def setup(request):
         external_page_url = DOWNLOADER_PAGE_URL + urllib.quote(request.GET['url'], safe='')
         return render(request, 'frontend/setup.html', {'external_page_url': external_page_url})
 
-    return HttpResponse('Url is required')
+    return HttpResponseBadRequest('Url is required')
 
-def setup_generate_selected_ids(request):
+def _validate_html(html):
+
+    def walk(tag):
+        if (len(tag) != 3 or not isinstance(tag[0], basestring) or
+                type(tag[1]) is not dict or 'tag-id' not in tag[1] or
+                type(tag[2]) is not list):
+            return False
+        for t in tag[2]:
+            if not walk(t):
+                return False
+        return True
+
+    return walk(html)
+
+
+def setup_get_selected_ids(request):
     if request.method == 'POST':
         obj = json.loads(request.body)
+        if 'html' not in obj or 'names' not in obj:
+            return HttpResponseBadRequest('"html" and "names" parameters are required')
         html_json = obj['html']
         item_names = obj['names']
+
+        if not _validate_html(html_json):
+            return HttpResponseBadRequest('html is invalid')
 
         return HttpResponse(json.dumps(get_selection_tag_ids(item_names, html_json)))
