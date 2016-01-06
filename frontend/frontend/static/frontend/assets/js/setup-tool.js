@@ -1,15 +1,170 @@
 (function(){
 
-var MODE_INACTIVE = 1,
-    MODE_SELECTING = 2,
-    MODE_SELECTED = 3;
+/**
+* Hash for geting element by tag-id
+*/
+var id2el = {};
 
-var itemsData = {
-    title: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#006dcc', elementCalcSelectedBg:"#0044CC", mode: MODE_INACTIVE, name: 'title' },
-    description: { id: null, elementHoverBg: '#FFEB0D', elementSelectedBg: '#2f96b4', elementCalcSelectedBg:"#5bc0de", mode: MODE_INACTIVE, name: 'description' }
+/**
+* Style class
+*/
+function Style(background, color) {
+    this.background = background;
+    this.color = color;
+    this.applyStyle = function(element) {
+        $(element).css({'background': background, 'color': color});
+    }
+}
+
+var styles = {
+    'title_manual': new Style('#006dcc', 'white'),
+    'title_calculated': new Style('#0044CC', 'white'),
+    'description_manual': new Style('#2f96b4', 'white'),
+    'description_calculated': new Style('#5bc0de', 'white'),
+    // selection hove style
+    'hover': new Style('#FFEB0D', 'black')
 };
 
-var curItemData = null;
+/**
+* Store styles of elements to restore them when required
+*/
+var styleTool = {
+    // origin styles for every element
+    origin_styles: {},
+    // list of style for every element
+    style_names: {},
+    unstyle: function(element, style_name) {
+        var id = element.attr('tag-id'),
+            names = styleTool.style_names,
+
+        // remove style from list
+        names.splice(names.indexOf(style_name), 1);
+
+        // apply previous style
+        if (id in names && names[id].length)
+            styles[names[id][0]].applyStyle(element);
+        else
+            origin_styles[id].applyStyle(element);
+    },
+    unstyleMarker: function(marker) {
+        var element = marker.element,
+            style_name = marker.style;
+        styleTool.unstyle(element, style_name);
+    }
+};
+
+/**
+* Marker class. Combination of element, element style, and element click handler.
+*/
+function Marker(element, style, click_handler) {
+    this.element = element;
+    this.style = style;
+    this.click_event = $(this.element).click(click_handler);
+
+    var m = this;
+    this.remove = function() {
+        styleTool.unstyleMarker(marker);
+        $(m.element).unbind(m.click_event);
+    }
+}
+
+/**
+* Item states
+*/
+var STATE_INACTIVE = 1,
+    STATE_SELECTING = 2,
+    STATE_SELECTED = 3;
+
+var currentItem = null;
+/**
+* Item class. Describe all logic related to separate item
+*/
+function Item(name, button) {
+
+    this.name = name;
+    this.button = button;
+    this.manual_marker = null;
+    this._markers = null;
+
+    var that = this;
+    function _button_click() {
+        switch (state) {
+            case STATE_INACTIVE:
+                that.state = STATE_SELECTING;
+                currentItem = that.name;
+                break;
+            case STATE_SELECTING:
+                that.state = STATE_INACTIVE;
+                currentItem = null;
+                break;
+            case STATE_SELECTED:
+                //remove markers
+                that.state = STATE_SELECTING;
+                currentItem = null;
+                break;
+        }
+        _update_button();
+    }
+    $(this.button).click(_button_click);
+
+    function _update_button(){
+        switch (state) {
+            case STATE_INACTIVE:
+                button.css('color', 'white');
+                button.addClass('disabled');
+                currentItem = null;
+                break;
+            case MODE_SELECTING:
+                button.css('color', '#FFEB0D');
+                button.removeClass('disabled');
+                currentItem = null;
+                break;
+            case MODE_SELECTED:
+                button.css('color', 'white');
+                currentItem = name;
+                break;
+        }
+    }
+    
+    /**
+    * Invokes when current item is active
+    */
+    this.onSelectionElementClick = function(element) {
+        that._markers = [];
+        // mark current element
+        that.manual_marker = new Marker(element, styles[that.name +'_manual'], that._manual_marker_click);
+        that._markers.push(that.manual_marker);
+
+        //todo: freeze UI
+        requestSelection().then(function(data){
+            // go by items
+            for (var name in data) {
+                var item = items[name],
+                    manual_id = item.manual_marker.element.attr('tag-id');
+
+                    // remove all markers except manual marker
+                    item._markers = [item.manual_marker];
+                // go by tag-ids for item
+                for (var id in items[name]) {
+                    if (id != manual_id)
+                        item._markers.push(new Marker(id2el[id], styles[item.name +'_calculated'], function(){}));
+                }
+            }
+        }, function(error){
+            //todo: unfreez UI
+            console.log('Server error: '+ error);
+        });
+    }
+
+    this._manual_marker_click = function() {
+        //remove markers
+        that._markers.forEach(function(marker){
+            marker.remove();
+        });
+    }
+}
+
+var items = {};
 
 function blinkButton(element, times) {
     times *= 2;
@@ -75,59 +230,23 @@ function buildJsonFromHtml(doc) {
     return iframeHtmlJson;
 }
 
-var calculatedSelection = function(){
-    return {
-        _selected_elements: {
-            'title': [],
-            'description': []
-        },
-
-        selectIds: function(data) {
-            var that = this;
-            // unselect old elements
-            for (var name in this._selected_elements) {
-                this._selected_elements[name].forEach(function(elem){
-                    that._unselectCalcElement(elem); 
-                });
-                this._selected_elements[name] = [];
-            }
-
-            // select current elements
-            for (var name in data) {
-                data[name].forEach(function(id){
-                    var elem = $('iframe').contents().find('*[tag-id='+ id +']')[0];
-                    if (id != itemsData[name].id) {
-                        that._selectCalcElement(elem, itemsData[name]);
-                        that._selected_elements[name].push(elem);
-                    }
-                });
-            }
-        },
-
-        unselectItem: function(name) {
-            this._selected_elements[name].forEach(function(element){
-                clearBg(element, BG_TYPE_CALC_SELECT);
-            });
-        },
-
-        _selectCalcElement: function(element, itemData){
-            setBg(element, itemData.elementSelectedBg, BG_TYPE_CALC_SELECT);
-        },
-
-        _unselectCalcElement: function(element){
-            clearBg(element, BG_TYPE_CALC_SELECT);
-        }
-    };
-}();
-
-function calcAllSelections() {
+function requestSelection() {
     var htmlJson = buildJsonFromHtml($('iframe').contents());
 
     var name_ids = {};
-    for (var name in itemsData) {
-        if (!!itemsData[name].id)
-            name_ids[name] = itemsData[name].id;
+    for (var name in items) {
+        if (items[name].state == STATE_SELECTED)
+            name_ids[name] = $(items[name].manual_marker.element).attr('tag-id');
     }
+
+    var promise = {
+        _success: function(data) { console.log('Undefined success handler'); },
+        _fail: function(error) { console.log('Undefined fail handler'); },
+        then: function(success, fail) {
+            promise._success = success;
+            promise._fail = fail;
+        }
+    };
 
     $.ajax({
         type: 'POST',
@@ -137,115 +256,20 @@ function calcAllSelections() {
         dataType: "json",
         headers: {"X-CSRFToken": getCookie('csrftoken')},
         success: function(data){
+            promise._success(data)
             calculatedSelection.selectIds(data);
         },
         failure: function(errMsg) {
-            console.log('Error:'+ errMsg);
+            promise._fail(errMsg);
         }
     });
     console.log(JSON.stringify(htmlJson));
+    return promise;
 }
 ////
 // --- calculation of all selections on server side
 ////
 
-
-function updateButtonAndData(itemData, new_mode, tag_id){
-    if (new_mode)
-        itemData.mode = new_mode;
-    var button = $('#st-'+ itemData.name);
-    switch (itemData.mode) {
-        case MODE_INACTIVE:
-            button.css('color', 'white');
-            button.addClass('disabled');
-            itemData.id = null;
-            break;
-        case MODE_SELECTING:
-            button.css('color', '#FFEB0D');
-            button.removeClass('disabled');
-            itemData.id = null;
-            break;
-        case MODE_SELECTED:
-            button.css('color', 'white');
-            itemData.id = tag_id;
-            break;
-    }
-}
-
-
-var BG_DATA_KEY = 'st-origin-background';
-var SELECTED_NAMES_KEY = 'st-selected-item-names';
-var CALC_SELECTED_NAMES_KEY = 'st-calculated-selected-item-names';
-
-var BG_TYPE_HOVER = 1,
-    BG_TYPE_SELECT = 2,
-    BG_TYPE_CALC_SELECT = 3;
-
-function setBg(element, bg, type) {
-    // save origin background if it's not saved
-    if (typeof($(element).data(BG_DATA_KEY)) == 'undefined')
-        $(element).data(BG_DATA_KEY, $(element).css('background'));
-    var key = null;
-    switch (type) {
-        case BG_TYPE_HOVER:
-            break;
-        case BG_TYPE_SELECT:
-            key = SELECTED_NAMES_KEY;
-            break;
-        case BG_TYPE_CALC_SELECT:
-            key = CALC_SELECTED_NAMES_KEY;
-            break;
-    }
-    // if it's picked element we push the item id into array
-    if (key) { // redo for multiselect
-        if (typeof($(element).data(key)) == 'undefined')
-            $(element).data(key, []);
-        $(element).data(key).push(curItemData.name);
-    }
-
-
-    $(element).css({'background': bg});
-}
-function clearBg(element, type) {
-    if (type == BG_TYPE_SELECT) { // redo for multiselect
-        var picked_names = $(element).data(SELECTED_NAMES_KEY);
-        // remove current item id from element
-        if (picked_names.indexOf(curItemData.name) > -1)
-            picked_names.splice(picked_names.indexOf(curItemData.name), 1);
-    }
-
-    var pop = true;
-    // for first take selection color if element was selected
-    [SELECTED_NAMES_KEY, CALC_SELECTED_NAMES_KEY].forEach(function(key){
-        if (pop) {
-            var picked_names = $(element).data(key);
-            if (typeof(picked_names) != 'undefined' && picked_names.length) {
-                var name = picked_names[picked_names.length-1];
-                $(element).css({'background': itemsData[name].elementSelectedBg});
-                pop = false;
-            }
-        }
-    });
-    // get original background if it saved
-    if (pop && typeof($(element).data(BG_DATA_KEY)) != 'undefined')
-        $(element).css({'background': $(element).data(BG_DATA_KEY)});
-}
-
-function selectElement(element, itemData) {
-    setBg(element, itemData.elementSelectedBg, BG_TYPE_SELECT);
-}
-
-function unselectElement(element) {
-    clearBg(element, BG_TYPE_SELECT);
-}
-
-function styleHoverElement(element) {
-    setBg(element, curItemData.elementHoverBg, BG_TYPE_HOVER);
-}
-
-function unstyleHoverElement(element) {
-    clearBg(element, BG_TYPE_HOVER);
-}
 
 function onIframeElementClick(event) {
     event.stopPropagation();
@@ -256,18 +280,8 @@ function onIframeElementClick(event) {
     if (!$(this).attr('tag-id'))
         return;
 
-    // unpick by click
-    if (curItemData.mode == MODE_SELECTED && curItemData.id == $(this).attr('tag-id')) {
-        unselectElement($('iframe').contents().find('*[tag-id='+ curItemData.id +']')[0]);
-        updateButtonAndData(curItemData, MODE_SELECTING);
-        styleHoverElement(this);
-    }
-    // pick by click
-    else if (curItemData.mode == MODE_SELECTING) {
-        selectElement(this, curItemData);
-        updateButtonAndData(curItemData, MODE_SELECTED, $(this).attr('tag-id'));
-        calcAllSelections();
-    }
+    if (currentItem)
+        items[currentItem].onSelectionElementClick(this);
 }
 
 var previous_hover_element = [];
@@ -327,7 +341,14 @@ function onItemButtonClick(event) {
 }
 
 $(document).ready(function(){
-    $(document).on('click', '*[id^="st-"]', onItemButtonClick);
+    items['title'] = new Item('title', $('#st-title')[0]);
+    items['description'] = new Item('description', $('#st-description')[0]);
+    
+
+    // init id2el
+    $('iframe').contents().find('*[tag-id]').each(function(){
+        id2el[$(this).attr('tag-id')] = this;
+    });
 
     blinkButton($('#st-title'), 3);
     $('#st-title').tooltip('show');
