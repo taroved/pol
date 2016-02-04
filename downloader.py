@@ -87,7 +87,7 @@ def downloadDone(response_str, request=None, page_factory=None, url=None):
     request.finish()
 
 def downloadError(error, request=None, page_factory=None):
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     request.write('Downloader error: ' + error.value)
     request.finish()
 

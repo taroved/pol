@@ -15,10 +15,13 @@ function Style(background, color) {
         $(element).css({'background': background, 'color': color});
     }
 }
+Style.take = function(element) {
+   return new Style($(element).css('background'), $(element).css('color'));
+}
 
 var styles = {
     'title_manual': new Style('#006dcc', 'white'),
-    'title_calculated': new Style('#0044CC', 'white'),
+    'title_calculated': new Style('#78A4F9', 'white'),
     'description_manual': new Style('#2f96b4', 'white'),
     'description_calculated': new Style('#5bc0de', 'white'),
     // selection hove style
@@ -33,38 +36,62 @@ var styleTool = {
     origin_styles: {},
     // list of style for every element
     style_names: {},
+
+    init: function() {
+        for (var tag_id in id2el) {
+            styleTool.origin_styles[tag_id] = Style.take(id2el[tag_id]);
+            styleTool.style_names[tag_id] = [];
+        }
+    },
     unstyle: function(element, style_name) {
-        var id = element.attr('tag-id'),
-            names = styleTool.style_names,
+        var id = $(element).attr('tag-id'),
+            names = styleTool.style_names[id];
 
         // remove style from list
         names.splice(names.indexOf(style_name), 1);
 
         // apply previous style
-        if (id in names && names[id].length)
-            styles[names[id][0]].applyStyle(element);
+        if (names.length)
+            styles[names[id]].applyStyle(element);
         else
-            origin_styles[id].applyStyle(element);
+            styleTool.origin_styles[id].applyStyle(element);
+    },
+    style: function(element, style_name) {
+        var id = $(element).attr('tag-id'),
+            names = styleTool.style_names[id];
+
+        // add style to list
+        names.push(style_name);
+
+        // apply style
+        styles[style_name].applyStyle(element);
     },
     unstyleMarker: function(marker) {
         var element = marker.element,
-            style_name = marker.style;
+            style_name = marker.style_name;
         styleTool.unstyle(element, style_name);
+    },
+    styleMarker: function(marker) {
+        var element = marker.element,
+            style_name = marker.style_name;
+        styleTool.style(element, style_name);
     }
 };
 
 /**
 * Marker class. Combination of element, element style, and element click handler.
 */
-function Marker(element, style, click_handler) {
+function Marker(element, style_name, click_handler) {
     this.element = element;
-    this.style = style;
-    this.click_event = $(this.element).click(click_handler);
+    this.style_name = style_name;
+    this.click_event = $(this.element).bind('click', click_handler);
+
+    styleTool.styleMarker(this);
 
     var m = this;
     this.remove = function() {
-        styleTool.unstyleMarker(marker);
-        $(m.element).unbind(m.click_event);
+        styleTool.unstyleMarker(m);
+        $(m.element).unbind('click', click_handler);
     }
 }
 
@@ -85,10 +112,11 @@ function Item(name, button) {
     this.button = button;
     this.manual_marker = null;
     this._markers = null;
+    this.state = STATE_INACTIVE;
 
     var that = this;
     function _button_click() {
-        switch (state) {
+        switch (that.state) {
             case STATE_INACTIVE:
                 that.state = STATE_SELECTING;
                 currentItem = that.name;
@@ -99,8 +127,12 @@ function Item(name, button) {
                 break;
             case STATE_SELECTED:
                 //remove markers
-                that.state = STATE_SELECTING;
+
+                that.state = STATE_INACTIVE;
                 currentItem = null;
+                updateSelection().then(function(){
+                    that.state = STATE_SELECTING;
+                });
                 break;
         }
         _update_button();
@@ -108,20 +140,17 @@ function Item(name, button) {
     $(this.button).click(_button_click);
 
     function _update_button(){
-        switch (state) {
+        switch (that.state) {
             case STATE_INACTIVE:
-                button.css('color', 'white');
-                button.addClass('disabled');
-                currentItem = null;
+                $(button).css('color', 'white');
+                $(button).addClass('disabled');
                 break;
-            case MODE_SELECTING:
-                button.css('color', '#FFEB0D');
-                button.removeClass('disabled');
-                currentItem = null;
+            case STATE_SELECTING:
+                $(button).css('color', '#FFEB0D');
+                $(button).removeClass('disabled');
                 break;
             case MODE_SELECTED:
-                button.css('color', 'white');
-                currentItem = name;
+                $(button).css('color', 'white');
                 break;
         }
     }
@@ -132,24 +161,34 @@ function Item(name, button) {
     this.onSelectionElementClick = function(element) {
         that._markers = [];
         // mark current element
-        that.manual_marker = new Marker(element, styles[that.name +'_manual'], that._manual_marker_click);
+        that.manual_marker = new Marker(element, that.name +'_manual', that._manual_marker_click);
         that._markers.push(that.manual_marker);
 
+        updateSelection();
+    }
+
+    function updateSelection() {
         //todo: freeze UI
-        requestSelection().then(function(data){
+        return requestSelection().then(function(data){
             // go by items
             for (var name in data) {
                 var item = items[name],
-                    manual_id = item.manual_marker.element.attr('tag-id');
+                    manual_id = $(item.manual_marker.element).attr('tag-id');
 
-                    // remove all markers except manual marker
-                    item._markers = [item.manual_marker];
+                // remove all markers except manual marker
+                item._markers = item._markers.filter(function(m){
+                    var remove = m != item.manual_marker;
+                    if (remove)
+                        m.remove(); // remove handlers and style
+                    return !remove;
+                });
                 // go by tag-ids for item
-                for (var id in items[name]) {
+                data[name].forEach(function(id){
                     if (id != manual_id)
-                        item._markers.push(new Marker(id2el[id], styles[item.name +'_calculated'], function(){}));
-                }
+                        item._markers.push(new Marker(id2el[id], item.name +'_calculated', function(){}));
+                });
             }
+            return {};
         }, function(error){
             //todo: unfreez UI
             console.log('Server error: '+ error);
@@ -233,38 +272,30 @@ function buildJsonFromHtml(doc) {
 function requestSelection() {
     var htmlJson = buildJsonFromHtml($('iframe').contents());
 
+    // gather selected tag-ids
     var name_ids = {};
     for (var name in items) {
-        if (items[name].state == STATE_SELECTED)
+        if ([STATE_SELECTING, STATE_SELECTED].indexOf(items[name].state) != -1)
             name_ids[name] = $(items[name].manual_marker.element).attr('tag-id');
     }
-
-    var promise = {
-        _success: function(data) { console.log('Undefined success handler'); },
-        _fail: function(error) { console.log('Undefined fail handler'); },
-        then: function(success, fail) {
-            promise._success = success;
-            promise._fail = fail;
-        }
-    };
-
-    $.ajax({
-        type: 'POST',
-        url: "/setup_get_selected_ids",
-        data: JSON.stringify({ html: htmlJson, names: name_ids }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        headers: {"X-CSRFToken": getCookie('csrftoken')},
-        success: function(data){
-            promise._success(data)
-            calculatedSelection.selectIds(data);
-        },
-        failure: function(errMsg) {
-            promise._fail(errMsg);
-        }
+    
+    return new Promise(function(resolve, reject){
+        $.ajax({
+            type: 'POST',
+            url: "/setup_get_selected_ids",
+            data: JSON.stringify({ html: htmlJson, names: name_ids }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            headers: {"X-CSRFToken": getCookie('csrftoken')},
+            success: function(data){
+                resolve(data)
+            },
+            failure: function(errMsg) {
+                reject(errMsg);
+            }
+        });
+        console.log(JSON.stringify(htmlJson));
     });
-    console.log(JSON.stringify(htmlJson));
-    return promise;
 }
 ////
 // --- calculation of all selections on server side
@@ -273,12 +304,6 @@ function requestSelection() {
 
 function onIframeElementClick(event) {
     event.stopPropagation();
-
-    if (!curItemData)
-        return;
-
-    if (!$(this).attr('tag-id'))
-        return;
 
     if (currentItem)
         items[currentItem].onSelectionElementClick(this);
@@ -344,10 +369,15 @@ $(document).ready(function(){
     items['title'] = new Item('title', $('#st-title')[0]);
     items['description'] = new Item('description', $('#st-description')[0]);
     
-
-    // init id2el
-    $('iframe').contents().find('*[tag-id]').each(function(){
-        id2el[$(this).attr('tag-id')] = this;
+    $('iframe').load(function(){
+        // init id2el
+        $('iframe').contents().find('*[tag-id]').each(function(){
+            id2el[$(this).attr('tag-id')] = this;
+            // init styleTool
+            styleTool.init();
+        });
+        // attach iframe elements click
+        $('iframe').contents().on('click', '*[tag-id]', onIframeElementClick);
     });
 
     blinkButton($('#st-title'), 3);
