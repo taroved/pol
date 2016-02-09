@@ -1,0 +1,16 @@
+[
+{
+    "fields": {
+        "name": "title"
+    },
+    "model": "frontend.field",
+    "pk": 1
+},
+{
+    "fields": {
+        "name": "description"
+    },
+    "model": "frontend.field",
+    "pk": 2
+}
+]
