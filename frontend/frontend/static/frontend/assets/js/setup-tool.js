@@ -168,6 +168,7 @@ function Item(name, button) {
                 $(button).css('color', 'white');
                 break;
         }
+        updateCreateButton();
     }
     
     /**
@@ -289,11 +290,7 @@ function buildJsonFromHtml(doc) {
     return iframeHtmlJson;
 }
 
-function requestSelection() {
-    var htmlJson = buildJsonFromHtml($('iframe').contents());
-
-    // gather selected tag-ids
-    var name_ids = {};
+function gatherSelectedTagIds(name_ids) {
     var selected_any = false;
     for (var name in items) {
         if ([STATE_SELECTING, STATE_SELECTED].indexOf(items[name].state) != -1) {
@@ -301,6 +298,15 @@ function requestSelection() {
             selected_any = true;
         }
     }
+    return selected_any;
+} 
+
+function requestSelection() {
+    var htmlJson = buildJsonFromHtml($('iframe').contents());
+
+    // gather selected tag-ids
+    var name_ids = {};
+    selected_any = gatherSelectedTagIds(name_ids);
 
     if (selected_any)
         return new Promise(function(resolve, reject){
@@ -353,6 +359,7 @@ function onIframeElementHover(event) {
             }
             else { // mouseleave
                 // clear all hover styles
+                // if mouseleave calls after mouseenter we may have a problem
                 styleTool.unstyleAll('hover');
             }
 }
@@ -388,11 +395,79 @@ function onItemButtonClick(event) {
         curItemData = null;
     }
 }
+////
+// ++++ Create button logic
+////
+function updateCreateButton() {
+    var active = false;
+
+    for (var name in items)
+        if (items[name].state == STATE_SELECTED) {
+            active = true;
+            break;
+        }
+
+    if (active)
+        $('#create').removeClass('disabled');
+    else
+        $('#create').addClass('disabled');
+}
+
+function onCreateButtonClick() {
+    var active = !$('#create').hasClass('disabled');
+    if (active)
+        //todo: freeze UI
+        createFeed().then(function(feed_page_url){
+            alert(feed_page_url);
+            //window.location.href = feed_page_url;
+        }, function(error){
+            //todo: unfreez UI
+            console.log('Server error: '+ error);
+        });
+}
+
+function createFeed() {
+    var htmlJson = buildJsonFromHtml($('iframe').contents());
+
+    // gather selected tag-ids
+    var name_ids = {};
+    selected_any = gatherSelectedTagIds(name_ids);
+
+    if (selected_any)
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                type: 'POST',
+                url: "/setup_create_feed",
+                data: JSON.stringify({ html: htmlJson, names: name_ids, url:$('#create').data('page-url') }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                headers: {"X-CSRFToken": getCookie('csrftoken')},
+                success: function(data){
+                    resolve(data)
+                },
+                failure: function(errMsg) {
+                    reject(errMsg);
+                }
+            });
+            console.log(JSON.stringify(htmlJson));
+        });
+    else {
+        return new Promise(function(resolve, reject){
+            setTimeout(function(){ resolve({}); }, 0);
+        });
+    }
+}
+////
+// ++++ Create button logic
+////
+
 
 $(document).ready(function(){
     items['title'] = new Item('title', $('#st-title')[0]);
     items['description'] = new Item('description', $('#st-description')[0]);
-    
+   
+    $('#create').click(onCreateButtonClick);
+ 
     $('iframe').load(function(){
         // init id2el
         $('iframe').contents().find('*[tag-id]').each(function(){
@@ -401,7 +476,6 @@ $(document).ready(function(){
         // attach iframe elements event handlers
         $('iframe').contents().on('click', '*[tag-id]', onIframeElementClick);
         $('iframe').contents().on('mouseenter mouseleave', '*[tag-id]', onIframeElementHover);
-        
     });
 
     blinkButton($('#st-title'), 3);

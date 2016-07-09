@@ -98,7 +98,7 @@ def get_selection_tag_ids(item_tag_ids, html_json):
     for name in item_tag_ids:
         tag_id = item_tag_ids[name]
         parent_stacks[name] = _build_parent_stack(html_json, tag_id)
-    #import pdb; pdb.set_trace()
+    
     # get fork
     fork_stack = _get_fork_stack(parent_stacks)
     
@@ -128,3 +128,32 @@ def get_selection_tag_ids(item_tag_ids, html_json):
                 selection_ids[name].append(ids[name])
 
     return selection_ids
+
+def _path_stack_to_xpath(stack):
+    stack
+
+def build_xpathes_for_items(item_tag_ids, html_json):
+    parent_stacks = {}
+
+    # buld parent stacks for every item name
+    for name in item_tag_ids:
+        tag_id = item_tag_ids[name]
+        parent_stacks[name] = _build_parent_stack(html_json, tag_id)
+    
+    # get fork
+    fork_stack = _get_fork_stack(parent_stacks)
+    
+    # get fork path
+    fork_path = [tag[I_TAGNAME] for tag in fork_stack]
+
+    # get pathes for items
+    fork_len = len(fork_path) - 1
+    selection_pathes = {name:_build_path(parent_stacks[name][fork_len:]) for name in parent_stacks}
+
+    # build xpathes
+    feed_xpath = '/' + '/'.join(fork_path)
+    item_xpathes = {}
+    for name in selection_pathes:
+        item_xpathes[name] = '/'.join([repr(path_item) for path_item in selection_pathes[name]])
+
+    return [feed_xpath, item_xpathes]

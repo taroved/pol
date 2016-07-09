@@ -11,7 +11,8 @@ from django.core.urlresolvers import reverse
 from .forms import IndexForm
 from .settings import DOWNLOADER_PAGE_URL
 
-from .setup_tool import get_selection_tag_ids
+from .setup_tool import get_selection_tag_ids, build_xpathes_for_items
+from .models import Feed, Field, FeedField
 
 def index(request):
     if request.method == 'GET' and 'url' in request.GET:
@@ -33,7 +34,12 @@ def index(request):
 def setup(request):
     if request.method == 'GET' and 'url' in request.GET:
         external_page_url = DOWNLOADER_PAGE_URL + urllib.quote(request.GET['url'], safe='')
-        return render(request, 'frontend/setup.html', {'external_page_url': external_page_url})
+        return render(request, 'frontend/setup.html',
+                        {
+                            'external_page_url': external_page_url,
+                            'page_url': request.GET['url'], 
+                            'feed_page_url': reverse('setup_create_feed') # todo: replace with feedpage
+                        })
 
     return HttpResponseBadRequest('Url is required')
 
@@ -64,3 +70,36 @@ def setup_get_selected_ids(request):
             return HttpResponseBadRequest('html is invalid')
 
         return HttpResponse(json.dumps(get_selection_tag_ids(item_names, html_json)))
+
+def _create_feed(url, xpathes):
+    feed_xpath = xpathes[0]
+    item_xpathes = xpathes[1]
+
+    #import pdb; pdb.set_trace()
+    feed = Feed(uri=url, xpath=feed_xpath)
+    feed.save()
+
+    fields = Field.objects.all()
+    
+    for field in fields:
+        ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
+        ff.save()
+
+    return feed.id
+
+def setup_create_feed(request):
+    if request.method == 'POST':
+        obj = json.loads(request.body)
+        if 'html' not in obj or 'names' not in obj or 'url' not in obj:
+            return HttpResponseBadRequest('"html", "names" and "url" parameters are required')
+        html_json = obj['html']
+        item_names = obj['names']
+        url = obj['url']
+
+        if not _validate_html(html_json):
+            return HttpResponseBadRequest('html is invalid')
+        
+        xpathes = build_xpathes_for_items(item_names, html_json)
+        feed_id = _create_feed(url, xpathes)
+ 
+        return HttpResponse(feed_id)
