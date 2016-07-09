@@ -50,10 +50,20 @@ var styleTool = {
         names.splice(names.indexOf(style_name), 1);
 
         // apply previous style
-        if (names.length)
-            styles[names[id]].applyStyle(element);
+        if (names.length) {
+            var last_style_name = names[names.length-1];
+            styles[last_style_name].applyStyle(element);
+        }
         else
             styleTool.origin_styles[id].applyStyle(element);
+    },
+    unstyleAll: function(style_name) {
+        // clear all styles with the style_name
+        for (var id in styleTool.style_names) {
+            var element = id2el[id];
+            while (styleTool.hasStyle(element, style_name))
+                styleTool.unstyle(element, style_name);
+        }
     },
     style: function(element, style_name) {
         var id = $(element).attr('tag-id');
@@ -195,6 +205,8 @@ function Item(name, button) {
                     if (id != manual_id)
                         item._markers.push(new Marker(id2el[id], item.name +'_calculated', function(){}));
                 });
+                // remove all hover styles
+                styleTool.unstyleAll('hover');
             }
             return {};
         }, function(error){
@@ -340,8 +352,8 @@ function onIframeElementHover(event) {
                 styleTool.style(this, 'hover');
             }
             else { // mouseleave
-                if (styleTool.hasStyle(this, 'hover'))
-                    styleTool.unstyle(this, 'hover');
+                // clear all hover styles
+                styleTool.unstyleAll('hover');
             }
 }
 

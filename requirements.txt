@@ -1,9 +1,12 @@
-#sudo apt-get install libmysqlclient-dev
-#sudo apt-get install libxml2-dev libxslt-dev python-dev
-#sudo apt-get install libffi-dev
+#sudo apt-get install libmysqlclient-dev libxml2-dev libxslt-dev python-dev libffi-dev gcc libssl-dev
 Django==1.8.6
 lxml==3.3.3
 Scrapy==1.0.3
 django-pipeline==1.5.4
 mysqlclient==1.3.7
 w3lib==1.12.0
+#sudo apt-get install nodejs npm
+#npm install -g less
+#ln -s /usr/bin/nodejs /usr/bin/node
+#sudo apt install ruby
+#sudo su -c "gem install sass"

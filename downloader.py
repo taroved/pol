@@ -131,4 +131,5 @@ class Counter(resource.Resource):
 
 
 endpoints.serverFromString(reactor, "tcp:1234").listen(server.Site(Counter()))
+print 'Server starting at http://localhost:1234'
 reactor.run()
