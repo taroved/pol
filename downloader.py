@@ -13,7 +13,9 @@ from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
 
 from lxml import etree
+import re
 
+from feed import startFeedRequest
 
 def getPageFactory(url, contextFactory=None, *args, **kwargs):
     """
@@ -87,13 +89,14 @@ def downloadDone(response_str, request=None, page_factory=None, url=None):
     request.finish()
 
 def downloadError(error, request=None, page_factory=None):
-    #import pdb; pdb.set_trace()
     request.write('Downloader error: ' + error.value)
     request.finish()
 
 
-class Counter(resource.Resource):
+class Downloader(resource.Resource):
     isLeaf = True
+
+    feed_regexp = re.compile('^/feed/(\d+)$')
 
     def startRequest(self, request, url):
         page_factory = getPageFactory(url,
@@ -118,18 +121,21 @@ class Counter(resource.Resource):
 
     def render_GET(self, request):
         '''
-        Render page for frontend
+        Render page for frontend or RSS feed
         '''
         if 'url' in request.args:
             url = request.args['url'][0]
 
             self.startRequest(request, url)
             return NOT_DONE_YET
+        elif self.feed_regexp.match(request.uri) is not None:
+            feed_id = self.feed_regexp.match(request.uri).groups()[0]
+            startFeedRequest(request, feed_id)
+            return NOT_DONE_YET
         else:
             return 'Url is required'
 
 
-
-endpoints.serverFromString(reactor, "tcp:1234").listen(server.Site(Counter()))
+endpoints.serverFromString(reactor, "tcp:1234").listen(server.Site(Downloader()))
 print 'Server starting at http://localhost:1234'
 reactor.run()

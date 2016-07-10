@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Feed is ready</h1>
+</div>
+<div class="media">
+  <a class="pull-left" href="{{ feed_url }}">
+	<img src="{% static 'frontend/images/rss-640.png' %}" width="64" height="64" class="media-object" />
+  </a>
+
+  <div class="media-body">
+    <h4 class="media-heading">subscribe.your_feed <a href="?" target="_blank">subscribe.rss_help_link</a>
+      :</h4>
+
+    <h3>
+      <a href="{{ feed_url }}" target="_blank">{{ feed_url }}</a>
+    </h3>
+  </div>
+
+  <div id="preview" class="well" style="margin-bottom: 60px">
+    subscribe.loading
+  </div>
+  <script type="text/javascript">
+      function tryGetFeed() {
+          $.getFeed({
+              url: '{{ feed_url }}',
+              success: function (feed) {
+                  if ('items' in feed) {
+                      $('#preview').empty()
+                              .append($('<h3 style="margin-top: 0;"></h3>').append("<%= I18n.t('subscribe.preview') %>: "));
+                      /*.append($('<div></div>').append($('<a/>').attr('href', feed.link).attr('target', '_blank').text(feed.title)))*/
+
+                      var html = '';
+
+                      for (var i = 0; i < feed.items.length; i++) {
+
+                          var item = feed.items[i];
+
+                          $('#preview').append('<h4>'
+                                  + '<a href="'
+                                  + item.link
+                                  + '">'
+                                  + item.title
+                                  + '</a>'
+                                  + '</h4>');
+
+                          $('#preview').append('<div>'
+                                  + item.description
+                                  + '</div>');
+                      }
+                  }
+                  else {
+                      $('#preview').text($('#preview').text().trim() + ' .');
+                      setTimeout(tryGetFeed, 2000);
+                  }
+              },
+              failure: function () {
+                  $('#preview').text($('#preview').text().trim() + ' .');
+                  setTimeout(tryGetFeed, 2000);
+              },
+              error: function () {
+                  $('#preview').text($('#preview').text().trim() + ' .');
+                  setTimeout(tryGetFeed, 2000);
+              }
+          });
+      }
+      tryGetFeed();
+  </script>
+</div>
+{% endblock %}

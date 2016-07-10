@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 
 from .forms import IndexForm
-from .settings import DOWNLOADER_PAGE_URL
+from .settings import DOWNLOADER_PAGE_URL, FEED_PAGE_URL
 
 from .setup_tool import get_selection_tag_ids, build_xpathes_for_items
 from .models import Feed, Field, FeedField
@@ -37,8 +37,7 @@ def setup(request):
         return render(request, 'frontend/setup.html',
                         {
                             'external_page_url': external_page_url,
-                            'page_url': request.GET['url'], 
-                            'feed_page_url': reverse('setup_create_feed') # todo: replace with feedpage
+                            'page_url': request.GET['url']
                         })
 
     return HttpResponseBadRequest('Url is required')
@@ -75,7 +74,6 @@ def _create_feed(url, xpathes):
     feed_xpath = xpathes[0]
     item_xpathes = xpathes[1]
 
-    #import pdb; pdb.set_trace()
     feed = Feed(uri=url, xpath=feed_xpath)
     feed.save()
 
@@ -102,4 +100,15 @@ def setup_create_feed(request):
         xpathes = build_xpathes_for_items(item_names, html_json)
         feed_id = _create_feed(url, xpathes)
  
-        return HttpResponse(feed_id)
+        return HttpResponse(reverse('preview', args=(feed_id,)))
+
+def preview(request, feed_id):
+    #import pdb; pdb.set_trace()
+
+    if request.method == 'GET': 
+        return render(request, 'frontend/preview.html',
+                        {
+                            'feed_url': FEED_PAGE_URL + feed_id, 
+                        })
+        
+    return HttpResponseBadRequest('Only GET method supported')

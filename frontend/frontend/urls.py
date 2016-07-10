@@ -22,6 +22,7 @@ from . import views
 urlpatterns = i18n_patterns(
     url(r'^$', views.index, name='index'),
     url(r'^setup$', views.setup, name='setup'),
+    url(r'^preview/([0-9]+)$', views.preview, name='preview'),
     url(r'^admin/', include(admin.site.urls)),
 )
 

@@ -324,7 +324,6 @@ function requestSelection() {
                     reject(errMsg);
                 }
             });
-            console.log(JSON.stringify(htmlJson));
         });
     else {
         return new Promise(function(resolve, reject){
@@ -418,8 +417,7 @@ function onCreateButtonClick() {
     if (active)
         //todo: freeze UI
         createFeed().then(function(feed_page_url){
-            alert(feed_page_url);
-            //window.location.href = feed_page_url;
+            window.location.href = feed_page_url;
         }, function(error){
             //todo: unfreez UI
             console.log('Server error: '+ error);
@@ -440,7 +438,6 @@ function createFeed() {
                 url: "/setup_create_feed",
                 data: JSON.stringify({ html: htmlJson, names: name_ids, url:$('#create').data('page-url') }),
                 contentType: "application/json; charset=utf-8",
-                dataType: "json",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
                 success: function(data){
                     resolve(data)
@@ -449,7 +446,6 @@ function createFeed() {
                     reject(errMsg);
                 }
             });
-            console.log(JSON.stringify(htmlJson));
         });
     else {
         return new Promise(function(resolve, reject){

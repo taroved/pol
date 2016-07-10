@@ -38,7 +38,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'pipeline',
+    'frontend',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -153,9 +155,11 @@ PIPELINE_JS = {
           'frontend/assets/js/bootstrap.js',
           'frontend/assets/js/bootstrap_and_overrides.js',
           'frontend/assets/js/setup-tool.js',
+          'frontend/assets/js/jquery.jfeed.js',
         ),
         'output_filename': 'frontend/js/app.js',
     }
 }
 
 DOWNLOADER_PAGE_URL = 'http://politepol.com/downloader?url='
+FEED_PAGE_URL = 'http://politepol.com/feed/'
