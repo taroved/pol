@@ -151,24 +151,24 @@ function Item(name, button) {
                 break;
         }
         _update_button();
+        updateCreateButton();
     }
     $(this.button).click(_button_click);
 
     function _update_button(){
         switch (that.state) {
             case STATE_INACTIVE:
-                $(button).css('color', 'white');
-                $(button).addClass('disabled');
+                $(button).css('color', '#333');
+                $(button).removeClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
                 break;
             case STATE_SELECTING:
                 $(button).css('color', '#FFEB0D');
-                $(button).removeClass('disabled');
+                $(button).addClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
                 break;
             case STATE_SELECTED:
                 $(button).css('color', 'white');
                 break;
         }
-        updateCreateButton();
     }
     
     /**

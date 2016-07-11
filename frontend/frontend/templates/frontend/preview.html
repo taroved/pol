@@ -53,17 +53,14 @@
                       }
                   }
                   else {
-                      $('#preview').text($('#preview').text().trim() + ' .');
-                      setTimeout(tryGetFeed, 2000);
+                      $('#preview').text('No items.');
                   }
               },
               failure: function () {
-                  $('#preview').text($('#preview').text().trim() + ' .');
-                  setTimeout(tryGetFeed, 2000);
+                  $('#preview').text('Something wrong.');
               },
               error: function () {
-                  $('#preview').text($('#preview').text().trim() + ' .');
-                  setTimeout(tryGetFeed, 2000);
+                  $('#preview').text('Something wrong.');
               }
           });
       }

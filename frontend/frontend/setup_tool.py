@@ -104,11 +104,14 @@ def get_selection_tag_ids(item_tag_ids, html_json):
     
     # get fork path
     fork_path = [tag[I_TAGNAME] for tag in fork_stack]
-
+    # console log
+    print 'Fork path: /'+'/'.join(fork_path)
     # get pathes for items
     fork_len = len(fork_path) - 1
     selection_pathes = {name:_build_path(parent_stacks[name][fork_len:]) for name in parent_stacks}
-
+    # console log
+    for name in selection_pathes:
+        print name + ': ' + '/'.join([repr(p) for p in selection_pathes[name]])
     # get fork tags
     fork_tags = _find_tags_by_tag_names(html_json, fork_path)
 
@@ -154,6 +157,9 @@ def build_xpathes_for_items(item_tag_ids, html_json):
     feed_xpath = '/' + '/'.join(fork_path)
     item_xpathes = {}
     for name in selection_pathes:
-        item_xpathes[name] = '/'.join([repr(path_item) for path_item in selection_pathes[name]])
+        if selection_pathes[name]:
+            item_xpathes[name] = '/'.join([repr(path_item) for path_item in selection_pathes[name]])
+        else:
+            item_xpathes[name] = '.'
 
     return [feed_xpath, item_xpathes]

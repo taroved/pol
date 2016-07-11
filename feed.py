@@ -42,10 +42,11 @@ def element_to_string(element):
     s = [element.text] if element.text else []
     for sub_element in element:
         s.append(etree.tostring(sub_element))
-    s.append(element.tail)
+    if element.tail:    
+        s.append(element.tail)
     return ''.join(s)
 
-def  _buildFeed(response, feed_config):
+def _buildFeed(response, feed_config):
     tree = response.selector._root.getroottree()
 
     # get data from html 
@@ -57,9 +58,9 @@ def  _buildFeed(response, feed_config):
                 element = node.xpath(feed_config['fields'][field_name])
                 if element:
                     item[field_name] = element_to_string(element[0])
-        items.append(item)
+        if len(item) == len(feed_config['fields']): # all fields are required
+            items.append(item)
 
-    #import pdb; pdb.set_trace()
     #build feed
     feed = Rss201rev2Feed(
         title='Polite Pol: ' + feed_config['uri'],
@@ -92,7 +93,8 @@ def _downloadDone(response_str, request=None, page_factory=None, feed_config=Non
     request.finish()
 
 def _downloadError(error, request=None, page_factory=None):
-    request.write('Downloader error: ' + error.value)
+    request.write('Downloader error: ' + error.getErrorMessage())
+    request.write('Traceback: ' + error.getTraceback())
     request.finish()
 
 def startFeedRequest(request, feed_id):

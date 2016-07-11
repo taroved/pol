@@ -20,11 +20,14 @@ def index(request):
         if form.is_valid():
             val = URLValidator()
             try:
-                val(request.GET['url'])
+                url = request.GET['url']
+                if not url.startswith('http'):
+                    url = 'http://' + url
+                val(url)
             except ValidationError, e:
                 form.add_error('url', 'Invalid url')
             else:
-                return HttpResponseRedirect('%s?url=%s' % (reverse('setup'), urllib.quote(request.GET['url'].encode('utf8'))))
+                return HttpResponseRedirect('%s?url=%s' % (reverse('setup'), urllib.quote(url.encode('utf8'))))
     else:
         form = IndexForm()
 
