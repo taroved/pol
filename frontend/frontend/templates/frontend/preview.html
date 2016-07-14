@@ -2,6 +2,10 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block headers %}
+<link rel="alternate" type="application/rss+xml" title="RSS" href="{{ feed_url }}" />
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <h1>Feed is ready</h1>
