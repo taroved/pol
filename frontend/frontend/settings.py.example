@@ -152,6 +152,7 @@ PIPELINE_JS = {
     'app': {
         'source_filenames': (
           'frontend/assets/js/jquery.js',
+          'frontend/assets/js/jquery.browser.js',
           'frontend/assets/js/bootstrap.js',
           'frontend/assets/js/bootstrap_and_overrides.js',
           'frontend/assets/js/setup-tool.js',
