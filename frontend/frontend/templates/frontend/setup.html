@@ -1,14 +1,15 @@
 {% extends "base.html" %}
+{% load i18n %}_
 
 {% block content %}
 <div class="page-header">
     <!--h1 style="display: inline">Feed setup:</h1-->
     <h2 style="display: inline" id="setup-tool-string">
-        You are creating feed with 
-        <button id="st-title" class="btn btn-large has-tooltip" title="Click on the button and move cursor to the below document and pick item you interested in."
-            data-trigger="hover focus manual" data-animation="true">Title</button> and 
-        <button id="st-description" class="btn btn-large">Description</button>.
-        <button id="create" class="btn btn-large btn-primary disabled" style="padding-right: 13px; float:right" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">Create <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
+        {% trans 'setup.you_are_creating_feed_with' %} 
+        <button id="st-title" class="btn btn-large has-tooltip" title="{% trans 'setup.help' %}"
+            data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button> {% trans 'setup.and' %} 
+        <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button>.
+        <button id="create" class="btn btn-large btn-primary disabled" style="padding-right: 13px; float:right" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </h2>
 </div>
 

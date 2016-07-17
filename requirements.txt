@@ -1,4 +1,4 @@
-#sudo apt-get install libmysqlclient-dev libxml2-dev libxslt-dev python-dev libffi-dev gcc libssl-dev
+#sudo apt-get install libmysqlclient-dev libxml2-dev libxslt-dev python-dev libffi-dev gcc libssl-dev gettext_
 Django==1.8.6
 lxml==3.3.3
 Scrapy==1.0.3
