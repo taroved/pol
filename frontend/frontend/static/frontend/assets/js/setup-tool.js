@@ -346,23 +346,30 @@ function onIframeElementClick(event) {
         currentItem.onSelectionElementClick(this);
 }
 
-var previous_hover_element = [];
-
-function onIframeElementHover(event) {
-    event.stopPropagation();
-
+function onIframeElementHover(event, p1, p2, p3) {
+    
     if (!currentItem)
         return;
 
-    if ($(this).prop("tagName")) // is not document object
+    if ($(this).prop("tagName")) // is document element
         if (currentItem.state == STATE_SELECTING)
             if (event.type == 'mouseenter') {
+                // clear all hover styles
+                styleTool.unstyleAll('hover');
                 styleTool.style(this, 'hover');
+                event.stopPropagation()
             }
             else { // mouseleave
-                // clear all hover styles
-                // if mouseleave calls after mouseenter we may have a problem
-                styleTool.unstyleAll('hover');
+                styleTool.unstyle(this, 'hover');
+                // style parent document element
+                var element = this;
+                while (element) {
+                    element = element.parentNode;
+                    if ($(element).prop("tagName")) {
+                        styleTool.style(element, 'hover');
+                        break;
+                    }
+                }
             }
 }
 
@@ -469,6 +476,8 @@ function loader(show) {
 }
 
 $(document).ready(function(){
+    loader(true);
+    
     items['title'] = new Item('title', $('#st-title')[0]);
     items['description'] = new Item('description', $('#st-description')[0]);
    
@@ -482,9 +491,9 @@ $(document).ready(function(){
         // attach iframe elements event handlers
         $('iframe').contents().on('click', '*[tag-id]', onIframeElementClick);
         $('iframe').contents().on('mouseenter mouseleave', '*[tag-id]', onIframeElementHover);
+        loader(false);
     });
 
-    blinkButton($('#st-title'), 3);
     $('#st-title').tooltip('show');
 });
 
