@@ -188,6 +188,7 @@ function Item(name, button) {
 
     function updateSelection() {
         //todo: freeze UI
+        loader(true);
         return requestSelection().then(function(data){
             // go by items
             for (var name in data) {
@@ -209,9 +210,11 @@ function Item(name, button) {
                 // remove all hover styles
                 styleTool.unstyleAll('hover');
             }
+            loader(false);
             return {};
         }, function(error){
-            //todo: unfreez UI
+            //unfreez UI
+            loader(false);
             console.log('Server error: '+ error);
         });
     }
@@ -415,11 +418,14 @@ function updateCreateButton() {
 function onCreateButtonClick() {
     var active = !$('#create').hasClass('disabled');
     if (active)
-        //todo: freeze UI
+        //freeze UI
+        loader(true);
         createFeed().then(function(feed_page_url){
             window.location.href = feed_page_url;
+            loader(false);
         }, function(error){
-            //todo: unfreez UI
+            //unfreez UI
+            loader(false);
             console.log('Server error: '+ error);
         });
 }
@@ -457,6 +463,10 @@ function createFeed() {
 // ++++ Create button logic
 ////
 
+// Spinner
+function loader(show) {
+  document.getElementById("loader-bg").style.display = show ? "block" : "none";
+}
 
 $(document).ready(function(){
     items['title'] = new Item('title', $('#st-title')[0]);
