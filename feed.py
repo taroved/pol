@@ -46,6 +46,10 @@ def element_to_string(element):
         s.append(element.tail)
     return ''.join(s)
 
+def _build_link(doclink, link):
+    # todo
+    return link
+
 def _buildFeed(response, feed_config):
     tree = response.selector._root.getroottree()
 
@@ -58,6 +62,13 @@ def _buildFeed(response, feed_config):
                 element = node.xpath(feed_config['fields'][field_name])
                 if element:
                     item[field_name] = element_to_string(element[0])
+                    # get item link
+                    if field_name == 'title':
+                        anchor = element[0].xpath('ancestor-or-self::node()[name()="a"]')
+                        if anchor and anchor[0].get('href'):
+                            item['title_link'] = _build_link(feed_config['uri'], anchor[0].get('href'))
+                            
+                            
         if len(item) == len(feed_config['fields']): # all fields are required
             items.append(item)
 
@@ -73,7 +84,7 @@ def _buildFeed(response, feed_config):
     for item in items:
         feed.add_item(
             title=item['title'] if 'title' in item else '',  
-            link=feed_config['uri'],
+            link = item['title_link'] if 'title_link' in item else feed_config['uri'],
             description=item['description'] if 'description' in item else '', 
             #enclosure=Enclosure(fields[4], "32000", "image/jpeg") if  4 in fields else None, #"Image"
             pubdate=datetime.datetime.now()

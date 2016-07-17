@@ -51,11 +51,9 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </a>
-        {% if index_page %}
+        {% block logo %}
             <a href="{% url 'index' %}" class="brand-pic"><img src="{% static 'frontend/images/apple-touch-icon-precomposed.png' %}" width="40" height="40" /></a>
-        {% else %}
-            <a href="{% url 'index' %}" class="brand">{% trans "brand" %}</a>
-        {% endif %}
+        {% endblock %}
 
         <div class="container-fluid nav-collapse">
           <ul class="nav pull-right">

@@ -2,6 +2,10 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block logo %}
+    <a href="{% url 'index' %}" class="brand">{% trans "brand" %}</a>
+{% endblock %}
+
 {% block content %}
 <div class="welcom">
     <img src="{% static 'frontend/images/pol.png' %}" alt="Hi!" />
