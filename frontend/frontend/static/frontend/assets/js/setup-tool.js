@@ -351,9 +351,9 @@ function onIframeElementHover(event, p1, p2, p3) {
     if (!currentItem)
         return;
 
-    if ($(this).prop("tagName")) // is document element
+    if ($(this).prop("tagName")) // is not document object
         if (currentItem.state == STATE_SELECTING)
-            if (event.type == 'mouseenter') {
+            if (event.type == 'mouseenter' && $(this).attr("tag-id")) {
                 // clear all hover styles
                 styleTool.unstyleAll('hover');
                 styleTool.style(this, 'hover');
@@ -365,7 +365,7 @@ function onIframeElementHover(event, p1, p2, p3) {
                 var element = this;
                 while (element) {
                     element = element.parentNode;
-                    if ($(element).prop("tagName")) {
+                    if ($(element).attr("tag-id")) {
                         styleTool.style(element, 'hover');
                         break;
                     }
