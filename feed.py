@@ -10,6 +10,9 @@ from scrapy.selector import Selector
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
 
+import w3lib.url
+import w3lib.html
+
 from lxml import etree
 
 from feedgenerator import Rss201rev2Feed, Enclosure
@@ -46,9 +49,9 @@ def element_to_string(element):
         s.append(element.tail)
     return ''.join(s)
 
-def _build_link(doclink, link):
-    # todo
-    return link
+def _build_link(html, doc_url, url):
+    base_url = w3lib.html.get_base_url(html, doc_url)
+    return w3lib.url.urljoin_rfc(base_url, url)
 
 def _buildFeed(response, feed_config):
     tree = response.selector._root.getroottree()
@@ -57,6 +60,7 @@ def _buildFeed(response, feed_config):
     items = []
     for node in tree.xpath(feed_config['xpath']):
         item = {}
+        title_link = None
         for field_name in ['title', 'description']:
             if field_name in feed_config['fields']:
                 element = node.xpath(feed_config['fields'][field_name])
@@ -66,10 +70,10 @@ def _buildFeed(response, feed_config):
                     if field_name == 'title':
                         anchor = element[0].xpath('ancestor-or-self::node()[name()="a"]')
                         if anchor and anchor[0].get('href'):
-                            item['title_link'] = _build_link(feed_config['uri'], anchor[0].get('href'))
-                            
-                            
+                            title_link = _build_link(response.body_as_unicode(), feed_config['uri'], anchor[0].get('href'))
+                  
         if len(item) == len(feed_config['fields']): # all fields are required
+            item['title_link'] = title_link
             items.append(item)
 
     #build feed
