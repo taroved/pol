@@ -1,8 +1,9 @@
-== Installation of development server
+## Installation of development server for Ubuntu and Debian
 
 Install required packages
-
+```
 sudo apt-get install python-minimal libmysqlclient-dev libxml2-dev libxslt-dev python-dev libffi-dev gcc libssl-dev gettext
+```
 
 Install pip
 ```
@@ -55,7 +56,7 @@ Create django config
 cp pol/frontend/frontend/settings.py.example pol/frontend/frontend/settings.py
 ```
 
-== Run servers
+## Run servers
 
 Run downloader server
 ```
@@ -70,3 +71,4 @@ pushd pol/frontend
 python manage.py runserver
 popd
 ```
+
