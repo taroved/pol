@@ -162,5 +162,5 @@ PIPELINE_JS = {
     }
 }
 
-DOWNLOADER_PAGE_URL = 'http://politepol.com/downloader?url='
-FEED_PAGE_URL = 'http://politepol.com/feed/'
+DOWNLOADER_PAGE_URL = '/downloader?url='
+FEED_PAGE_URL = '/feed/'

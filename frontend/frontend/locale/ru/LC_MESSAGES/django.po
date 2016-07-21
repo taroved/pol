@@ -37,7 +37,7 @@ msgstr "Лента готова!"
 
 #: templates/frontend/preview.html:19
 msgid "subscribe.your_feed"
-msgstr "Ваша лента:"
+msgstr "Ваша лента"
 
 #: templates/frontend/preview.html:26
 msgid "subscribe.loading"
