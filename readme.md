@@ -80,3 +80,7 @@ python manage.py runserver
 popd
 ```
 
+
+## License
+
+MIT
