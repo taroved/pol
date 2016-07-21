@@ -50,6 +50,7 @@ pushd pol/frontend
 python manage.py migrate
 python manage.py loaddata fields.json
 popd
+```
 
 Create django config
 ```
