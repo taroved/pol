@@ -1,4 +1,4 @@
-# [PolitePol.com] (http://politepol.com "RSS Feed Generator")
+[PolitePol.com] (http://politepol.com "RSS Feed Generator")
 # RSS feed generator website with user friendly interface
 
 ![PolitePol.com](frontend/frontend/static/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePol.com")
