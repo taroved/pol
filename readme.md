@@ -1,3 +1,10 @@
+# [PolitePol.com] (http://politepol.com "RSS Feed Generator")
+# RSS feed generator website with user friendly interface
+
+![PolitePol.com](frontend/frontend/static/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePol.com")
+
+This is source code of RSS feed generator website with user friendly interface.
+
 ## Installation of development server for Ubuntu and Debian
 
 Install required packages
