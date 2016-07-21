@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-16 17:13-0700\n"
+"POT-Creation-Date: 2016-07-21 14:05-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,15 +19,23 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: templates/base.html:57 templates/frontend/index.html:8
+#: templates/base.html:91
+msgid "made_by"
+msgstr "Сделал"
+
+#: templates/base.html:91
+msgid "made_name"
+msgstr "Александр Нестеренко"
+
+#: templates/frontend/index.html:6 templates/frontend/index.html.py:12
 msgid "brand"
 msgstr "Polite Pol"
 
-#: templates/frontend/index.html:10
+#: templates/frontend/index.html:14
 msgid "hello"
 msgstr "Создай новостную ленту сам!"
 
-#: templates/frontend/index.html:21
+#: templates/frontend/index.html:25
 msgid "go"
 msgstr "Поехали!"
 
@@ -47,28 +55,28 @@ msgstr "Загрузка..."
 msgid "subscribe.preview"
 msgstr "Предпросмотр"
 
-#: templates/frontend/setup.html:8
+#: templates/frontend/setup.html:9
 msgid "setup.you_are_creating_feed_with"
 msgstr "Вы создаете ленту содержащую"
 
-#: templates/frontend/setup.html:9
+#: templates/frontend/setup.html:10
 msgid "setup.help"
 msgstr ""
 "Нажмите на кнопку и переместите курсор на документ внизу и выберите нужный "
 "блок"
 
-#: templates/frontend/setup.html:10
+#: templates/frontend/setup.html:11
 msgid "setup.title"
 msgstr "Название"
 
-#: templates/frontend/setup.html:10
+#: templates/frontend/setup.html:11
 msgid "setup.and"
 msgstr "и"
 
-#: templates/frontend/setup.html:11
+#: templates/frontend/setup.html:12
 msgid "setup.description"
 msgstr "Описание"
 
-#: templates/frontend/setup.html:12
+#: templates/frontend/setup.html:13
 msgid "setup.create"
 msgstr "Создать"

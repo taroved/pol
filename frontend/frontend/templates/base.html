@@ -61,7 +61,6 @@
 
             <li>{% if LANGUAGE_CODE == 'en' %} <a href="/ru/" class="lang"><span class="lang">Русский</span></a> {% else %} <span class="lang">Русский</span> {% endif %}
             <li class="divider-vertical"></li>
-            <!--%= render 'devise/menu/registration_items' %-->
             <!--%= render 'devise/menu/login_items' %-->
           </ul>
         </div>
@@ -77,11 +76,7 @@
       {% block side_menu %}{% endblock %}
     {% endif %}
     <div class="<%= (user_signed_in? && content_for?(:side_menu)) ? 'span9' : 'span12' %>">
-
       {% block content %}{% endblock %}
-      <!--p class="notice"><%#= notice %></p-->
-
-      <!--p class="alert"><%#= alert %></p-->
     </div>
   </div>
   <!--/row-->
@@ -90,11 +85,10 @@
 <!-- /container -->
   <div class="push"></div>
 </div>
-  <!--%= content_for?(:after_content) ? yield(:after_content) : ''%-->
 </div>
 <div id="footer">
   <div class="container">
-    <p class="credit">&copy; PolitePol.com 2015</p>
+    <p class="credit">{% trans 'made_by' %} <a href="https://github.com/taroved" target="_blank">{% trans 'made_name' %}</a></p>
   </div>
 </div>
 </body>
