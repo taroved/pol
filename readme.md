@@ -25,11 +25,11 @@ Install pip packages
 sudo pip install -r pol/requirements.txt
 ```
 
-Install less and 
+Install less and yuglify
 ```
 sudo apt-get install nodejs npm
 sudo npm install -g less@2.7.1
-sudo npm install -g yuglify@0.1.4
+sudo npm -g install yuglify@0.1.4
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 ```
 
