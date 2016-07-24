@@ -17,6 +17,9 @@ import re
 
 from feed import startFeedRequest
 
+from settings import DOWNLOADER_USER_AGENT
+
+
 def getPageFactory(url, contextFactory=None, *args, **kwargs):
     """
     Download a web page as a string.
@@ -96,14 +99,14 @@ def downloadError(error, request=None, page_factory=None):
 class Downloader(resource.Resource):
     isLeaf = True
 
-    feed_regexp = re.compile('^/feed/(\d+)$')
+    feed_regexp = re.compile('^/feed1?/(\d+)$')
 
     def startRequest(self, request, url):
         page_factory = getPageFactory(url,
                 headers={
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, sdch',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
+                    'User-Agent': DOWNLOADER_USER_AGENT
                     },
                 redirectLimit=5,
                 timeout=10

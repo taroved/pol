@@ -28,7 +28,7 @@
   <script type="text/javascript">
       function tryGetFeed() {
           $.getFeed({
-              url: '{{ feed_url }}',
+              url: '{{ feed1_url }}',
               success: function (feed) {
                   if ('items' in feed) {
                       $('#preview').empty()

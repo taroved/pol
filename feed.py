@@ -19,7 +19,7 @@ from feedgenerator import Rss201rev2Feed, Enclosure
 import datetime
 
 import MySQLdb
-from settings import DATABASES
+from settings import DATABASES, DOWNLOADER_USER_AGENT
 
 
 def _getPageFactory(url, contextFactory=None, *args, **kwargs):
@@ -137,7 +137,7 @@ def startFeedRequest(request, feed_id):
                 headers={
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Accept-Encoding': 'gzip, deflate, sdch',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
+                    'User-Agent': DOWNLOADER_USER_AGENT
                     },
                 redirectLimit=5,
                 timeout=10
