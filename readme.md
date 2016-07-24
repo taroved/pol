@@ -25,17 +25,18 @@ Install pip packages
 sudo pip install -r pol/requirements.txt
 ```
 
-Install less
+Install less and 
 ```
 sudo apt-get install nodejs npm
-sudo npm install -g less
+sudo npm install -g less@2.7.1
+sudo npm install -g yuglify@0.1.4
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 ```
 
 Install sass
 ```
 sudo apt-get install ruby
-sudo su -c "gem install sass"
+sudo su -c "gem install sass -v 3.4.22"
 ```
 
 Install and setup nginx
@@ -51,17 +52,17 @@ sudo apt-get install mysql-server
 mysql -uroot -ptoor -e 'CREATE DATABASE pol DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
 ```
 
+Create django config
+```
+cp pol/frontend/frontend/settings.py.example pol/frontend/frontend/settings.py
+```
+
 Initialise database
 ```
 pushd pol/frontend
 python manage.py migrate
 python manage.py loaddata fields.json
 popd
-```
-
-Create django config
-```
-cp pol/frontend/frontend/settings.py.example pol/frontend/frontend/settings.py
 ```
 
 ## Run servers
