@@ -22,7 +22,7 @@ popd
 
 Install pip packages
 ```
-sudo pip install -r requirements.txt
+sudo pip install -r pol/requirements.txt
 ```
 
 Install less
