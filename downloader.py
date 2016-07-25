@@ -1,8 +1,10 @@
 import json
+import time, sys
+from datetime import datetime
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
-from twisted.web.client import HTTPClientFactory, _makeGetterFactory 
+from twisted.web.client import HTTPClientFactory, _makeGetterFactory
 from twisted.web.server import NOT_DONE_YET
 
 from scrapy.http.response.text import TextResponse
@@ -17,8 +19,23 @@ import re
 
 from feed import startFeedRequest
 
-from settings import DOWNLOADER_USER_AGENT
+from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG
 
+
+if FEED_REQUEST_PERIOD_LIMIT:
+    import redis
+
+def check_feed_request_time_limit(url):
+    if FEED_REQUEST_PERIOD_LIMIT:
+        r = redis.StrictRedis(host='localhost', port=6379, db=0)
+        previous_timestamp = int(r.get(url))
+        if previous_timestamp:
+            time_passed = int(time.time()) - previous_timestamp
+            if time_passed <= FEED_REQUEST_PERIOD_LIMIT:
+                # time left to wait
+                return FEED_REQUEST_PERIOD_LIMIT - time_passed
+        r.set(url, int(time.time()))
+    return 0
 
 def getPageFactory(url, contextFactory=None, *args, **kwargs):
     """
@@ -92,14 +109,20 @@ def downloadDone(response_str, request=None, page_factory=None, url=None):
     request.finish()
 
 def downloadError(error, request=None, page_factory=None):
-    request.write('Downloader error: ' + error.value)
+    if DEBUG:
+        request.write('Downloader error: ' + error.getErrorMessage())
+        request.write('Traceback: ' + error.getTraceback())
+    else:
+        request.write('Something wrong')
+        sys.stderr.write(datetime.datetime.now())
+        sys.stderr.write('\n'.join('Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()))
     request.finish()
 
 
 class Downloader(resource.Resource):
     isLeaf = True
 
-    feed_regexp = re.compile('^/feed1?/(\d+)$')
+    feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
     def startRequest(self, request, url):
         page_factory = getPageFactory(url,
@@ -126,16 +149,23 @@ class Downloader(resource.Resource):
         '''
         Render page for frontend or RSS feed
         '''
-        if 'url' in request.args:
+        if 'url' in request.args: # page for frontend
             url = request.args['url'][0]
 
             self.startRequest(request, url)
             return NOT_DONE_YET
-        elif self.feed_regexp.match(request.uri) is not None:
+        elif self.feed_regexp.match(request.uri) is not None: # feed
             feed_id = self.feed_regexp.match(request.uri).groups()[0]
-            startFeedRequest(request, feed_id)
-            return NOT_DONE_YET
-        else:
+            
+            time_left = check_feed_request_time_limit(request.uri)
+            if time_left:
+                request.setResponseCode(429)
+                request.setHeader('Retry-After', str(time_left) + ' seconds')
+                return 'Too Many Requests'
+            else:
+                startFeedRequest(request, feed_id)
+                return NOT_DONE_YET
+        else: # neither page and feed
             return 'Url is required'
 
 

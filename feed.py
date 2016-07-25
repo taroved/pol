@@ -108,8 +108,13 @@ def _downloadDone(response_str, request=None, page_factory=None, feed_config=Non
     request.finish()
 
 def _downloadError(error, request=None, page_factory=None):
-    request.write('Downloader error: ' + error.getErrorMessage())
-    request.write('Traceback: ' + error.getTraceback())
+    if DEBUG:
+        request.write('Downloader error: ' + error.getErrorMessage())
+        request.write('Traceback: ' + error.getTraceback())
+    else:
+        request.write('Something wrong')
+        sys.stderr.write(datetime.datetime.now())
+        sys.stderr.write('\n'.join('Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()))
     request.finish()
 
 def startFeedRequest(request, feed_id):
