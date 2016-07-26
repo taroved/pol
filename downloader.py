@@ -28,8 +28,9 @@ if FEED_REQUEST_PERIOD_LIMIT:
 def check_feed_request_time_limit(url):
     if FEED_REQUEST_PERIOD_LIMIT:
         r = redis.StrictRedis(host='localhost', port=6379, db=0)
-        previous_timestamp = int(r.get(url))
+        previous_timestamp = r.get(url)
         if previous_timestamp:
+            previous_timestamp = int(r.get(url))
             time_passed = int(time.time()) - previous_timestamp
             if time_passed <= FEED_REQUEST_PERIOD_LIMIT:
                 # time left to wait
