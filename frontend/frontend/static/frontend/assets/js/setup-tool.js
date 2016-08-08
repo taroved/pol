@@ -19,11 +19,8 @@ Style.take = function(element) {
    return new Style($(element).css('background'), $(element).css('color'));
 }
 
+// marker styles storage
 var styles = {
-    'title_manual': new Style('#006dcc', 'white'),
-    'title_calculated': new Style('#78A4F9', 'white'),
-    'description_manual': new Style('#2f96b4', 'white'),
-    'description_calculated': new Style('#5bc0de', 'white'),
     // selection hove style
     'hover': new Style('#FFEB0D', 'black')
 };
@@ -115,17 +112,26 @@ var STATE_INACTIVE = 1,
     STATE_SELECTING = 2,
     STATE_SELECTED = 3;
 
+var CONTENT_TYPE_TEXT = 1,
+    CONTENT_TYPE_HTML = 2,
+    CONTENT_TYPE_LINK = 3,
+    CONTENT_TYPE_IMAGE = 4;
+
 var currentItem = null;
 /**
 * Item class. Describe all logic related to separate item
 */
-function Item(name, button) {
+function Item(name, button, active_button_cls, marker_styles, required, content_type) {
 
     this.name = name;
     this.button = button;
     this.manual_marker = null;
     this._markers = null;
     this.state = STATE_INACTIVE;
+    this.active_button_cls;
+    this.marker_styles = marker_styles;
+    this.required = required;
+    this.content_type = content_type;
 
     var that = this;
     function _button_click() {
@@ -159,11 +165,11 @@ function Item(name, button) {
         switch (that.state) {
             case STATE_INACTIVE:
                 $(button).css('color', '#333');
-                $(button).removeClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
+                $(button).removeClass(active_button_cls);
                 break;
             case STATE_SELECTING:
                 $(button).css('color', '#FFEB0D');
-                $(button).addClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
+                $(button).addClass(active_button_cls);
                 break;
             case STATE_SELECTED:
                 $(button).css('color', 'white');
@@ -225,22 +231,28 @@ function Item(name, button) {
             marker.remove();
         });
     }
+
+    this._manage_styles = function(add) {
+        if (add) {
+            styles[that.name + '_manual'] = that.marker_styles['manual'];
+            styles[that.name + '_calculated'] = that.marker_styles['calculated'];
+        }
+        else {
+            delete styles[that.name + '_manual'];
+            delete styles[that.name + '_calculated'];
+        }
+    };
+    this._manage_styles(true);
+
+    this.edit = function() {
+        
+    }
+    this.remove = function() {
+        this._manage_styles(false);
+    };
 }
 
 var items = {};
-
-function blinkButton(element, times) {
-    times *= 2;
-    var show = true;
-    function toggle() {
-        element.tooltip(show ? 'show' : 'hide');
-        times --;
-        show = !show;
-        if (times)
-            setTimeout(toggle, 1000);
-    }
-    toggle();
-}
 
 ////
 // +++ calculation of all selections on server side
@@ -478,8 +490,22 @@ function loader(show) {
 $(document).ready(function(){
     loader(true);
     
-    items['title'] = new Item('title', $('#st-title')[0]);
-    items['description'] = new Item('description', $('#st-description')[0]);
+    items['title'] = new Item('title', $('#st-title')[0], 'btn-primary',
+        {'manual': new Style('#006dcc', 'white'),
+         'calculated': new Style('#78A4F9', 'white')},
+        true, CONTENT_TYPE_TEXT);
+    items['link'] = new Item('link', $('#st-link')[0], 'btn-primary',
+        {'manual': new Style('#006dcc', 'white'),
+         'calculated': new Style('#78A4F9', 'white')},
+        true, CONTENT_TYPE_LINK);
+    items['description'] = new Item('description', $('#st-description')[0], 'btn-info',
+        {'manual': new Style('#2f96b4', 'white'),
+         'calculated': new Style('#5bc0de', 'white')},
+        true, CONTENT_TYPE_TEXT);
+    items['image'] = new Item('image', $('#st-image')[0], 'btn-primary',
+        {'manual': new Style('#006dcc', 'white'),
+         'calculated': new Style('#78A4F9', 'white')},
+        false, CONTENT_TYPE_IMAGE);
    
     $('#create').click(onCreateButtonClick);
  
