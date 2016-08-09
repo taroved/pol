@@ -121,7 +121,7 @@ var currentItem = null;
 /**
 * Item class. Describe all logic related to separate item
 */
-function Item(name, button, active_button_cls, marker_styles, required, content_type) {
+function Item(name, button, active_button_cls, marker_styles, required, content_type, removable) {
 
     this.name = name;
     this.button = button;
@@ -132,6 +132,7 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
     this.marker_styles = marker_styles;
     this.required = required;
     this.content_type = content_type;
+    this.removable = typeof(removable) == 'undefined' ? false : removable;
 
     var that = this;
     function _button_click() {
@@ -244,12 +245,41 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
     };
     this._manage_styles(true);
 
-    this.edit = function() {
-        
+    this.field_edit = function() {
+        $('#field-name').val(that.name).prop('readonly', !that.removable);
+        $('#field-required').prop('checked', that.required);
+        $('[name="fieldContentType"][value="'+ that.content_type +'"]').prop('checked', true);
+        $('#field-modal').modal();
+        $('#field-save-changes').unbind('click').click(that.field_save);;
     }
-    this.remove = function() {
-        this._manage_styles(false);
+
+    this.field_save = function() {
+        if (that.removable)
+            that.name = $('#field-name').val();
+        that.required = $('#field-required').is(':checked');
+        that.content_type = $('[name="fieldContentType"]:checked').val();
+        if (!that.required) {
+            // validate required
+            var required_count = 0;
+            for (var name in items) {
+                if (items[name].required)
+                    required_count ++;
+            }
+            if (required_count == 0) {
+                alert('Please set at least one field as required');
+                $('#field-required').prop('checked', true);
+                return;
+            }
+        }
+            
+        $('#field-modal').modal('hide');
+    }
+
+    this.field_remove = function() {
+        that._manage_styles(false);
     };
+    // add button events
+    $('#st-'+ this.name +'-edit').click(this.field_edit);
 }
 
 var items = {};
@@ -494,17 +524,17 @@ $(document).ready(function(){
         {'manual': new Style('#006dcc', 'white'),
          'calculated': new Style('#78A4F9', 'white')},
         true, CONTENT_TYPE_TEXT);
-    items['link'] = new Item('link', $('#st-link')[0], 'btn-primary',
-        {'manual': new Style('#006dcc', 'white'),
-         'calculated': new Style('#78A4F9', 'white')},
+    items['link'] = new Item('link', $('#st-link')[0], 'btn-success',
+        {'manual': new Style('#387038', 'white'),
+         'calculated': new Style('#62c462', 'white')},
         true, CONTENT_TYPE_LINK);
     items['description'] = new Item('description', $('#st-description')[0], 'btn-info',
         {'manual': new Style('#2f96b4', 'white'),
          'calculated': new Style('#5bc0de', 'white')},
         true, CONTENT_TYPE_TEXT);
-    items['image'] = new Item('image', $('#st-image')[0], 'btn-primary',
-        {'manual': new Style('#006dcc', 'white'),
-         'calculated': new Style('#78A4F9', 'white')},
+    items['image'] = new Item('image', $('#st-image')[0], 'btn-danger',
+        {'manual': new Style('#bd362f', 'white'),
+         'calculated': new Style('#ee5f5b', 'white')},
         false, CONTENT_TYPE_IMAGE);
    
     $('#create').click(onCreateButtonClick);

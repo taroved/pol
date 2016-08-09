@@ -9,12 +9,13 @@
         {% trans 'setup.you_are_creating_feed_with' %} <br/> 
         <button id="st-title" class="btn btn-large has-tooltip" title="{% trans 'setup.help' %}"
             data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button>
-        <a href="javascript::void(0)"><i id="st-title-edit" class="icon-edit"></i></a>
+        <a id="st-title-edit" href="javascript:void(0)"><i class="icon-edit"></i></a>
         <button id="st-link" class="btn btn-large">{% trans 'setup.link' %}</button>
-        <a href="javascript::void(0)"><i id="st-link-edit" class="icon-edit"></i></a>
-        <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button> <a href="javascript::void(0)"><i id="st-description-edit" class="icon-edit"></i></a>
+        <a id="st-link-edit" href="javascript:void(0)"><i class="icon-edit"></i></a>
+        <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button>
+        <a id="st-description-edit" href="javascript:void(0)"><i class="icon-edit"></i></a>
         <button id="st-image" class="btn btn-large">{% trans 'setup.image' %}</button>
-        <a href="javascript::void(0)"><i id="st-image-edit" class="icon-edit"></i></a>
+        <a id="st-image-edit" href="javascript:void(0)"><i class="icon-edit"></i></a>
         <button id="add-field" class="btn" onclick="$('#field-modal').modal()"><i class="icon-plus"></i></button>
         <button id="create" class="btn btn-large btn-primary disabled" style="padding-right: 13px; float:right" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </h2>
@@ -102,7 +103,7 @@
 	</div>
 	<div class="modal-footer">
 		<a href="javascript:void(0)" onclick="$('#field-modal').modal('hide')" class="btn">Close</a>
-		<a href="#" class="btn btn-primary">Save changes</a>
+		<a href="javascript:void(0)" id="field-save-changes" class="btn btn-primary">Save changes</a>
 	</div>
 </div>
 {% endblock %}
