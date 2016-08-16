@@ -153,10 +153,11 @@ PIPELINE_JS = {
         'source_filenames': (
           'frontend/assets/js/jquery.js',
           'frontend/assets/js/jquery.browser.js',
+          'frontend/assets/js/jquery.jfeed.js',
           'frontend/assets/js/bootstrap.js',
           'frontend/assets/js/bootstrap_and_overrides.js',
+          'frontend/assets/js/xregexp-all.js',
           'frontend/assets/js/setup-tool.js',
-          'frontend/assets/js/jquery.jfeed.js',
         ),
         'output_filename': 'frontend/js/app.js',
     }

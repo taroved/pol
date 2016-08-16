@@ -479,6 +479,44 @@ function onCreateButtonClick() {
         });
 }
 
+function onAddFieldButtonClick() {
+    $('#field-name').val('').prop('readonly', false);
+    $('#field-required').prop('checked', true);
+    $('[name="fieldContentType"][value="1"]').prop('checked', true);
+    $('#field-modal').modal();
+    $('#field-save-changes').unbind('click').click(createField);
+}
+
+function createField() {
+    var name = $('#field-name').val(),
+        required = $('#field-required').is(':checked'),
+        content_type = $('[name="fieldContentType"]:checked').val();
+
+    // normalize name
+    name = name.replace(' ', '_');
+    var regex = XRegExp("[^\\pL_]+");
+    name = XRegExp.replace(name, regex, "");
+    $('#field-name').val(name);
+
+    if (!name.length)
+        alert('Name can not be empty');
+    else if (name in items)
+        alert('The name is already in use');
+    else {
+        // create button html
+        $('[id^="st-"][id$="-edit"]').last()
+            .after('\n<button id="st-'+ name +'" class="btn btn-large">'+ name +'</button>\n'+
+                   '<a id="st-'+ name +'-edit" href="javascript:void(0)"><i class="icon-edit"></i></a>\n');
+
+        items[name] = new Item(name, $('#st-'+ name)[0], 'btn-inverse',
+            {'manual': new Style('#333', 'white'),
+             'calculated': new Style('#555', 'white')},
+            required, content_type);
+        
+        $('#field-modal').modal('hide');
+    }
+}
+
 function createFeed() {
     var htmlJson = buildJsonFromHtml($('iframe').contents());
 
@@ -537,11 +575,20 @@ $(document).ready(function(){
          'calculated': new Style('#ee5f5b', 'white')},
         false, CONTENT_TYPE_IMAGE);
    
+    $('#add-field').click(onAddFieldButtonClick);
+    
     $('#create').click(onCreateButtonClick);
  
     $('iframe').load(function(){
+        var contents = null;
+        try {
+            contents = $('iframe').contents();
+        }
+        catch (err) {
+            contents = $('iframe').contents();
+        }
         // init id2el
-        $('iframe').contents().find('*[tag-id]').each(function(){
+        contents.find('*[tag-id]').each(function(){
             id2el[$(this).attr('tag-id')] = this;
         });
         // attach iframe elements event handlers
