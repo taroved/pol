@@ -91,12 +91,12 @@ def _find_tag(html_json, tag, path):
         tag = next
     return tag
 
-def get_selection_tag_ids(item_tag_ids, html_json):
+def get_selection_tag_ids(field_tag_id_required, html_json):
     parent_stacks = {}
 
     # buld parent stacks for every item name
-    for name in item_tag_ids:
-        tag_id = item_tag_ids[name]
+    for name in field_tag_id_required:
+        tag_id = field_tag_id_required[name][0]
         parent_stacks[name] = _build_parent_stack(html_json, tag_id)
     
     # get fork
@@ -123,7 +123,7 @@ def get_selection_tag_ids(item_tag_ids, html_json):
             tag = _find_tag(html_json, fork_tag, selection_pathes[name])
             if tag is not None:
                 ids[name] = tag[I_ATTRS]['tag-id']
-            else:
+            elif field_tag_id_required[name][1]:
                 ids = None
                 break
         if ids is not None:

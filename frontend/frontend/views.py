@@ -63,19 +63,23 @@ def _validate_html(html):
 def setup_get_selected_ids(request):
     if request.method == 'POST':
         obj = json.loads(request.body)
-        if 'html' not in obj or 'names' not in obj:
-            return HttpResponseBadRequest('"html" and "names" parameters are required')
+        if 'html' not in obj or 'fields' not in obj:
+            return HttpResponseBadRequest('"html" and "fields" parameters are required')
         html_json = obj['html']
-        item_names = obj['names']
+        fields_settings = obj['fields']
+
+        #todo: validate required
 
         if not _validate_html(html_json):
             return HttpResponseBadRequest('html is invalid')
 
-        return HttpResponse(json.dumps(get_selection_tag_ids(item_names, html_json)))
+        return HttpResponse(json.dumps(get_selection_tag_ids(fields_settings, html_json)))
 
-def _create_feed(url, xpathes):
+def _create_feed(url, xpathes, fields_required):
     feed_xpath = xpathes[0]
     item_xpathes = xpathes[1]
+
+    predefined_fields = {1:'title', 2:'description', 3:'link', 4:'image'}
 
     feed = Feed(uri=url, xpath=feed_xpath)
     feed.save()
@@ -94,14 +98,19 @@ def setup_create_feed(request):
         if 'html' not in obj or 'names' not in obj or 'url' not in obj:
             return HttpResponseBadRequest('"html", "names" and "url" parameters are required')
         html_json = obj['html']
-        item_names = obj['names']
+        fields_settings = obj['fields']
         url = obj['url']
 
         if not _validate_html(html_json):
             return HttpResponseBadRequest('html is invalid')
+
+        field_tag_ids = {name:v[0] for name, v in fields_settings.iteritems()}
+
+        xpathes = build_xpathes_for_items(field_tag_ids, html_json)
+
+        fields_required = {name:v[1] for name, v in fields_settings.iteritems()}
         
-        xpathes = build_xpathes_for_items(item_names, html_json)
-        feed_id = _create_feed(url, xpathes)
+        feed_id = _create_feed(url, xpathes, fields_required)
  
         return HttpResponse(reverse('preview', args=(feed_id,)))
 

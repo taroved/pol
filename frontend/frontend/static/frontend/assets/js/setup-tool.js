@@ -139,6 +139,10 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
         switch (that.state) {
             case STATE_INACTIVE:
                 that.state = STATE_SELECTING;
+                if (currentItem && currentItem.state == STATE_SELECTING) {
+                    currentItem.state = STATE_INACTIVE;
+                    currentItem.updateButton();
+                }
                 currentItem = that;
                 break;
             case STATE_SELECTING:
@@ -157,12 +161,12 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
                 updateSelection();
                 break;
         }
-        _update_button();
+        that.updateButton();
         updateCreateButton();
     }
     $(this.button).click(_button_click);
 
-    function _update_button(){
+    this.updateButton = function() {
         switch (that.state) {
             case STATE_INACTIVE:
                 $(button).css('color', '#333');
@@ -189,7 +193,7 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
 
         updateSelection().then(function(){
             that.state = STATE_SELECTED;
-            _update_button();
+            that.updateButton();
         });
     }
 
@@ -353,12 +357,15 @@ function requestSelection() {
     var name_ids = {};
     selected_any = gatherSelectedTagIds(name_ids);
 
-    if (selected_any)
+    if (selected_any) {
+        var fields = {};
+        for (var name in name_ids)
+            fields[name] = [name_ids[name], items[name].required];
         return new Promise(function(resolve, reject){
             $.ajax({
                 type: 'POST',
                 url: "/setup_get_selected_ids",
-                data: JSON.stringify({ html: htmlJson, names: name_ids }),
+                data: JSON.stringify({ html: htmlJson, fields: fields }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
@@ -370,6 +377,7 @@ function requestSelection() {
                 }
             });
         });
+    }
     else {
         return new Promise(function(resolve, reject){
             setTimeout(function(){ resolve({}); }, 0);
@@ -471,7 +479,6 @@ function onCreateButtonClick() {
         loader(true);
         createFeed().then(function(feed_page_url){
             window.location.href = feed_page_url;
-            loader(false);
         }, function(error){
             //unfreez UI
             loader(false);
@@ -524,7 +531,10 @@ function createFeed() {
     var name_ids = {};
     selected_any = gatherSelectedTagIds(name_ids);
 
-    if (selected_any)
+    if (selected_any) {
+        var fields = {};
+        for (var name in name_ids)
+            fields[name] = [name_ids[name], items[name].required];
         return new Promise(function(resolve, reject){
             $.ajax({
                 type: 'POST',
@@ -540,6 +550,7 @@ function createFeed() {
                 }
             });
         });
+    }
     else {
         return new Promise(function(resolve, reject){
             setTimeout(function(){ resolve({}); }, 0);
