@@ -194,6 +194,7 @@ function Item(name, button, active_button_cls, marker_styles, required, content_
         updateSelection().then(function(){
             that.state = STATE_SELECTED;
             that.updateButton();
+            updateCreateButton();
         });
     }
 
@@ -474,7 +475,7 @@ function updateCreateButton() {
 
 function onCreateButtonClick() {
     var active = !$('#create').hasClass('disabled');
-    if (active)
+    if (active) {
         //freeze UI
         loader(true);
         createFeed().then(function(feed_page_url){
@@ -484,6 +485,7 @@ function onCreateButtonClick() {
             loader(false);
             console.log('Server error: '+ error);
         });
+    }
 }
 
 function onAddFieldButtonClick() {
@@ -534,12 +536,12 @@ function createFeed() {
     if (selected_any) {
         var fields = {};
         for (var name in name_ids)
-            fields[name] = [name_ids[name], items[name].required];
+            fields[name] = [name_ids[name], items[name].content_type, items[name].required];
         return new Promise(function(resolve, reject){
             $.ajax({
                 type: 'POST',
                 url: "/setup_create_feed",
-                data: JSON.stringify({ html: htmlJson, names: name_ids, url:$('#create').data('page-url') }),
+                data: JSON.stringify({ html: htmlJson, fields: fields, url:$('#create').data('page-url') }),
                 contentType: "application/json; charset=utf-8",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
                 success: function(data){

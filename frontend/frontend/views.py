@@ -75,19 +75,24 @@ def setup_get_selected_ids(request):
 
         return HttpResponse(json.dumps(get_selection_tag_ids(fields_settings, html_json)))
 
-def _create_feed(url, xpathes, fields_required):
+def _create_feed(url, xpathes, fields_settings):
     feed_xpath = xpathes[0]
-    item_xpathes = xpathes[1]
+    field_xpathes = xpathes[1]
 
-    predefined_fields = {1:'title', 2:'description', 3:'link', 4:'image'}
+    predefined_fields = {'title':1, 'description':2, 'link':3, 'image':4}
 
     feed = Feed(uri=url, xpath=feed_xpath)
     feed.save()
-
-    fields = Field.objects.all()
-    
-    for field in fields:
-        ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
+    for name, field_xpath in field_xpathes.iteritems():
+        if name in predefined_fields:
+            ff_id = predefined_fields[name]
+        else:
+            field = Field(name=name)
+            field.save()
+            ff_id = field.id
+        content_type = fields_settings[name][1]
+        required = fields_settings[name][2]
+        ff = FeedField(feed=feed, field_id=ff_id, xpath=field_xpath, content_type=content_type, required=required)
         ff.save()
 
     return feed.id
@@ -95,8 +100,8 @@ def _create_feed(url, xpathes, fields_required):
 def setup_create_feed(request):
     if request.method == 'POST':
         obj = json.loads(request.body)
-        if 'html' not in obj or 'names' not in obj or 'url' not in obj:
-            return HttpResponseBadRequest('"html", "names" and "url" parameters are required')
+        if 'html' not in obj or 'fields' not in obj or 'url' not in obj:
+            return HttpResponseBadRequest('"html", "fields" and "url" parameters are required')
         html_json = obj['html']
         fields_settings = obj['fields']
         url = obj['url']
@@ -108,9 +113,7 @@ def setup_create_feed(request):
 
         xpathes = build_xpathes_for_items(field_tag_ids, html_json)
 
-        fields_required = {name:v[1] for name, v in fields_settings.iteritems()}
-        
-        feed_id = _create_feed(url, xpathes, fields_required)
+        feed_id = _create_feed(url, xpathes, fields_settings)
  
         return HttpResponse(reverse('preview', args=(feed_id,)))
 
