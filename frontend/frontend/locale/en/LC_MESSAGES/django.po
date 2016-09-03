@@ -55,7 +55,7 @@ msgstr "Preview"
 
 #: templates/frontend/setup.html:9
 msgid "setup.you_are_creating_feed_with"
-msgstr ""
+msgstr "You are creating feed with"
 
 #: templates/frontend/setup.html:10
 msgid "setup.help"
