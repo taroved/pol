@@ -164,8 +164,10 @@ PIPELINE_JS = {
 }
 
 DOWNLOADER_PAGE_URL = '/downloader?url='
-FEED_PAGE_URL = '/feed/'
-FEED1_PAGE_URL = '/feed1/'
+RSS_FEED_PAGE_URL = '/rss/'
+RSS_FEED1_PAGE_URL = '/rss1/'
+XML_FEED_PAGE_URL = '/xml/'
+XML_FEED1_PAGE_URL = '/xml1/'
 DOWNLOADER_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
 # limit of seconds in which user can access separate feed
 FEED_REQUEST_PERIOD_LIMIT = 0

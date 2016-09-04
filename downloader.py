@@ -18,6 +18,7 @@ from lxml import etree
 import re
 
 from feed import startFeedRequest
+from rss import startRssRequest
 
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG
 
@@ -124,6 +125,7 @@ class Downloader(resource.Resource):
     isLeaf = True
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
+    rss_regexp = re.compile('^/rss1?/(\d{1,10})$')
 
     def startRequest(self, request, url):
         page_factory = getPageFactory(url,
@@ -165,6 +167,17 @@ class Downloader(resource.Resource):
                 return 'Too Many Requests'
             else:
                 startFeedRequest(request, feed_id)
+                return NOT_DONE_YET
+        elif self.rss_regexp.match(request.uri) is not None: # rss
+            feed_id = self.rss_regexp.match(request.uri).groups()[0]
+            
+            time_left = check_feed_request_time_limit(request.uri)
+            if time_left:
+                request.setResponseCode(429)
+                request.setHeader('Retry-After', str(time_left) + ' seconds')
+                return 'Too Many Requests'
+            else:
+                startRssRequest(request, feed_id)
                 return NOT_DONE_YET
         else: # neither page and feed
             return 'Url is required'

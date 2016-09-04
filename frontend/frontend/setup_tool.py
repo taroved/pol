@@ -128,7 +128,8 @@ def get_selection_tag_ids(field_tag_id_required, html_json):
                 break
         if ids is not None:
             for name in selection_pathes:
-                selection_ids[name].append(ids[name])
+                if name in ids:
+                    selection_ids[name].append(ids[name])
 
     return selection_ids
 

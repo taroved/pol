@@ -112,10 +112,10 @@ var STATE_INACTIVE = 1,
     STATE_SELECTING = 2,
     STATE_SELECTED = 3;
 
-var CONTENT_TYPE_TEXT = 1,
-    CONTENT_TYPE_HTML = 2,
-    CONTENT_TYPE_LINK = 3,
-    CONTENT_TYPE_IMAGE = 4;
+var CONTENT_TYPE_TEXT = 'text',
+    CONTENT_TYPE_HTML = 'html',
+    CONTENT_TYPE_LINK = 'link',
+    CONTENT_TYPE_IMAGE = 'image';
 
 var currentItem = null;
 /**
