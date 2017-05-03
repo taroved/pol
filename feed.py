@@ -14,6 +14,8 @@ import w3lib.url
 import w3lib.html
 
 from lxml import etree
+import re
+from hashlib import md5
 
 from feedgenerator import Rss201rev2Feed, Enclosure
 import datetime
@@ -21,6 +23,7 @@ import datetime
 import MySQLdb
 from settings import DATABASES, DOWNLOADER_USER_AGENT
 
+url_hash_regexp = re.compile('(#.*)?$')
 
 def _getPageFactory(url, contextFactory=None, *args, **kwargs):
     """
@@ -84,12 +87,17 @@ def _buildFeed(response, feed_config):
             "Url: " + feed_config['uri'],
         language="en",
     )
-
     for item in items:
+        title = item['title'] if 'title' in item else ''
+        desc = item['description'] if 'description' in item else ''
+        if item['title_link']: 
+            link = item['title_link']
+        else:
+            link = url_hash_regexp.sub('#' + md5((title+desc).encode('utf-8')).hexdigest(), feed_config['uri'])
         feed.add_item(
-            title=item['title'] if 'title' in item else '',  
-            link = item['title_link'] if 'title_link' in item else feed_config['uri'],
-            description=item['description'] if 'description' in item else '', 
+            title = title,
+            link = link,
+            description = desc,
             #enclosure=Enclosure(fields[4], "32000", "image/jpeg") if  4 in fields else None, #"Image"
             pubdate=datetime.datetime.now()
         )
