@@ -83,8 +83,9 @@ def _create_feed(url, xpathes):
     fields = Field.objects.all()
     
     for field in fields:
-        ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
-        ff.save()
+        if field.name in item_xpathes:
+            ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
+            ff.save()
 
     return feed.id
 
