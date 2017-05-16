@@ -188,6 +188,7 @@ function Item(name, button) {
             that.state = STATE_SELECTED;
             that.updateButton();
             updateCreateButton();
+            currentItem = null;
         });
     }
 
