@@ -159,6 +159,6 @@ def startFeedRequest(request, feed_id):
         d.addCallback(_downloadDone, request=request, page_factory=page_factory, feed_config=feed)
         d.addErrback(_downloadError, request=request, page_factory=page_factory)
     else:
-        Request.write('Feed generator error: config of feed is empty')
+        request.write('Feed generator error: config of feed is empty')
         request.finish()
     return
