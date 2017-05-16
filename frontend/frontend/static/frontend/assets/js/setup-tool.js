@@ -132,6 +132,10 @@ function Item(name, button) {
         switch (that.state) {
             case STATE_INACTIVE:
                 that.state = STATE_SELECTING;
+                if (currentItem && currentItem.state == STATE_SELECTING) {
+                    currentItem.state = STATE_INACTIVE;
+                    currentItem.updateButton();
+                }
                 currentItem = that;
                 break;
             case STATE_SELECTING:
@@ -150,12 +154,12 @@ function Item(name, button) {
                 updateSelection();
                 break;
         }
-        _update_button();
+        that.updateButton();
         updateCreateButton();
     }
     $(this.button).click(_button_click);
 
-    function _update_button(){
+    this.updateButton = function() {
         switch (that.state) {
             case STATE_INACTIVE:
                 $(button).css('color', '#333');
@@ -182,7 +186,8 @@ function Item(name, button) {
 
         updateSelection().then(function(){
             that.state = STATE_SELECTED;
-            _update_button();
+            that.updateButton();
+            updateCreateButton();
         });
     }
 
@@ -424,7 +429,7 @@ function updateCreateButton() {
 
 function onCreateButtonClick() {
     var active = !$('#create').hasClass('disabled');
-    if (active)
+    if (active) {
         //freeze UI
         loader(true);
         createFeed().then(function(feed_page_url){
@@ -435,6 +440,7 @@ function onCreateButtonClick() {
             loader(false);
             console.log('Server error: '+ error);
         });
+    }
 }
 
 function createFeed() {
