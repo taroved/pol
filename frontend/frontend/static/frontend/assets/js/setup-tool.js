@@ -435,7 +435,6 @@ function onCreateButtonClick() {
         loader(true);
         createFeed().then(function(feed_page_url){
             window.location.href = feed_page_url;
-            loader(false);
         }, function(error){
             //unfreez UI
             loader(false);
