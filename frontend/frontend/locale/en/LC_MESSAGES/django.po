@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-05-17 13:12-0700\n"
+"POT-Creation-Date: 2017-05-17 14:53-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,19 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: templates/base.html:91
+#: templates/base.html:12
+msgid "meta_desc"
+msgstr "Create RSS feed for any webpage you need. All you need is to make several mouse button clicks."
+
+#: templates/base.html:13
+msgid "meta_keywords"
+msgstr "rss feed generator, create rss, webpage to rss, html to rss, free rss generator, rss builder, create rss feed, create rss online"
+
+#: templates/base.html:92
 msgid "made_by"
 msgstr "Made by"
 
-#: templates/base.html:91
+#: templates/base.html:92
 msgid "made_name"
 msgstr "Alexandr Nesterenko"
 
