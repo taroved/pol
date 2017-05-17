@@ -2,6 +2,8 @@
 {% load staticfiles %}
 {% load i18n %}
 
+{% block title %}{% trans "index_title" %}{% endblock %}
+
 {% block logo %}
     <a href="{% url 'index' %}" class="brand">{% trans "brand" %}</a>
 {% endblock %}

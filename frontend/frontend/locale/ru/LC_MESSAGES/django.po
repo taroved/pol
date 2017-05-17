@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-21 14:05-0700\n"
+"POT-Creation-Date: 2017-05-17 13:12-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,15 +27,19 @@ msgstr "Сделал"
 msgid "made_name"
 msgstr "Александр Нестеренко"
 
-#: templates/frontend/index.html:6 templates/frontend/index.html.py:12
+#: templates/frontend/index.html:5
+msgid "index_title"
+msgstr "PolitePol.com: Создай RSS канал для любой веб-страницы"
+
+#: templates/frontend/index.html:8 templates/frontend/index.html.py:14
 msgid "brand"
 msgstr "Polite Pol"
 
-#: templates/frontend/index.html:14
+#: templates/frontend/index.html:16
 msgid "hello"
 msgstr "Создай новостную ленту сам!"
 
-#: templates/frontend/index.html:25
+#: templates/frontend/index.html:27
 msgid "go"
 msgstr "Поехали!"
 
