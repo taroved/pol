@@ -268,36 +268,8 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// generate json [tag_name, {attributes_dict}, [children]]
-
+// html2json [tag_name, {attributes_dict}, [children]]
 var iframeHtmlJson = null;
-
-function buildJsonFromHtml(doc) {
-    function tag2json(tag) {
-        if (tag.attr('tag-id')) {
-            var tagJson = [tag.prop("tagName").toLowerCase(), {'tag-id': tag.attr('tag-id')}],
-                children = [];
-            tag.children().each(function(_, t){
-                var res = tag2json($(t));
-                Array.prototype.push.apply(children, res);
-            });
-            tagJson.push(children);
-            return [ tagJson ]
-        }
-        else {
-            var tagListJson = [];
-            tag.children().each(function(_, t){
-                var res = tag2json($(t));
-                Array.prototype.push.apply(tagListJson, res);
-            });
-            return tagListJson;
-        }
-    }
-
-    if (!iframeHtmlJson)
-        iframeHtmlJson = tag2json(doc.find(':root'))[0];
-    return iframeHtmlJson;
-}
 
 function gatherSelectedTagIds(name_ids) {
     var selected_any = false;
@@ -311,8 +283,6 @@ function gatherSelectedTagIds(name_ids) {
 } 
 
 function requestSelection() {
-    var htmlJson = buildJsonFromHtml($('iframe').contents());
-
     // gather selected tag-ids
     var name_ids = {};
     selected_any = gatherSelectedTagIds(name_ids);
@@ -322,7 +292,7 @@ function requestSelection() {
             $.ajax({
                 type: 'POST',
                 url: "/setup_get_selected_ids",
-                data: JSON.stringify({ html: htmlJson, names: name_ids }),
+                data: JSON.stringify({ html: iframeHtmlJson, names: name_ids }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
@@ -444,8 +414,6 @@ function onCreateButtonClick() {
 }
 
 function createFeed() {
-    var htmlJson = buildJsonFromHtml($('iframe').contents());
-
     // gather selected tag-ids
     var name_ids = {};
     selected_any = gatherSelectedTagIds(name_ids);
@@ -455,7 +423,7 @@ function createFeed() {
             $.ajax({
                 type: 'POST',
                 url: "/setup_create_feed",
-                data: JSON.stringify({ html: htmlJson, names: name_ids, url:$('#create').data('page-url') }),
+                data: JSON.stringify({ html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }),
                 contentType: "application/json; charset=utf-8",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
                 success: function(data){
@@ -482,6 +450,10 @@ function loader(show) {
 }
 
 $(document).ready(function(){
+    // skip non setup page
+    if (!document.location.href.match('https?://[^/]+/[^/]+/setup\?.+'))
+        return;
+
     loader(true);
     
     items['title'] = new Item('title', $('#st-title')[0]);
@@ -497,6 +469,7 @@ $(document).ready(function(){
         // attach iframe elements event handlers
         $('iframe').contents().on('click', '*[tag-id]', onIframeElementClick);
         $('iframe').contents().on('mouseenter mouseleave', '*[tag-id]', onIframeElementHover);
+        iframeHtmlJson = $('iframe')[0].contentWindow.html2json;
         loader(false);
     });
 

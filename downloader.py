@@ -51,6 +51,12 @@ def getPageFactory(url, contextFactory=None, *args, **kwargs):
         contextFactory=contextFactory,
         *args, **kwargs)
 
+def html2json(el):
+    return [
+        el.tag,
+        {"tag-id": el.attrib["tag-id"]},
+        [html2json(e) for e in el.getchildren() if type(e) == etree._Element]
+    ]
 
 def setBaseAndRemoveScriptsAndMore(response, url):
     response.selector.remove_namespaces()
@@ -71,15 +77,16 @@ def setBaseAndRemoveScriptsAndMore(response, url):
 
     i = 1
     for bad in tree.xpath("//*"):
-        # set tag-id attribute
-        bad.attrib['tag-id'] = str(i)
-        i += 1
-        
         # remove scripts
         if bad.tag == 'script':
             bad.getparent().remove(bad)
+        else:
+            # set tag-id attribute
+            bad.attrib['tag-id'] = str(i)
+            i += 1
+
         # sanitize anchors
-        elif bad.tag == 'a' and 'href' in bad.attrib:
+        if bad.tag == 'a' and 'href' in bad.attrib:
             bad.attrib['origin-href'] = bad.attrib['href']
             del bad.attrib['href']
 
@@ -91,6 +98,14 @@ def setBaseAndRemoveScriptsAndMore(response, url):
         # sanitize forms
         if bad.tag == 'form':
             bad.attrib['onsubmit'] = "return false"
+    
+    body = tree.xpath("//body")
+    if body:
+        # append html2json js object
+        jsobj = html2json(tree.getroot())
+        script = etree.Element('script', {'type': 'text/javascript'})
+        script.text = 'var html2json = ' + json.dumps(jsobj) + ';'
+        body[0].append(script)
     
     return etree.tostring(tree, method='html')
 
