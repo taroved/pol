@@ -53,6 +53,8 @@ def getPageFactory(url, contextFactory=None, *args, **kwargs):
 
 
 def setBaseAndRemoveScriptsAndMore(response, url):
+    response.selector.remove_namespaces()
+    
     tree = response.selector._root.getroottree()
     
     # set base url to html document

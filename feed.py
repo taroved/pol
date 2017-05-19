@@ -57,6 +57,8 @@ def _build_link(html, doc_url, url):
     return w3lib.url.urljoin_rfc(base_url, url)
 
 def _buildFeed(response, feed_config):
+    response.selector.remove_namespaces()
+
     tree = response.selector._root.getroottree()
 
     # get data from html 
