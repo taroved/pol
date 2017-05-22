@@ -11,7 +11,7 @@ def _get_fork_stack(stacks):
     for i in range(0, len(first)):
         tag = first[i]
         for name in stacks:
-            if tag != stacks[name][i]:
+            if i >= len(stacks[name]) or tag != stacks[name][i]:
                 return stacks[name][:i]
     return first
                 

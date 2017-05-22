@@ -94,17 +94,15 @@ var styleTool = {
 /**
 * Marker class. Combination of element, element style, and element click handler.
 */
-function Marker(element, style_name, click_handler) {
+function Marker(element, style_name) {
     this.element = element;
     this.style_name = style_name;
-    this.click_event = $(this.element).bind('click', click_handler);
 
     styleTool.styleMarker(this);
 
     var m = this;
     this.remove = function() {
         styleTool.unstyleMarker(m);
-        $(m.element).unbind('click', click_handler);
     }
 }
 
@@ -181,7 +179,7 @@ function Item(name, button) {
     this.onSelectionElementClick = function(element) {
         that._markers = [];
         // mark current element
-        that.manual_marker = new Marker(element, that.name +'_manual', that._manual_marker_click);
+        that.manual_marker = new Marker(element, that.name +'_manual');
         that._markers.push(that.manual_marker);
 
         updateSelection().then(function(){
@@ -211,7 +209,7 @@ function Item(name, button) {
                 // go by tag-ids for item
                 data[name].forEach(function(id){
                     if (id != manual_id)
-                        item._markers.push(new Marker(id2el[id], item.name +'_calculated', function(){}));
+                        item._markers.push(new Marker(id2el[id], item.name +'_calculated'));
                 });
                 // remove all hover styles
                 styleTool.unstyleAll('hover');
@@ -222,13 +220,6 @@ function Item(name, button) {
             //unfreez UI
             loader(false);
             console.log('Server error: '+ error);
-        });
-    }
-
-    this._manual_marker_click = function() {
-        //remove markers
-        that._markers.forEach(function(marker){
-            marker.remove();
         });
     }
 }
