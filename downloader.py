@@ -4,8 +4,10 @@ from datetime import datetime
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
-from twisted.web.client import HTTPClientFactory, _makeGetterFactory
+from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody
 from twisted.web.server import NOT_DONE_YET
+from twisted.web.http_headers import Headers
+twisted_headers = Headers
 
 from scrapy.http.response.text import TextResponse
 from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
@@ -17,7 +19,7 @@ from scrapy.responsetypes import responsetypes
 from lxml import etree
 import re
 
-from feed import startFeedRequest
+from feed import getFeedData, buildFeed
 
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG
 
@@ -38,18 +40,7 @@ def check_feed_request_time_limit(url):
         r.set(url, int(time.time()))
     return 0
 
-def getPageFactory(url, contextFactory=None, *args, **kwargs):
-    """
-    Download a web page as a string.
-    Download a page. Return a deferred, which will callback with a
-    page (as a string) or errback with a description of the error.
-    See L{HTTPClientFactory} to see what extra arguments can be passed.
-    """
-    return _makeGetterFactory(
-        url,
-        HTTPClientFactory,
-        contextFactory=contextFactory,
-        *args, **kwargs)
+agent = BrowserLikeRedirectAgent(Agent(reactor, connectTimeout=10), redirectLimit=5)
 
 def html2json(el):
     return [
@@ -109,29 +100,42 @@ def setBaseAndRemoveScriptsAndMore(response, url):
     
     return etree.tostring(tree, method='html')
 
-def buildScrapyResponse(page_factory, body):
-    status = int(page_factory.status)
-    headers = Headers(page_factory.response_headers)
-    respcls = responsetypes.from_args(headers=headers, url=page_factory.url)
-    return respcls(url=page_factory.url, status=status, headers=headers, body=body)
+def buildScrapyResponse(response, body, url):
+    status = response.code
+    headers = Headers({k:','.join(v) for k,v in response.headers.getAllRawHeaders()})
+    respcls = responsetypes.from_args(headers=headers, url=url)
+    return respcls(url=url, status=status, headers=headers, body=body)
 
-def downloadDone(response_str, request=None, page_factory=None, url=None):
-    response = buildScrapyResponse(page_factory, response_str)
+def downloadStarted(response, response_ref):
+    response_ref.append(response) # seve the response reference
+    return response
+
+def downloadDone(response_str, request, response_ref, feed_config):
+    response = response_ref.pop() # get the response reference
+    
+    url = response.request.absoluteURI
+    
+    print 'Response <%s> ready (%s bytes)' % (url, len(response_str))
+    response = buildScrapyResponse(response, response_str, url)
 
     response = DecompressionMiddleware().process_response(None, response, None)
 
     if (isinstance(response, TextResponse)):
-        response_str = setBaseAndRemoveScriptsAndMore(response, url)
+        if feed_config:
+            response_str = buildFeed(response, feed_config)
+            request.setHeader(b"Content-Type", b'text/xml')
+        else:
+            response_str = setBaseAndRemoveScriptsAndMore(response, url)
 
     request.write(response_str)
     request.finish()
 
-def downloadError(error, request=None, page_factory=None):
+def downloadError(error, request=None):
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
     else:
-        request.write('Something wrong')
+        request.write('Something wrong. Geek comment: ' + error.getErrorMessage())
         sys.stderr.write(datetime.datetime.now())
         sys.stderr.write('\n'.join('Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()))
     request.finish()
@@ -142,19 +146,23 @@ class Downloader(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def startRequest(self, request, url):
-        page_factory = getPageFactory(url,
-                headers={
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Encoding': 'gzip, deflate, sdch',
-                    'User-Agent': DOWNLOADER_USER_AGENT
-                    },
-                redirectLimit=5,
-                timeout=10
-                )
-        d = page_factory.deferred
-        d.addCallback(downloadDone, request=request, page_factory=page_factory, url=url)
-        d.addErrback(downloadError, request=request, page_factory=page_factory)
+    def startRequest(self, request, url, feed_config = None):
+        d = agent.request(
+            'GET',
+            url,
+            twisted_headers({
+                'Accept': ['text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'],
+                'Accept-Encoding': ['gzip, deflate, sdch'],
+                'User-Agent': [DOWNLOADER_USER_AGENT]
+            }),
+            None
+        )
+        print 'Request <GET %s> started' % (url,)
+        response_ref = []
+        d.addCallback(downloadStarted, response_ref)
+        d.addCallback(readBody)
+        d.addCallback(downloadDone, request=request, response_ref=response_ref, feed_config=feed_config)
+        d.addErrback(downloadError, request=request)
 
     def render_POST(self, request):
         obj = json.load(request.content)
@@ -179,9 +187,15 @@ class Downloader(resource.Resource):
             if time_left:
                 request.setResponseCode(429)
                 request.setHeader('Retry-After', str(time_left) + ' seconds')
-                return 'Too Many Requests'
+                return 'Too Many Requests. Retry after %s seconds' % (str(time_left))
             else:
-                startFeedRequest(request, feed_id)
+                res = getFeedData(request, feed_id)
+                
+                if isinstance(res, basestring): # error message
+                    return res
+                
+                url, feed_config = res
+                self.startRequest(request, url, feed_config)
                 return NOT_DONE_YET
         else: # neither page and feed
             return 'Url is required'
