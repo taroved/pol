@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{% trans "contact" %}</h1>
+</div>
+<script type="text/javascript">
+function e(){return[0x70,0x6f,0x6c,0x69,0x74,0x65,0x70,0x6f,0x6c,0x2e,0x63,0x6f,0x6d,0x40,0x67,0x6d,0x61,0x69,0x6c,0x2e,0x63,0x6f,0x6d].slice()}
+function s(hex) {
+  return hex.length ? String.fromCharCode(hex[0]) + s((hex.shift(),hex)) : "";
+}
+</script>
+<div class="media">
+<form class="form-horizontal">
+ <div class="control-group">
+   <label class="control-label" for="inputIcon">{% trans "contact.title" %}</label>
+   <div class="controls">
+     <div class="input-prepend">
+       <span class="add-on"><i class="icon-envelope"></i></span>
+       <a class="btn btn-link" id="mail_link" style="border: 1px solid #ccc"><script type="text/javascript">document.write(s(e()))</script></a>
+     </div>
+     <span class="help-inline">{% trans "contact.msg" %}</span>
+   </div>
+ </div>
+</form>
+</div>
+<script type="text/javascript">
+document.getElementById('mail_link').onclick = function() {
+  this.href = 'mailto:' + s(e());
+}
+</script>
+{% endblock %}
