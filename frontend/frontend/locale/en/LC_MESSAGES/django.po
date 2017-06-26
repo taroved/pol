@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-05-17 14:53-0700\n"
+"POT-Creation-Date: 2017-06-26 13:30-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,19 +19,35 @@ msgstr ""
 
 #: templates/base.html:12
 msgid "meta_desc"
-msgstr "Create RSS feed for any webpage you need. All you need is to make several mouse button clicks."
+msgstr ""
+"Create RSS feed for any webpage you need. All you need is to make several "
+"mouse button clicks."
 
 #: templates/base.html:13
 msgid "meta_keywords"
-msgstr "rss feed generator, create rss, webpage to rss, html to rss, free rss generator, rss builder, create rss feed, create rss online"
+msgstr ""
+"rss feed generator, create rss, webpage to rss, html to rss, free rss "
+"generator, rss builder, create rss feed, create rss online"
 
-#: templates/base.html:92
+#: templates/base.html:65 templates/frontend/contact.html:7
+msgid "contact"
+msgstr "Contacts"
+
+#: templates/base.html:93
 msgid "made_by"
 msgstr "Made by"
 
-#: templates/base.html:92
+#: templates/base.html:93
 msgid "made_name"
 msgstr "Alexandr Nesterenko"
+
+#: templates/frontend/contact.html:19
+msgid "contact.title"
+msgstr "Contact us by email:"
+
+#: templates/frontend/contact.html:25
+msgid "contact.msg"
+msgstr "We will answer ASAP"
 
 #: templates/frontend/index.html:5
 msgid "index_title"
@@ -43,7 +59,7 @@ msgstr "Polite Pol"
 
 #: templates/frontend/index.html:16
 msgid "hello"
-msgstr "Create you feed yourself!"
+msgstr "Create your feed yourself!"
 
 #: templates/frontend/index.html:27
 msgid "go"

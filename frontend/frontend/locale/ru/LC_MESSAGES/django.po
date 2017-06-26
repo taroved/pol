@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-05-17 14:53-0700\n"
+"POT-Creation-Date: 2017-06-26 13:30-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,19 +21,34 @@ msgstr ""
 
 #: templates/base.html:12
 msgid "meta_desc"
-msgstr "Создать RSS ленту из любой веб страницы в интернете в несколько кликов."
+msgstr ""
+"Создать RSS ленту из любой веб страницы в интернете в несколько кликов."
 
 #: templates/base.html:13
 msgid "meta_keywords"
-msgstr "rss генератор, создать rss ленту, создать rss, rss генератор онлайн, генератор rss лент"
+msgstr ""
+"rss генератор, создать rss ленту, создать rss, rss генератор онлайн, "
+"генератор rss лент"
 
-#: templates/base.html:92
+#: templates/base.html:65 templates/frontend/contact.html:7
+msgid "contact"
+msgstr "Контакты"
+
+#: templates/base.html:93
 msgid "made_by"
 msgstr "Сделал"
 
-#: templates/base.html:92
+#: templates/base.html:93
 msgid "made_name"
 msgstr "Александр Нестеренко"
+
+#: templates/frontend/contact.html:19
+msgid "contact.title"
+msgstr "Свяжитесь с нами по имэйлу:"
+
+#: templates/frontend/contact.html:25
+msgid "contact.msg"
+msgstr "Мы ответим как можно скорее"
 
 #: templates/frontend/index.html:5
 msgid "index_title"

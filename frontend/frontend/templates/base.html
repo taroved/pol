@@ -62,6 +62,7 @@
 
             <li>{% if LANGUAGE_CODE == 'en' %} <a href="/ru/" class="lang"><span class="lang">Русский</span></a> {% else %} <span class="lang">Русский</span> {% endif %}
             <li class="divider-vertical"></li>
+            <li><a href="{% url 'contact' %}">{% trans "contact" %}</a></li>
             <!--%= render 'devise/menu/login_items' %-->
           </ul>
         </div>

@@ -1,15 +1,3 @@
-from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
-from twisted.web.client import HTTPClientFactory, _makeGetterFactory 
-from twisted.web.server import NOT_DONE_YET
-
-from scrapy.http.response.text import TextResponse
-from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
-from scrapy.selector import Selector
-
-from scrapy.http import Headers
-from scrapy.responsetypes import responsetypes
-
 import w3lib.url
 import w3lib.html
 
@@ -24,19 +12,6 @@ import MySQLdb
 from settings import DATABASES, DOWNLOADER_USER_AGENT
 
 url_hash_regexp = re.compile('(#.*)?$')
-
-def _getPageFactory(url, contextFactory=None, *args, **kwargs):
-    """
-    Download a web page as a string.
-    Download a page. Return a deferred, which will callback with a
-    page (as a string) or errback with a description of the error.
-    See L{HTTPClientFactory} to see what extra arguments can be passed.
-    """
-    return _makeGetterFactory(
-        url,
-        HTTPClientFactory,
-        contextFactory=contextFactory,
-        *args, **kwargs)
 
 def element_to_string(element):
     s = [element.text] if element.text else []

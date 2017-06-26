@@ -33,6 +33,9 @@ def index(request):
 
     return render(request, 'frontend/index.html', {'form': form})
 
+def contact(request):
+    return render(request, 'frontend/contact.html')
+
 @ensure_csrf_cookie
 def setup(request):
     if request.method == 'GET' and 'url' in request.GET:
