@@ -9,7 +9,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="welcom">
+<div class="welcom" style="position: relative">
+    <div id="help" style="position: absolute; z-index: 2; right:0; top: 0; width: 60px;">
+    <a href="#helpModal" id="helpModalRef" data-toggle="modal">
+    <span>{% trans 'help' %}</span>
+    <img id="buoy" src="{% static 'frontend/images/buoy.png' %}" alt="{% trans 'help' %}" style="width: 60px; height: 60px" />
+    </a>
+    </div>
     <img src="{% static 'frontend/images/pol.png' %}" alt="Hi!" />
     <h1>{% trans "brand" %}</h1>
 
@@ -29,5 +35,21 @@
             </div>
         </div>
     </form>
+</div>
+<!-- Modal -->
+<div id="helpModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="helpModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="helpModalLabel">{% trans 'help' %}</h3>
+  </div>
+  <div class="modal-body">
+    <h4>{% trans 'help.header' %}</h4>
+    <iframe id="helpPlayer" type="text/html" width="100%" height="360"
+      src="https://www.youtube.com/embed/ygmQ0ck81Dk?enablejsapi=1&origin=http://politepol.com"
+      frameborder="0"></iframe>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
 </div>
 {% endblock %}

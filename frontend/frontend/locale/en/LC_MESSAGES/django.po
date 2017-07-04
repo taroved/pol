@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-26 13:30-0700\n"
+"POT-Creation-Date: 2017-07-04 14:32-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 
 #: templates/base.html:65 templates/frontend/contact.html:7
 msgid "contact"
-msgstr "Contacts"
+msgstr "Contact"
 
 #: templates/base.html:93
 msgid "made_by"
@@ -41,11 +41,11 @@ msgstr "Made by"
 msgid "made_name"
 msgstr "Alexandr Nesterenko"
 
-#: templates/frontend/contact.html:19
+#: templates/frontend/contact.html:18
 msgid "contact.title"
 msgstr "Contact us by email:"
 
-#: templates/frontend/contact.html:25
+#: templates/frontend/contact.html:24
 msgid "contact.msg"
 msgstr "We will answer ASAP"
 
@@ -53,17 +53,25 @@ msgstr "We will answer ASAP"
 msgid "index_title"
 msgstr "PolitePol.com: Generate RSS feeds for any web page"
 
-#: templates/frontend/index.html:8 templates/frontend/index.html.py:14
+#: templates/frontend/index.html:8 templates/frontend/index.html.py:20
 msgid "brand"
 msgstr "Polite Pol"
 
-#: templates/frontend/index.html:16
+#: templates/frontend/index.html:16 templates/frontend/index.html.py:43
+msgid "help"
+msgstr "Help"
+
+#: templates/frontend/index.html:22
 msgid "hello"
 msgstr "Create your feed yourself!"
 
-#: templates/frontend/index.html:27
+#: templates/frontend/index.html:33
 msgid "go"
 msgstr "Go!"
+
+#: templates/frontend/index.html:46
+msgid "help.header"
+msgstr "Video tutorial how to make your feed:"
 
 #: templates/frontend/preview.html:11
 msgid "subscribe.feed_ready"

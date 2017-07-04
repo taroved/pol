@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-26 13:30-0700\n"
+"POT-Creation-Date: 2017-07-04 14:32-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -42,11 +42,11 @@ msgstr "Сделал"
 msgid "made_name"
 msgstr "Александр Нестеренко"
 
-#: templates/frontend/contact.html:19
+#: templates/frontend/contact.html:18
 msgid "contact.title"
 msgstr "Свяжитесь с нами по имэйлу:"
 
-#: templates/frontend/contact.html:25
+#: templates/frontend/contact.html:24
 msgid "contact.msg"
 msgstr "Мы ответим как можно скорее"
 
@@ -54,17 +54,25 @@ msgstr "Мы ответим как можно скорее"
 msgid "index_title"
 msgstr "PolitePol.com: Создай RSS канал для любой веб-страницы"
 
-#: templates/frontend/index.html:8 templates/frontend/index.html.py:14
+#: templates/frontend/index.html:8 templates/frontend/index.html.py:20
 msgid "brand"
 msgstr "Polite Pol"
 
-#: templates/frontend/index.html:16
+#: templates/frontend/index.html:16 templates/frontend/index.html.py:43
+msgid "help"
+msgstr "Помощ"
+
+#: templates/frontend/index.html:22
 msgid "hello"
 msgstr "Создай новостную ленту сам!"
 
-#: templates/frontend/index.html:27
+#: templates/frontend/index.html:33
 msgid "go"
 msgstr "Поехали!"
+
+#: templates/frontend/index.html:46
+msgid "help.header"
+msgstr "Видеоурок по созданию RSS ленты:"
 
 #: templates/frontend/preview.html:11
 msgid "subscribe.feed_ready"
