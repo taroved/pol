@@ -17,8 +17,8 @@ def element_to_string(element):
     s = [element.text] if element.text else []
     for sub_element in element:
         s.append(etree.tostring(sub_element))
-    if element.tail:    
-        s.append(element.tail)
+        if sub_element.tail:
+            s.append(element.tail)
     return ''.join(s)
 
 def _build_link(html, doc_url, url):
@@ -29,7 +29,6 @@ def buildFeed(response, feed_config):
     response.selector.remove_namespaces()
 
     tree = response.selector._root.getroottree()
-
     # get data from html 
     items = []
     for node in tree.xpath(feed_config['xpath']):
