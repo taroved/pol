@@ -17,8 +17,6 @@ def element_to_string(element):
     s = [element.text] if element.text else []
     for sub_element in element:
         s.append(etree.tostring(sub_element))
-        if sub_element.tail:
-            s.append(element.tail)
     return ''.join(s)
 
 def _build_link(html, doc_url, url):
