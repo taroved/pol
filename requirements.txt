@@ -3,6 +3,7 @@ Django==1.8.6
 lxml==3.3.3
 Scrapy==1.0.3
 django-pipeline==1.5.4
+django-unixtimestampfield==0.3.9
 mysqlclient==1.3.7
 w3lib==1.12.0
 feedgenerator==1.8

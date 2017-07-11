@@ -136,8 +136,8 @@ def downloadError(error, request=None):
         request.write('Traceback: ' + error.getTraceback())
     else:
         request.write('Something wrong. Geek comment: ' + error.getErrorMessage())
-        sys.stderr.write(datetime.datetime.now())
-        sys.stderr.write('\n'.join('Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()))
+    sys.stderr.write(str(datetime.now()))
+    sys.stderr.write('\n'.join(['Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
     request.finish()
 
 

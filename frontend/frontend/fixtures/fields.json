@@ -12,5 +12,12 @@
     },
     "model": "frontend.field",
     "pk": 2
+},
+{
+    "fields": {
+        "name": "link"
+    },
+    "model": "frontend.field",
+    "pk": 3
 }
 ]

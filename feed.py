@@ -13,6 +13,67 @@ from settings import DATABASES, DOWNLOADER_USER_AGENT
 
 url_hash_regexp = re.compile('(#.*)?$')
 
+POST_TIME_DISTANCE = 15 # minutes
+
+FIELD_IDS = {'title': 1, 'description': 2, 'title_link': 3}
+
+def save_post(conn, md5sum, created, feed_id, post_fields):
+    cur = conn.cursor()
+    try:
+        #import pdb;pdb.set_trace()
+        cur.execute("""insert into frontend_post (md5sum, created, feed_id)
+                        values (%s, %s, %s)""", (md5sum.hexdigest(), created, feed_id))
+    finally:
+        print(cur._last_executed)
+    post_id = conn.insert_id()
+    for key in ['title', 'description', 'title_link']:
+        if key in post_fields:
+            try:
+                cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
+                                values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
+            finally:
+                print(cur._last_executed)
+
+def fill_dates(feed_id, items):
+    if not items:
+        return []
+    hashes = {}
+    for item in items:
+        #create md5
+        h = md5('')
+        for key in ['title', 'description', 'title_link']:
+            if key in item:
+                h.update(item[key].encode('utf-8')) 
+        hashes[h] = item
+
+    #fetch dates from db
+    fetched_dates = {}
+    db = get_conn()
+    with db:
+        quoted_hashes = ','.join(["'%s'" % (h.hexdigest()) for h in hashes])
+
+        cur = db.cursor()
+        cur.execute("""select p.md5sum, p.created, p.id
+                       from frontend_post p
+                       where p.md5sum in (%s)
+                       and p.id=%s""" % (quoted_hashes, feed_id,))
+        rows = cur.fetchall()
+        print(cur._last_executed)
+        for row in rows:
+            md5hash = row[0]
+            created = row[1]
+            post_id = row[2]
+            fetched_dates[md5hash] = datetime.datetime.fromtimestamp(int(created))
+    cur_time = datetime.datetime.now()
+    new_posts = []
+    for h in hashes:
+        if h in fetched_dates:
+            hashes[h]['time'] = fetched_date[h]
+        else:
+            hashes[h]['time'] = cur_time
+            save_post(db, h, cur_time, feed_id, hashes[h])
+            cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
+
 def element_to_string(element):
     s = [element.text] if element.text else []
     for sub_element in element:
@@ -42,11 +103,12 @@ def buildFeed(response, feed_config):
                         anchor = element[0].xpath('ancestor-or-self::node()[name()="a"]')
                         if anchor and anchor[0].get('href'):
                             title_link = _build_link(response.body_as_unicode(), feed_config['uri'], anchor[0].get('href'))
-                  
+
         if len(item) == len(feed_config['fields']): # all fields are required
-            item['title_link'] = title_link
+            if title_link:
+                item['title_link'] = title_link
             items.append(item)
-    
+
     title = response.selector.xpath('//title/text()').extract()
 
     #build feed
@@ -57,10 +119,13 @@ def buildFeed(response, feed_config):
             "Source page url: " + feed_config['uri'],
         language="en",
     )
+
+    fill_dates(feed_config['id'], items)
+
     for item in items:
         title = item['title'] if 'title' in item else ''
         desc = item['description'] if 'description' in item else ''
-        if item['title_link']: 
+        if 'title_link' in item:
             link = item['title_link']
         else:
             link = url_hash_regexp.sub('#' + md5((title+desc).encode('utf-8')).hexdigest(), feed_config['uri'])
@@ -75,9 +140,8 @@ def buildFeed(response, feed_config):
 
 def getFeedData(request, feed_id):
     # get url, xpathes
-    creds = DATABASES['default']
-    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'])
     feed = {}
+    db = get_conn()
     with db:
         cur = db.cursor()
         cur.execute("""select f.uri, f.xpath, fi.name, ff.xpath from frontend_feed f
@@ -88,6 +152,7 @@ def getFeedData(request, feed_id):
 
         for row in rows:
             if not feed:
+                feed['id'] = feed_id
                 feed['uri'] = row[0]
                 feed['xpath'] = row[1]
                 feed['fields'] = {}
@@ -97,3 +162,9 @@ def getFeedData(request, feed_id):
         return [feed['uri'], feed]
     else:
         return 'Feed generator error: config of feed is empty'
+
+def get_conn():
+    creds = DATABASES['default']
+    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'])
+    db.autocommit(True)
+    return db
