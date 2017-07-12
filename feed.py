@@ -17,61 +17,56 @@ POST_TIME_DISTANCE = 15 # minutes
 
 FIELD_IDS = {'title': 1, 'description': 2, 'title_link': 3}
 
-def save_post(conn, md5sum, created, feed_id, post_fields):
+def save_post(conn, created, feed_id, post_fields):
     cur = conn.cursor()
-    try:
-        #import pdb;pdb.set_trace()
-        cur.execute("""insert into frontend_post (md5sum, created, feed_id)
-                        values (%s, %s, %s)""", (md5sum.hexdigest(), created, feed_id))
-    finally:
-        print(cur._last_executed)
+    cur.execute("""insert into frontend_post (md5sum, created, feed_id)
+                    values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
+    print(cur._last_executed)
+
     post_id = conn.insert_id()
     for key in ['title', 'description', 'title_link']:
         if key in post_fields:
-            try:
-                cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
-                                values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
-            finally:
-                print(cur._last_executed)
+            cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
+                            values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
+            print(cur._last_executed)
 
-def fill_dates(feed_id, items):
+def fill_time(feed_id, items):
     if not items:
         return []
-    hashes = {}
     for item in items:
         #create md5
         h = md5('')
         for key in ['title', 'description', 'title_link']:
             if key in item:
                 h.update(item[key].encode('utf-8')) 
-        hashes[h] = item
+        item['md5'] = h.hexdigest()
 
     #fetch dates from db
     fetched_dates = {}
     db = get_conn()
     with db:
-        quoted_hashes = ','.join(["'%s'" % (h.hexdigest()) for h in hashes])
+        quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
 
         cur = db.cursor()
         cur.execute("""select p.md5sum, p.created, p.id
                        from frontend_post p
                        where p.md5sum in (%s)
-                       and p.id=%s""" % (quoted_hashes, feed_id,))
+                       and p.feed_id=%s""" % (quoted_hashes, feed_id,))
         rows = cur.fetchall()
         print(cur._last_executed)
         for row in rows:
             md5hash = row[0]
             created = row[1]
             post_id = row[2]
-            fetched_dates[md5hash] = datetime.datetime.fromtimestamp(int(created))
-    cur_time = datetime.datetime.now()
+            fetched_dates[md5hash] = created
+    cur_time = datetime.datetime.utcnow()
     new_posts = []
-    for h in hashes:
-        if h in fetched_dates:
-            hashes[h]['time'] = fetched_date[h]
+    for item in items:
+        if item['md5'] in fetched_dates:
+            item['time'] = fetched_dates[item['md5']]
         else:
-            hashes[h]['time'] = cur_time
-            save_post(db, h, cur_time, feed_id, hashes[h])
+            item['time'] = cur_time
+            save_post(db, cur_time, feed_id, item)
             cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
 
 def element_to_string(element):
@@ -120,11 +115,12 @@ def buildFeed(response, feed_config):
         language="en",
     )
 
-    fill_dates(feed_config['id'], items)
+    fill_time(feed_config['id'], items)
 
     for item in items:
         title = item['title'] if 'title' in item else ''
         desc = item['description'] if 'description' in item else ''
+        time = item['time']
         if 'title_link' in item:
             link = item['title_link']
         else:
@@ -134,7 +130,7 @@ def buildFeed(response, feed_config):
             link = link,
             description = desc,
             #enclosure=Enclosure(fields[4], "32000", "image/jpeg") if  4 in fields else None, #"Image"
-            pubdate=datetime.datetime.now()
+            pubdate = time
         )
     return feed.writeString('utf-8')
 
