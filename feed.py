@@ -13,7 +13,7 @@ from settings import DATABASES, DOWNLOADER_USER_AGENT
 
 url_hash_regexp = re.compile('(#.*)?$')
 
-POST_TIME_DISTANCE = 15 # minutes
+POST_TIME_DISTANCE = 15 # minutes, RSS Feed Reader skip same titles created in 10 min interval
 
 FIELD_IDS = {'title': 1, 'description': 2, 'title_link': 3}
 
@@ -161,6 +161,6 @@ def getFeedData(request, feed_id):
 
 def get_conn():
     creds = DATABASES['default']
-    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'])
+    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'], init_command='SET NAMES UTF8')
     db.autocommit(True)
     return db
