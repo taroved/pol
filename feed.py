@@ -15,7 +15,7 @@ url_hash_regexp = re.compile('(#.*)?$')
 
 POST_TIME_DISTANCE = 15 # minutes, RSS Feed Reader skip same titles created in 10 min interval
 
-FIELD_IDS = {'title': 1, 'description': 2, 'title_link': 3}
+FIELD_IDS = {'title': 1, 'description': 2, 'link': 3}
 
 def save_post(conn, created, feed_id, post_fields):
     cur = conn.cursor()
@@ -36,7 +36,7 @@ def fill_time(feed_id, items):
     for item in items:
         #create md5
         h = md5('')
-        for key in ['title', 'description', 'title_link']:
+        for key in ['title', 'description', 'link']:
             if key in item:
                 h.update(item[key].encode('utf-8')) 
         item['md5'] = h.hexdigest()
@@ -70,6 +70,9 @@ def fill_time(feed_id, items):
             cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
 
 def element_to_string(element):
+    if isinstance(element, basestring): # attribute
+        return element
+
     s = [element.text] if element.text else []
     for sub_element in element:
         s.append(etree.tostring(sub_element))
@@ -87,21 +90,21 @@ def buildFeed(response, feed_config):
     items = []
     for node in tree.xpath(feed_config['xpath']):
         item = {}
-        title_link = None
-        for field_name in ['title', 'description']:
+        required_count = 0
+        required_found = 0
+        for field_name in ['title', 'description', 'link']:
             if field_name in feed_config['fields']:
-                element = node.xpath(feed_config['fields'][field_name])
-                if element:
-                    item[field_name] = element_to_string(element[0])
-                    # get item link
-                    if field_name == 'title':
-                        anchor = element[0].xpath('ancestor-or-self::node()[name()="a"]')
-                        if anchor and anchor[0].get('href'):
-                            title_link = _build_link(response.body_as_unicode(), feed_config['uri'], anchor[0].get('href'))
+                if feed_config['required'][field_name]:
+                    required_count += 1
+                element_or_attr = node.xpath(feed_config['fields'][field_name])
+                if element_or_attr:
+                    item[field_name] = element_to_string(element_or_attr[0])
+                    if feed_config['required'][field_name]:
+                        required_found += 1
+                    if field_name == 'link':
+                        item['link'] = _build_link(response.body_as_unicode(), feed_config['uri'], item['link'])
 
-        if len(item) == len(feed_config['fields']): # all fields are required
-            if title_link:
-                item['title_link'] = title_link
+        if required_count == required_found:
             items.append(item)
 
     title = response.selector.xpath('//title/text()').extract()
@@ -121,8 +124,8 @@ def buildFeed(response, feed_config):
         title = item['title'] if 'title' in item else ''
         desc = item['description'] if 'description' in item else ''
         time = item['time']
-        if 'title_link' in item:
-            link = item['title_link']
+        if 'link' in item:
+            link = item['link']
         else:
             link = url_hash_regexp.sub('#' + md5((title+desc).encode('utf-8')).hexdigest(), feed_config['uri'])
         feed.add_item(
@@ -140,7 +143,7 @@ def getFeedData(request, feed_id):
     db = get_conn()
     with db:
         cur = db.cursor()
-        cur.execute("""select f.uri, f.xpath, fi.name, ff.xpath from frontend_feed f
+        cur.execute("""select f.uri, f.xpath, fi.name, ff.xpath, fi.required from frontend_feed f
                        right join frontend_feedfield ff on ff.feed_id=f.id
                        left join frontend_field fi on fi.id=ff.field_id
                        where f.id=%s""", (feed_id,))
@@ -152,7 +155,9 @@ def getFeedData(request, feed_id):
                 feed['uri'] = row[0]
                 feed['xpath'] = row[1]
                 feed['fields'] = {}
+                feed['required'] = {}
             feed['fields'][row[2]] = row[3]
+            feed['required'][row[2]] = row[4]
 
     if feed:
         return [feed['uri'], feed]

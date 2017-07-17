@@ -84,10 +84,13 @@ def _create_feed(url, xpathes):
     feed.save()
 
     fields = Field.objects.all()
-    
+
     for field in fields:
         if field.name in item_xpathes:
             ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
+            ff.save()
+        if field.name == 'link' and 'title' in item_xpathes:
+            ff = FeedField(feed=feed, field=field, xpath='('+ item_xpathes['title'] +')[1]/ancestor-or-self::node()[name()="a"]/@href')
             ff.save()
 
     return feed.id

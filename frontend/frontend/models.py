@@ -7,6 +7,7 @@ class Feed(models.Model):
 
 class Field(models.Model):
     name = models.CharField(max_length=200)
+    required = models.BooleanField(default=True)
 
 class FeedField(models.Model):
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)

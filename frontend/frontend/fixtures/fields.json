@@ -1,21 +1,24 @@
 [
 {
     "fields": {
-        "name": "title"
+        "name": "title",
+        "required": 1
     },
     "model": "frontend.field",
     "pk": 1
 },
 {
     "fields": {
-        "name": "description"
+        "name": "description",
+        "required": 1
     },
     "model": "frontend.field",
     "pk": 2
 },
 {
     "fields": {
-        "name": "link"
+        "name": "link",
+        "required": 0
     },
     "model": "frontend.field",
     "pk": 3
