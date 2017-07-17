@@ -130,14 +130,13 @@ def downloadDone(response_str, request, response_ref, feed_config):
     request.write(response_str)
     request.finish()
 
-def downloadError(error, request=None):
+def downloadError(error, request=None, url=None):
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
     else:
         request.write('Something wrong. Geek comment: ' + error.getErrorMessage())
-    sys.stderr.write(str(datetime.now()))
-    sys.stderr.write('\n'.join(['Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
+    sys.stderr.write('\n'.join([str(datetime.now()), url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
     request.finish()
 
 
@@ -162,7 +161,7 @@ class Downloader(resource.Resource):
         d.addCallback(downloadStarted, response_ref)
         d.addCallback(readBody)
         d.addCallback(downloadDone, request=request, response_ref=response_ref, feed_config=feed_config)
-        d.addErrback(downloadError, request=request)
+        d.addErrback(downloadError, request=request, url=url)
 
     def render_POST(self, request):
         obj = json.load(request.content)
