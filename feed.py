@@ -70,17 +70,23 @@ def fill_time(feed_id, items):
                 save_post(db, cur_time, feed_id, item)
                 cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
     except Exception as ex:
-    	sys.stderr.write('\n'.join([str(datetime.datetime.now()), "Feed exception:" +str(ex)]))
+        sys.stderr.write('\n'.join([str(datetime.datetime.now()), "Feed exception:" +str(ex)]))
 
-        
-def element_to_string(element):
+
+def decode(text, encoding): # it's strange but true
+    if isinstance(text, unicode):
+        return text
+    else:
+        return text.decode(encoding)
+
+def element_to_unicode(element, encoding):
     if isinstance(element, basestring): # attribute
-        return element
+        return decode(element, encoding)
 
-    s = [element.text] if element.text else []
+    s = [decode(element.text, encoding)] if element.text else []
     for sub_element in element:
-        s.append(etree.tostring(sub_element))
-    return ''.join(s)
+        s.append(decode(etree.tostring(sub_element), encoding))
+    return u''.join(s)
 
 def _build_link(html, doc_url, url):
     base_url = w3lib.html.get_base_url(html, doc_url)
@@ -102,7 +108,7 @@ def buildFeed(response, feed_config):
                     required_count += 1
                 element_or_attr = node.xpath(feed_config['fields'][field_name])
                 if element_or_attr:
-                    item[field_name] = element_to_string(element_or_attr[0])
+                    item[field_name] = element_to_unicode(element_or_attr[0], response.encoding)
                     if feed_config['required'][field_name]:
                         required_found += 1
                     if field_name == 'link':
@@ -127,7 +133,7 @@ def buildFeed(response, feed_config):
     for item in items:
         title = item['title'] if 'title' in item else ''
         desc = item['description'] if 'description' in item else ''
-        time = item['time'] if 'time' in item else datetime.datetime.now()
+        time = item['time'] if 'time' in item else datetime.datetime.utcnow()
         if 'link' in item:
             link = item['link']
         else:
