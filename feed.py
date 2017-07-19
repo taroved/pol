@@ -31,46 +31,43 @@ def save_post(conn, created, feed_id, post_fields):
             print(cur._last_executed)
 
 def fill_time(feed_id, items):
-    try:
-        if not items:
-            return []
-        for item in items:
-            #create md5
-            h = md5('')
-            for key in ['title', 'description', 'link']:
-                if key in item:
-                    h.update(item[key].encode('utf-8')) 
-            item['md5'] = h.hexdigest()
+    if not items:
+        return []
+    for item in items:
+        #create md5
+        h = md5('')
+        for key in ['title', 'description', 'link']:
+            if key in item:
+                h.update(item[key].encode('utf-8')) 
+        item['md5'] = h.hexdigest()
 
-        #fetch dates from db
-        fetched_dates = {}
-        db = get_conn()
-        with db:
-            quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
+    #fetch dates from db
+    fetched_dates = {}
+    db = get_conn()
+    with db:
+        quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
 
-            cur = db.cursor()
-            cur.execute("""select p.md5sum, p.created, p.id
-                           from frontend_post p
-                           where p.md5sum in (%s)
-                           and p.feed_id=%s""" % (quoted_hashes, feed_id,))
-            rows = cur.fetchall()
-            print(cur._last_executed)
-            for row in rows:
-                md5hash = row[0]
-                created = row[1]
-                post_id = row[2]
-                fetched_dates[md5hash] = created
-        cur_time = datetime.datetime.utcnow()
-        new_posts = []
-        for item in items:
-            if item['md5'] in fetched_dates:
-                item['time'] = fetched_dates[item['md5']]
-            else:
-                item['time'] = cur_time
-                save_post(db, cur_time, feed_id, item)
-                cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
-    except Exception as ex:
-        sys.stderr.write('\n'.join([str(datetime.datetime.now()), "Feed exception:" +str(ex)]))
+        cur = db.cursor()
+        cur.execute("""select p.md5sum, p.created, p.id
+                       from frontend_post p
+                       where p.md5sum in (%s)
+                       and p.feed_id=%s""" % (quoted_hashes, feed_id,))
+        rows = cur.fetchall()
+        print(cur._last_executed)
+        for row in rows:
+            md5hash = row[0]
+            created = row[1]
+            post_id = row[2]
+            fetched_dates[md5hash] = created
+    cur_time = datetime.datetime.utcnow()
+    new_posts = []
+    for item in items:
+        if item['md5'] in fetched_dates:
+            item['time'] = fetched_dates[item['md5']]
+        else:
+            item['time'] = cur_time
+            save_post(db, cur_time, feed_id, item)
+            cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
 
 
 def decode(text, encoding): # it's strange but true
@@ -90,7 +87,7 @@ def element_to_unicode(element, encoding):
 
 def _build_link(html, doc_url, url):
     base_url = w3lib.html.get_base_url(html, doc_url)
-    return w3lib.url.urljoin_rfc(base_url, url)
+    return w3lib.url.urljoin_rfc(base_url, url).decode('utf-8')
 
 def buildFeed(response, feed_config):
     response.selector.remove_namespaces()
