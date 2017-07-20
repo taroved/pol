@@ -4,7 +4,7 @@ from datetime import datetime
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
-from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody
+from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
 twisted_headers = Headers
@@ -106,15 +106,15 @@ def buildScrapyResponse(response, body, url):
     respcls = responsetypes.from_args(headers=headers, url=url)
     return respcls(url=url, status=status, headers=headers, body=body)
 
-def downloadStarted(response, response_ref):
-    response_ref.append(response) # seve the response reference
+def downloadStarted(response, request, url, feed_config):
+    d = readBody(response)
+    d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
+    d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
     return response
 
-def downloadDone(response_str, request, response_ref, feed_config):
-    response = response_ref.pop() # get the response reference
-    
+def downloadDone(response_str, request, response, feed_config):
     url = response.request.absoluteURI
-    
+
     print 'Response <%s> ready (%s bytes)' % (url, len(response_str))
     response = buildScrapyResponse(response, response_str, url)
 
@@ -130,7 +130,12 @@ def downloadDone(response_str, request, response_ref, feed_config):
     request.write(response_str)
     request.finish()
 
-def downloadError(error, request=None, url=None):
+def downloadError(error, request=None, url=None, response=None, feed_config=None):
+    # read for details: https://stackoverflow.com/questions/29423986/twisted-giving-twisted-web-client-partialdownloaderror-200-ok
+    if error.type is PartialDownloadError and error.value.status == '200':
+        downloadDone(error.value.response, request, response, feed_config)
+        return
+
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
@@ -158,9 +163,7 @@ class Downloader(resource.Resource):
         )
         print 'Request <GET %s> started' % (url,)
         response_ref = []
-        d.addCallback(downloadStarted, response_ref)
-        d.addCallback(readBody)
-        d.addCallback(downloadDone, request=request, response_ref=response_ref, feed_config=feed_config)
+        d.addCallback(downloadStarted, request=request, url=url, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url)
 
     def render_POST(self, request):
