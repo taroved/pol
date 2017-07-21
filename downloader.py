@@ -7,6 +7,7 @@ from twisted.internet import reactor, endpoints
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
+from twisted.web.html import escape
 twisted_headers = Headers
 
 from scrapy.http.response.text import TextResponse
@@ -130,12 +131,15 @@ def downloadDone(response_str, request, response_ref, feed_config):
     request.write(response_str)
     request.finish()
 
+def error_html(msg):
+    return "<html><body>%s</body></html" % escape(msg).replace("\n", "<br/>\n")
+
 def downloadError(error, request=None, url=None):
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
     else:
-        request.write('Something wrong. Contact us by email: politepol.com@gmail.com . Geek comment: ' + error.getErrorMessage())
+        request.write(error_html('Something wrong. Contact us by email: politepol.com@gmail.com \n Scary mantra: ' + error.getErrorMessage()))
     sys.stderr.write('\n'.join([str(datetime.now()), url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
     request.finish()
 
