@@ -69,8 +69,8 @@ def diff(ext1, ext2):
                 posts1 = {}
                 posts2 = {}
                 if len(items1) != len(items2):
-                    print "Different post count: %s vs %s" % (len(items1), len(item2))
-                    f.write("<< Different posts count: %s.%s:%s vs %s.%s:%s >>\n" % (id, ext1, len(items1), id, ext2, len(item2)))
+                    print "Different post count: %s vs %s" % (len(items1), len(items2))
+                    f.write("<< Different posts count: %s.%s:%s vs %s.%s:%s >>\n" % (id, ext1, len(items1), id, ext2, len(items2)))
                 for post in items1:
                     posts1[element_to_string(post)] = True
                 for post in items2:
