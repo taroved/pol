@@ -47,7 +47,7 @@ def html2json(el):
     return [
         el.tag,
         {"tag-id": el.attrib["tag-id"]},
-        [html2json(e) for e in el.getchildren() if isinstance(e, etree._Element)]
+        [html2json(e) for e in el.getchildren() if isinstance(e, etree.ElementBase)]
     ]
 
 def setBaseAndRemoveScriptsAndMore(response, url):
