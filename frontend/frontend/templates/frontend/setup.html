@@ -1,18 +1,57 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 {% load i18n %}_
 
 {% block content %}
 <div id="loader-bg"><div id="loader"></div></div>
-<div class="page-header">
-    <!--h1 style="display: inline">Feed setup:</h1-->
-    <h2 style="display: inline" id="setup-tool-string">
-        {% trans 'setup.you_are_creating_feed_with' %} 
-        <button id="st-title" class="btn btn-large has-tooltip" title="{% trans 'setup.help' %}"
-            data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button> {% trans 'setup.and' %} 
-        <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button>.
-        <button id="create" class="btn btn-large btn-primary disabled" style="padding-right: 13px; float:right" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
-    </h2>
-</div>
+    <div id="st-simple" style="float: left; display: none">
+        <h2 style="display: inline; line-height:inherit" id="setup-tool-string">
+            {% trans 'setup.you_are_creating_feed_with' %} 
+            <button id="st-title" class="btn btn-large has-tooltip" title="{% trans 'setup.help' %}"
+                data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button> {% trans 'setup.and' %} 
+            <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button>.
+        </h2>
+    </div>
+    <div id="st-complicated" style="float: left">
+        <form class="form-inline">
+        <div class="input-append">
+            <label class="checkbox" style="width: 70px; margin-right:10px">Item path:</label>
+            <input type="text" id="c-item" />
+        </div>
+        <br/>
+        <div class="input-append">
+            <label class="checkbox" style="width: 100px; padding-right:10px; text-align: right">Tille path:</label>
+            <select style="width:100px" disabled>
+                <option selected="selected">Required</option>
+                <option>Optional</option>
+            <select>
+            <input type="text" id="c-item" class="input-block-level" />
+        </div>
+        <br/>
+        <div class="input-append">
+            <label class="checkbox" style="width: 100px; padding-right:10px; text-align: right">Link path:</label>
+            <select style="width:100px" disabled>
+                <option>Required</option>
+                <option selected="selected">Optional</option>
+            <select>
+            <input type="text" id="c-item" />
+        </div>
+        <br/>
+        <div class="input-append">
+            <label class="checkbox" style="width: 100px; padding-right:10px; text-align: right">Description path:</label>
+            <select style="width:100px" disabled>
+                <option selected="selected">Required</option>
+                <option>Optional</option>
+            <select>
+            <input type="text" id="c-item" />
+        </div>
+        </form>
+    </div>
+    <div style="float:right">
+        <a id="st-hard-button" href="javascript::void()" class="has-tooltip" title="{% trans 'setup.config' %}"
+            data-trigger="hover focus manual" data-animation="true"><img src="{% static 'frontend/images/wrench48.png' %}" /></a>
+        <button id="create" class="btn btn-large btn-primary disabled" style="" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
+    </div>
 
 
 <iframe src="{{ external_page_url }}" frameborder="0" style="width:100%;/*for footer*/; border:solid">
