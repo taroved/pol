@@ -47,13 +47,13 @@ def html2json(el):
     return [
         el.tag,
         {"tag-id": el.attrib["tag-id"]},
-        [html2json(e) for e in el.getchildren() if type(e) == etree._Element]
+        [html2json(e) for e in el.getchildren() if isinstance(e, etree._Element)]
     ]
 
 def setBaseAndRemoveScriptsAndMore(response, url):
     response.selector.remove_namespaces()
     
-    tree = response.selector._root.getroottree()
+    tree = response.selector.root.getroottree()
     
     # set base url to html document
     head = tree.xpath("//head")
