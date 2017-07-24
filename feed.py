@@ -138,6 +138,7 @@ def buildFeed(response, feed_config):
         feed.add_item(
             title = title,
             link = link,
+            unique_id = link,
             description = desc,
             #enclosure=Enclosure(fields[4], "32000", "image/jpeg") if  4 in fields else None, #"Image"
             pubdate = time
