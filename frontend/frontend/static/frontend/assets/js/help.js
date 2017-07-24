@@ -82,6 +82,8 @@ window.onYouTubeIframeAPIReady = function() { // doesn't work
 };
 
 $(document).ready(function() {
+  if (!document.getElementById('buoy'))
+    return;
   style = document.getElementById('buoy').style;
   cont_el = document.getElementById('help');
   cont = cont_el.style;

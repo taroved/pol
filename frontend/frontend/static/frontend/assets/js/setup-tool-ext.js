@@ -19,8 +19,20 @@ window.ext_tool = {
     'update_ui': update_tool_ui
 };
 
-$(document).ready(function(){
+function show_ext(show) {
+    $("#st-ext-trigger")[0].style.display = show ? "inline-block" : "none";
+    $("#st-clicker-trigger")[0].style.display = !show ? "inline-block" : "none";
+    $("#st-extended")[0].style.display = !show ? "block" : "none";
+    $("#st-clicker")[0].style.display = show ? "block" : "none";
+}
 
+$(document).ready(function(){
+    $("#st-ext-trigger").click(function(){
+        show_ext(false);
+    });
+    $("#st-clicker-trigger").click(function(){
+        show_ext(true);
+    });
 
 });
 
