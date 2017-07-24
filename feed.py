@@ -92,7 +92,7 @@ def _build_link(html, doc_url, url):
 def buildFeed(response, feed_config):
     response.selector.remove_namespaces()
 
-    tree = response.selector._root.getroottree()
+    tree = response.selector.root.getroottree()
     # get data from html 
     items = []
     for node in tree.xpath(feed_config['xpath']):
