@@ -158,6 +158,7 @@ PIPELINE_JS = {
           'frontend/assets/js/bootstrap_and_overrides.js',
           'frontend/assets/js/xregexp-all.js',
           'frontend/assets/js/setup-tool.js',
+          'frontend/assets/js/setup-tool-ext.js',
           'frontend/assets/js/help.js',
         ),
         'output_filename': 'frontend/js/app.js',

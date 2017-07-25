@@ -153,7 +153,7 @@ function Item(name, button) {
                 break;
         }
         that.updateButton();
-        updateCreateButton();
+        updateCreateButtonAndExtIcon();
     }
     $(this.button).click(_button_click);
 
@@ -185,7 +185,7 @@ function Item(name, button) {
         updateSelection().then(function(){
             that.state = STATE_SELECTED;
             that.updateButton();
-            updateCreateButton();
+            updateCreateButtonAndExtIcon();
             currentItem = null;
         });
     }
@@ -194,8 +194,11 @@ function Item(name, button) {
         //todo: freeze UI
         loader(true);
         return requestSelection().then(function(data){
+            if (!('xpathes' in data && 'ids' in data)) // removed all selections
+                data = [[] ['', []]];
+
             // go by items
-            for (var name in data) {
+            for (var name in data.ids) {
                 var item = items[name],
                     manual_id = $(item.manual_marker.element).attr('tag-id');
 
@@ -207,18 +210,24 @@ function Item(name, button) {
                     return !remove;
                 });
                 // go by tag-ids for item
-                data[name].forEach(function(id){
+                data.ids[name].forEach(function(id){
                     if (id != manual_id)
                         item._markers.push(new Marker(id2el[id], item.name +'_calculated'));
                 });
                 // remove all hover styles
                 styleTool.unstyleAll('hover');
             }
+
+            // update extended tool selectors
+            xpathes = 'xpathes' in data ? data.xpathes : ['', []];
+            ET.updateUI(xpathes);
+
             loader(false);
             return {};
         }, function(error){
             //unfreez UI
             loader(false);
+            alert("Server error. Developer note: check console log")
             console.log('Server error: '+ error);
         });
     }
@@ -374,19 +383,21 @@ function onItemButtonClick(event) {
 ////
 // ++++ Create button logic
 ////
-function updateCreateButton() {
-    var active = false;
+function updateCreateButtonAndExtIcon() {
+    var selected = false;
 
     for (var name in items)
         if (items[name].state == STATE_SELECTED) {
-            active = true;
+            selected = true;
             break;
         }
 
-    if (active)
+    if (selected)
         $('#create').removeClass('disabled');
     else
         $('#create').addClass('disabled');
+    
+    ET.showIcon(selected && (!currentItem || currentItem.state != STATE_SELECTING)); // hide ext icon in time of selection
 }
 
 function onCreateButtonClick() {

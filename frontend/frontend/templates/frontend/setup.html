@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load staticfiles %}
-{% load i18n %}_
+{% load i18n %}
 
 {% block content %}
 <div id="loader-bg"><div id="loader"></div></div>
@@ -15,8 +15,8 @@
     <div id="st-extended" style="float:left; display:none">
         <form class="form-inline">
         <div class="input-append">
-            <label class="checkbox" style="width: 70px; margin-right:10px">Item path:</label>
-            <input type="text" id="ste-parent" class="input-xxlarge"/>
+            <label class="checkbox" style="width: 70px; margin-right:10px">Item xpath:</label>
+            <input type="text" id="ste-parent" class="input-xxlarge" placeholder="Skipped"/>
         </div>
         <br/>
         <div class="input-append">
@@ -25,7 +25,7 @@
                 <option selected="selected">Required</option>
                 <option>Optional</option>
             <select>
-            <input type="text" id="ste-title" class="input-xxlarge" />
+            <input type="text" id="ste-title" class="input-xxlarge" placeholder="Skipped"/>
         </div>
         <br/>
         <div class="input-append">
@@ -34,7 +34,7 @@
                 <option>Required</option>
                 <option selected="selected">Optional</option>
             <select>
-            <input type="text" id="ste-link"  class="input-xxlarge" />
+            <input type="text" id="ste-link"  class="input-xxlarge" placeholder="Skipped"/>
         </div>
         <br/>
         <div class="input-append">
@@ -43,14 +43,15 @@
                 <option selected="selected">Required</option>
                 <option>Optional</option>
             <select>
-            <input type="text" id="ste-description" class="input-xxlarge" />
+            <input type="text" id="ste-description" class="input-xxlarge" placeholder="Skipped"/>
         </div>
         </form>
     </div>
     <div style="float:right">
         <a id="st-clicker-trigger" href="javascript:void(0)" style="display:none" class="has-tooltip" title="{% trans 'setup.config' %}"
-            data-trigger="hover focus manual" data-animation="true"><img src="{% static 'frontend/images/target48.png' %}" /></a>
-        <a id="st-ext-trigger" href="javascript:void(0)"  style="display:inline-block" class="has-tooltip" title="{% trans 'setup.config' %}"
+           data-trigger="hover focus manual" data-animation="true"
+           confirm-text="You may loose your changes. Are you shure?"><img src="{% static 'frontend/images/target48.png' %}" /></a>
+        <a id="st-ext-trigger" href="javascript:void(0)"  style="display:none" class="has-tooltip" title="{% trans 'setup.config' %}"
             data-trigger="hover focus manual" data-animation="true"><img src="{% static 'frontend/images/wrench48.png' %}" /></a>
         <button id="create" class="btn btn-large btn-primary disabled" style="" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </div>

@@ -74,7 +74,19 @@ def setup_get_selected_ids(request):
         if not _validate_html(html_json):
             return HttpResponseBadRequest('html is invalid')
 
-        return HttpResponse(json.dumps(get_selection_tag_ids(item_names, html_json)))
+        xpathes = build_xpathes_for_items(item_names, html_json)
+        if 'title' in xpathes[1]:
+            xpathes[1]['link'] = _get_link_xpath(xpathes[1]['title'])
+
+        resp = {
+            'xpathes': xpathes,
+            'ids': get_selection_tag_ids(item_names, html_json)
+        }
+
+        return HttpResponse(json.dumps(resp))
+
+def _get_link_xpath(title_xpath):
+    return '('+ title_xpath +')[1]/ancestor-or-self::node()[name()="a"]/@href'
 
 def _create_feed(url, xpathes):
     feed_xpath = xpathes[0]
@@ -90,7 +102,7 @@ def _create_feed(url, xpathes):
             ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
             ff.save()
         if field.name == 'link' and 'title' in item_xpathes:
-            ff = FeedField(feed=feed, field=field, xpath='('+ item_xpathes['title'] +')[1]/ancestor-or-self::node()[name()="a"]/@href')
+            ff = FeedField(feed=feed, field=field, xpath= _get_link_xpath(item_xpathes['title']))
             ff.save()
 
     return feed.id
