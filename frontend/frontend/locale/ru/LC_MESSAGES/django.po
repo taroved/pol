@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-04 14:32-0700\n"
+"POT-Creation-Date: 2017-07-26 20:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,7 +58,8 @@ msgstr "PolitePol.com: Создай RSS канал для любой веб-ст
 msgid "brand"
 msgstr "Polite Pol"
 
-#: templates/frontend/index.html:16 templates/frontend/index.html.py:43
+#: templates/frontend/index.html:15 templates/frontend/index.html.py:16
+#: templates/frontend/index.html:43
 msgid "help"
 msgstr "Помощ"
 
@@ -90,28 +91,72 @@ msgstr "Загрузка..."
 msgid "subscribe.preview"
 msgstr "Предпросмотр"
 
-#: templates/frontend/setup.html:9
+#: templates/frontend/setup.html:46
+msgid "xpath.link"
+msgstr ""
+
+#: templates/frontend/setup.html:54
 msgid "setup.you_are_creating_feed_with"
 msgstr "Вы создаете ленту содержащую"
 
-#: templates/frontend/setup.html:10
+#: templates/frontend/setup.html:55
 msgid "setup.help"
 msgstr ""
 "Нажмите на кнопку и переместите курсор на документ внизу и выберите нужный "
 "блок"
 
-#: templates/frontend/setup.html:11
+#: templates/frontend/setup.html:56
 msgid "setup.title"
 msgstr "Название"
 
-#: templates/frontend/setup.html:11
+#: templates/frontend/setup.html:56
 msgid "setup.and"
 msgstr "и"
 
-#: templates/frontend/setup.html:12
+#: templates/frontend/setup.html:57
 msgid "setup.description"
 msgstr "Описание"
 
-#: templates/frontend/setup.html:13
+#: templates/frontend/setup.html:63
+msgid "setup.item_xpath"
+msgstr "Xpath поста"
+
+#: templates/frontend/setup.html:65 templates/frontend/setup.html.py:76
+#: templates/frontend/setup.html:87 templates/frontend/setup.html.py:98
+msgid "setup.skipped"
+msgstr "Пропущено"
+
+#: templates/frontend/setup.html:66 templates/frontend/setup.html.py:77
+#: templates/frontend/setup.html:88 templates/frontend/setup.html.py:99
+msgid "setup.Selected"
+msgstr "Выбрано %s элементов"
+
+#: templates/frontend/setup.html:70
+msgid "setup.title_xpath"
+msgstr "Xpath названия"
+
+#: templates/frontend/setup.html:73 templates/frontend/setup.html.py:84
+#: templates/frontend/setup.html:95
+msgid "setup.Required"
+msgstr "Обязательное"
+
+#: templates/frontend/setup.html:74 templates/frontend/setup.html.py:85
+#: templates/frontend/setup.html:96
+msgid "setup.Optional"
+msgstr "Опциональное"
+
+#: templates/frontend/setup.html:81
+msgid "setup.link_xpath"
+msgstr "Xpath ссылки"
+
+#: templates/frontend/setup.html:92
+msgid "setup.description_xpath"
+msgstr "Xpath описания"
+
+#: templates/frontend/setup.html:105 templates/frontend/setup.html.py:108
+msgid "setup.config"
+msgstr "и"
+
+#: templates/frontend/setup.html:110
 msgid "setup.create"
 msgstr "Создать"

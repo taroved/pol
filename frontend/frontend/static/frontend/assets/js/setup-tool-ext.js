@@ -108,8 +108,10 @@ $(document).ready(function(){
     });
     $("#st-clicker-trigger").click(function(){
         var ch = changed();
-        if (!ch || confirm($("#st-clicker-trigger").attr('confirm-text')))
+        if (!ch || confirm($("#st-clicker-trigger").attr('confirm-text'))) {
             show_ext(false);
+            updateUI(_config);
+        }
         return true;
     });
 
