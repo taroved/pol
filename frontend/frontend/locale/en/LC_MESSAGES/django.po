@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-26 20:24+0300\n"
+"POT-Creation-Date: 2017-07-26 20:30+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -152,9 +152,13 @@ msgstr "Link xpath"
 msgid "setup.description_xpath"
 msgstr "Description xpath"
 
-#: templates/frontend/setup.html:105 templates/frontend/setup.html.py:108
-msgid "setup.config"
-msgstr "and"
+#: templates/frontend/setup.html:105
+msgid "setup.clicker_tip"
+msgstr "Visual constructor"
+
+#: templates/frontend/setup.html:108
+msgid "setup.extended_tip"
+msgstr "Selectors editor"
 
 #: templates/frontend/setup.html:110
 msgid "setup.create"

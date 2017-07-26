@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-26 20:24+0300\n"
+"POT-Creation-Date: 2017-07-26 20:30+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -153,9 +153,13 @@ msgstr "Xpath ссылки"
 msgid "setup.description_xpath"
 msgstr "Xpath описания"
 
-#: templates/frontend/setup.html:105 templates/frontend/setup.html.py:108
-msgid "setup.config"
-msgstr "и"
+#: templates/frontend/setup.html:105
+msgid "setup.clicker_tip"
+msgstr "Визуальный конструктор"
+
+#: templates/frontend/setup.html:108
+msgid "setup.extended_tip"
+msgstr "Редактор селекторов"
 
 #: templates/frontend/setup.html:110
 msgid "setup.create"
