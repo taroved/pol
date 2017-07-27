@@ -170,13 +170,6 @@ class Downloader(resource.Resource):
         d.addCallback(downloadStarted, request=request, url=url, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url)
 
-    def render_POST(self, request):
-        obj = json.load(request.content)
-        url = obj[0].encode('utf-8')
-
-        self.startRequest(request, url)
-        return NOT_DONE_YET
-
     def render_GET(self, request):
         '''
         Render page for frontend or RSS feed
