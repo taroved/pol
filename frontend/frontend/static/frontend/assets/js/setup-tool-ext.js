@@ -52,7 +52,9 @@ function updateSelector(name, messages) {
 
 // show status and error messages
 function updateUIMessages(data) {
-        
+    updateSelector('parent', data[0]);
+    for (name in data[1])
+        updateSelector(name, data[1][name]);
 }
 
 function updateUI(config) {

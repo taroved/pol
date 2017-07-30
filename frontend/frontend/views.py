@@ -12,6 +12,7 @@ from .forms import IndexForm
 from .settings import DOWNLOADER_PAGE_URL, FEED_PAGE_URL, FEED1_PAGE_URL
 
 from .setup_tool import get_selection_tag_ids, build_xpathes_for_items
+from .setup_tool_ext import build_xpath_results
 from .models import Feed, Field, FeedField
 
 def index(request):
@@ -123,6 +124,49 @@ def setup_create_feed(request):
         feed_id = _create_feed(url, xpathes)
  
         return HttpResponse(reverse('preview', args=(feed_id,)))
+
+def _validate_selectors(selectors):
+    if not isinstance(selectors, list) or len(selectors) != 2:
+        return False
+    feed_xpath = xpathes[0]
+    item_xpathes = xpathes[1]
+
+    if not isinstance(feed_xpath, basestring):
+        return False
+
+    if not isinstance(item_xpathes, dict):
+        return False
+
+    fields = Field.objects.all()
+
+    item_xpathes_out = {}
+
+    for field in fields:
+        if field.name in item_xpathes:
+            if not isinstance(item_xpath[field.name], basestring):
+                return False
+            else:
+                item_xpathes_out[field.name] = item_xpath[field.name]
+    return [feed_xpath. item_xpathes_out]
+
+def setup_create_feed_ext(request):
+    if request.method == 'POST':
+        obj = json.loads(request.body)
+        if 'selectors' not in obj or 'snapshot_time' not in obj or 'url' not in obj:
+            return HttpResponseBadRequest('"selectors", "snapshot_time" and "url" parameters are required')
+
+        selectors = obj['selectors']
+        snapshot_time = obj['snapshot_time']
+        url = obj['url']
+
+        validated_selectors = _validate_selectors(selectors)
+
+        if not validated_selectors:
+            return HttpResponseBadRequest('selectors are invalid')
+
+        results = build_xpathes_results(validated_selectors, snapshot_time, url)
+
+        return HttpResponse(json.dumps(results))
 
 def preview(request, feed_id):
     if request.method == 'GET': 

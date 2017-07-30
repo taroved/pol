@@ -406,7 +406,7 @@ function onCreateButtonClick() {
         //freeze UI
         loader(true);
         createFeed().then(function(data){
-            if (typeof(data) == 'string'))
+            if (typeof(data) == 'string')
 				window.location.href = data; // feed_page_url
 			else
 				ET.updateUI(data);
@@ -430,7 +430,7 @@ function createFeed() {
             $.ajax({
                 type: 'POST',
                 url: EI.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
-                data: JSON.stringify(ET.active
+                data: JSON.stringify(ET.active()
                                      ? { selectors: ET.getUIConfig(), snapshot_time: snapshot_time, url:$('#create').data('page-url') }
                                      : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }
                                     ),

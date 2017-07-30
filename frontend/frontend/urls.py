@@ -29,3 +29,4 @@ urlpatterns = i18n_patterns(
 
 urlpatterns.append(url(r'^setup_get_selected_ids$', views.setup_get_selected_ids, name='setup_get_selected_ids'))
 urlpatterns.append(url(r'^setup_create_feed$', views.setup_create_feed, name='setup_create_feed'))
+urlpatterns.append(url(r'^setup_create_feed_ext$', views.setup_create_feed, name='setup_create_feed_ext'))
