@@ -1,9 +1,10 @@
 import json
 import time, sys
+from hashlib import md5
 from datetime import datetime
 
 from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
+from twisted.internet import reactor, endpoints, defer
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
@@ -22,7 +23,7 @@ import re
 
 from feed import getFeedData, buildFeed
 
-from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG
+from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG, SNAPSHOT_DIR
 
 
 if FEED_REQUEST_PERIOD_LIMIT:
@@ -55,6 +56,8 @@ def setBaseAndRemoveScriptsAndMore(response, url):
     
     tree = response.selector.root.getroottree()
     
+    snapshot_time = str(time.time())
+
     # set base url to html document
     head = tree.xpath("//head")
     if head:
@@ -96,10 +99,13 @@ def setBaseAndRemoveScriptsAndMore(response, url):
         # append html2json js object
         jsobj = html2json(tree.getroot())
         script = etree.Element('script', {'type': 'text/javascript'})
-        script.text = 'var html2json = ' + json.dumps(jsobj) + ';'
+        script.text = '\n'.join((
+                        'var html2json = ' + json.dumps(jsobj) + ';',
+                        'var snapshot_time = "' + snapshot_time + '";'
+                    ))
         body[0].append(script)
     
-    return etree.tostring(tree, method='html')
+    return (etree.tostring(tree, method='html'), snapshot_time)
 
 def buildScrapyResponse(response, body, url):
     status = response.code
@@ -126,7 +132,15 @@ def downloadDone(response_str, request, response, feed_config):
             response_str = buildFeed(response, feed_config)
             request.setHeader(b"Content-Type", b'text/xml')
         else:
-            response_str = setBaseAndRemoveScriptsAndMore(response, url)
+            response_str, snapshot_time = setBaseAndRemoveScriptsAndMore(response, url)
+            file_name = SNAPSHOT_DIR + '/' + snapshot_time + '_' + md5(url).hexdigest()
+            # import pdb;pdb.set_trace()
+            with open(file_name, 'w') as f:
+                f.write(url + '\n')
+                for k, v in response.headers.iteritems():
+                    for vv in v:
+                        f.write('%s: %s\n' % (k, vv))
+                f.write('\n\n' + response_str)
 
     request.write(response_str)
     request.finish()
@@ -137,7 +151,10 @@ def error_html(msg):
 def downloadError(error, request=None, url=None, response=None, feed_config=None):
     # read for details: https://stackoverflow.com/questions/29423986/twisted-giving-twisted-web-client-partialdownloaderror-200-ok
     if error.type is PartialDownloadError and error.value.status == '200':
-        downloadDone(error.value.response, request, response, feed_config)
+        d = defer.Deferred()
+        reactor.callLater(0, d.callback, error.value.response) # error.value.response is response_str
+        d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
+        d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
         return
 
     if DEBUG:
@@ -166,7 +183,6 @@ class Downloader(resource.Resource):
             None
         )
         print 'Request <GET %s> started' % (url,)
-        response_ref = []
         d.addCallback(downloadStarted, request=request, url=url, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url)
 

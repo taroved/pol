@@ -38,6 +38,23 @@ function check_pathes(pathes) {
 var _config = ['', {}];
 var _active = false;
 
+function updateSelector(name, messages) {
+    var control_group = $('#ste-'+ name).parent().parent();
+    if ('error' in messages) {
+        control_group.removeClass('info').addClass('error');
+        control_group.find('.help-inline').text(messages['error']);
+    }
+    else {
+        control_group.removeClass('error').addClass('info');
+        control_group.find('.help-inline').text(messages['count']);
+    }
+}
+
+// show status and error messages
+function updateUIMessages(data) {
+        
+}
+
 function updateUI(config) {
     console.log(config);
     _config = config;
@@ -89,6 +106,7 @@ window.ET = {
     'init': init_tool,
     'check': check_pathes,
     'updateUI': updateUI,
+    'getUIConfig': getUIConfig,
     'active': active
 };
 

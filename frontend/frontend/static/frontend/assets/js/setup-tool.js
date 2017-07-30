@@ -405,8 +405,11 @@ function onCreateButtonClick() {
     if (active) {
         //freeze UI
         loader(true);
-        createFeed().then(function(feed_page_url){
-            window.location.href = feed_page_url;
+        createFeed().then(function(data){
+            if (typeof(data) == 'string'))
+				window.location.href = data; // feed_page_url
+			else
+				ET.updateUI(data);
         }, function(error){
             //unfreez UI
             loader(false);
@@ -416,16 +419,21 @@ function onCreateButtonClick() {
 }
 
 function createFeed() {
-    // gather selected tag-ids
-    var name_ids = {};
-    selected_any = gatherSelectedTagIds(name_ids);
+    if (!ET.active()) {
+        // gather selected tag-ids
+        var name_ids = {};
+        selected_any = gatherSelectedTagIds(name_ids);
+    }
 
     if (selected_any)
         return new Promise(function(resolve, reject){
             $.ajax({
                 type: 'POST',
-                url: "/setup_create_feed",
-                data: JSON.stringify({ html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }),
+                url: EI.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
+                data: JSON.stringify(ET.active
+                                     ? { selectors: ET.getUIConfig(), snapshot_time: snapshot_time, url:$('#create').data('page-url') }
+                                     : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }
+                                    ),
                 contentType: "application/json; charset=utf-8",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},
                 success: function(data){
@@ -471,7 +479,9 @@ $(document).ready(function(){
         // attach iframe elements event handlers
         $('iframe').contents().on('click', '*[tag-id]', onIframeElementClick);
         $('iframe').contents().on('mouseenter mouseleave', '*[tag-id]', onIframeElementHover);
-        iframeHtmlJson = $('iframe')[0].contentWindow.html2json;
+		var iframe_window = $('iframe')[0].contentWindow;
+        iframeHtmlJson = iframe_window.html2json;
+		snapshot_time = iframe_window.snapshot_time;
         loader(false);
     });
 
