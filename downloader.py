@@ -53,10 +53,18 @@ def html2json(el):
 
 def setBaseAndRemoveScriptsAndMore(response, url):
     response.selector.remove_namespaces()
-    
+
     tree = response.selector.root.getroottree()
-    
-    snapshot_time = str(time.time())
+
+    # save html for extended selectors
+    file_name = '%s_%s' % (time.time(), md5(url).hexdigest())
+    file_path = SNAPSHOT_DIR + '/' + file_name
+    with open(file_path, 'w') as f:
+        f.write(url + '\n')
+        for k, v in response.headers.iteritems():
+            for vv in v:
+                f.write('%s: %s\n' % (k, vv))
+        f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html'))
 
     # set base url to html document
     head = tree.xpath("//head")
@@ -89,11 +97,11 @@ def setBaseAndRemoveScriptsAndMore(response, url):
         for attr in bad.attrib:
             if attr.startswith('on'):
                 del bad.attrib[attr]
-        
+
         # sanitize forms
         if bad.tag == 'form':
             bad.attrib['onsubmit'] = "return false"
-    
+
     body = tree.xpath("//body")
     if body:
         # append html2json js object
@@ -101,11 +109,11 @@ def setBaseAndRemoveScriptsAndMore(response, url):
         script = etree.Element('script', {'type': 'text/javascript'})
         script.text = '\n'.join((
                         'var html2json = ' + json.dumps(jsobj) + ';',
-                        'var snapshot_time = "' + snapshot_time + '";'
+                        'var snapshot_time = "' + file_name + '";'
                     ))
         body[0].append(script)
-    
-    return (etree.tostring(tree, method='html'), snapshot_time)
+
+    return (etree.tostring(tree, method='html'), file_name)
 
 def buildScrapyResponse(response, body, url):
     status = response.code
@@ -132,15 +140,7 @@ def downloadDone(response_str, request, response, feed_config):
             response_str = buildFeed(response, feed_config)
             request.setHeader(b"Content-Type", b'text/xml')
         else:
-            response_str, snapshot_time = setBaseAndRemoveScriptsAndMore(response, url)
-            file_name = SNAPSHOT_DIR + '/' + snapshot_time + '_' + md5(url).hexdigest()
-            # import pdb;pdb.set_trace()
-            with open(file_name, 'w') as f:
-                f.write(url + '\n')
-                for k, v in response.headers.iteritems():
-                    for vv in v:
-                        f.write('%s: %s\n' % (k, vv))
-                f.write('\n\n' + response_str)
+            response_str, file_name = setBaseAndRemoveScriptsAndMore(response, url)
 
     request.write(response_str)
     request.finish()
@@ -197,7 +197,7 @@ class Downloader(resource.Resource):
             return NOT_DONE_YET
         elif self.feed_regexp.match(request.uri) is not None: # feed
             feed_id = self.feed_regexp.match(request.uri).groups()[0]
-            
+
             time_left = check_feed_request_time_limit(request.uri)
             if time_left:
                 request.setResponseCode(429)
@@ -205,10 +205,10 @@ class Downloader(resource.Resource):
                 return 'Too Many Requests. Retry after %s seconds' % (str(time_left))
             else:
                 res = getFeedData(request, feed_id)
-                
+
                 if isinstance(res, basestring): # error message
                     return res
-                
+
                 url, feed_config = res
                 self.startRequest(request, url, feed_config)
                 return NOT_DONE_YET

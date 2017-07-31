@@ -1,5 +1,6 @@
 import urllib
 import json
+import re
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
@@ -119,21 +120,20 @@ def setup_create_feed(request):
 
         if not _validate_html(html_json):
             return HttpResponseBadRequest('html is invalid')
-        
+
         xpathes = build_xpathes_for_items(item_names, html_json)
         feed_id = _create_feed(url, xpathes)
- 
+
         return HttpResponse(reverse('preview', args=(feed_id,)))
 
 def _validate_selectors(selectors):
     if not isinstance(selectors, list) or len(selectors) != 2:
         return False
-    feed_xpath = xpathes[0]
-    item_xpathes = xpathes[1]
+    feed_xpath = selectors[0]
+    item_xpathes = selectors[1]
 
     if not isinstance(feed_xpath, basestring):
         return False
-
     if not isinstance(item_xpathes, dict):
         return False
 
@@ -143,28 +143,30 @@ def _validate_selectors(selectors):
 
     for field in fields:
         if field.name in item_xpathes:
-            if not isinstance(item_xpath[field.name], basestring):
+            if not isinstance(item_xpathes[field.name], basestring):
                 return False
             else:
-                item_xpathes_out[field.name] = item_xpath[field.name]
-    return [feed_xpath. item_xpathes_out]
+                item_xpathes_out[field.name] = item_xpathes[field.name]
+    return [feed_xpath, item_xpathes_out]
 
 def setup_create_feed_ext(request):
     if request.method == 'POST':
         obj = json.loads(request.body)
-        if 'selectors' not in obj or 'snapshot_time' not in obj or 'url' not in obj:
-            return HttpResponseBadRequest('"selectors", "snapshot_time" and "url" parameters are required')
+        if 'selectors' not in obj or 'snapshot_time' not in obj:
+            return HttpResponseBadRequest('"selectors" and "snapshot_time" are required')
 
         selectors = obj['selectors']
-        snapshot_time = obj['snapshot_time']
-        url = obj['url']
+        file_name = obj['snapshot_time']
+
+        if not re.match('^\d{10}\.\d+_[\da-f]{32}', file_name):
+            return HttpResponseBadRequest('"snapshot_time" is invalid')
 
         validated_selectors = _validate_selectors(selectors)
 
         if not validated_selectors:
             return HttpResponseBadRequest('selectors are invalid')
 
-        results = build_xpathes_results(validated_selectors, snapshot_time, url)
+        results = build_xpath_results(validated_selectors, file_name)
 
         return HttpResponse(json.dumps(results))
 
@@ -175,5 +177,5 @@ def preview(request, feed_id):
                             'feed_url': FEED_PAGE_URL + feed_id, 
                             'feed1_url': FEED1_PAGE_URL + feed_id, 
                         })
-        
+
     return HttpResponseBadRequest('Only GET method supported')

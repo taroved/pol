@@ -429,7 +429,7 @@ function createFeed() {
         return new Promise(function(resolve, reject){
             $.ajax({
                 type: 'POST',
-                url: EI.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
+                url: ET.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
                 data: JSON.stringify(ET.active()
                                      ? { selectors: ET.getUIConfig(), snapshot_time: snapshot_time, url:$('#create').data('page-url') }
                                      : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }
