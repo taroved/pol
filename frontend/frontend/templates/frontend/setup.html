@@ -63,7 +63,7 @@
               <label class="control-label"><a href="{{ xpath_link }}" target="_blank">{% trans 'setup.item_xpath' %}</a>:</label>
 								<div class="controls">
 										<input type="text" id="ste-parent" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
-                    <span class="help-inline" selected-text="{% trans 'setup.Selected' %}"></span>
+                    <span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
 						<div class="control-group info">
@@ -74,7 +74,7 @@
 												<option>{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-title" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
-										<span class="help-inline">{% trans 'setup.Selected' %}</span>
+										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
 						<div class="control-group info">
@@ -85,7 +85,7 @@
 												<option selected="selected">{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-link" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
-										<span class="help-inline">{% trans 'setup.Selected' %}</span>
+										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
 						<div class="control-group info">
@@ -96,7 +96,7 @@
 												<option>{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-description" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
-										<span class="help-inline">{% trans 'setup.Selected' %}</span>
+										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
         </form>

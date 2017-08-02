@@ -406,20 +406,34 @@ function onCreateButtonClick() {
         //freeze UI
         loader(true);
         createFeed().then(function(data){
-            if (typeof(data) == 'string')
-				window.location.href = data; // feed_page_url
+            if (ET.active()) {
+				ET.updateUIMessages(JSON.parse(data));
+                //unfreez UI
+                loader(false);
+            }
 			else
-				ET.updateUI(data);
+				window.location.href = data; // feed_page_url
         }, function(error){
+            console.log('Server error: '+ error);
             //unfreez UI
             loader(false);
-            console.log('Server error: '+ error);
         });
     }
 }
 
 function createFeed() {
-    if (!ET.active()) {
+    var selectors = null;
+    if (ET.active()) {
+        selectors = ET.getUIConfig();
+        selectors[0] = selectors[0].trim();
+        
+        for (var name in selectors[1]) {
+            var xpath = selectors[1][name];
+            if (xpath.trim().length == 0)
+                delete selectors[1][name];
+        }
+    }
+    else {
         // gather selected tag-ids
         var name_ids = {};
         selected_any = gatherSelectedTagIds(name_ids);
@@ -431,7 +445,7 @@ function createFeed() {
                 type: 'POST',
                 url: ET.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
                 data: JSON.stringify(ET.active()
-                                     ? { selectors: ET.getUIConfig(), snapshot_time: snapshot_time, url:$('#create').data('page-url') }
+                                     ? { selectors: selectors, snapshot_time: snapshot_time, url:$('#create').data('page-url') }
                                      : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }
                                     ),
                 contentType: "application/json; charset=utf-8",

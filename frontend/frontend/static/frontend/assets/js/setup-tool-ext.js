@@ -40,13 +40,14 @@ var _active = false;
 
 function updateSelector(name, messages) {
     var control_group = $('#ste-'+ name).parent().parent();
+    var help_text = control_group.find('.help-inline');
     if ('error' in messages) {
         control_group.removeClass('info').addClass('error');
-        control_group.find('.help-inline').text(messages['error']);
+        help_text.text(messages['error']);
     }
     else {
         control_group.removeClass('error').addClass('info');
-        control_group.find('.help-inline').text(messages['count']);
+        help_text.text(help_text.attr('count-tpl').replace('%s', messages['count']));
     }
 }
 
@@ -108,6 +109,7 @@ window.ET = {
     'init': init_tool,
     'check': check_pathes,
     'updateUI': updateUI,
+    'updateUIMessages': updateUIMessages,
     'getUIConfig': getUIConfig,
     'active': active
 };
