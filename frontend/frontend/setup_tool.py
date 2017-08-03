@@ -161,5 +161,6 @@ def build_xpathes_for_items(item_tag_ids, html_json):
             item_xpathes[name] = '/'.join([repr(path_item) for path_item in selection_pathes[name]])
         else:
             item_xpathes[name] = '.'
+        item_xpathes[name] += '/child::node()'
 
     return [feed_xpath, item_xpathes]

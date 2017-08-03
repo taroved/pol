@@ -60,14 +60,16 @@
     <div id="st-extended" style="float:left; display:none">
         <form class="form-horizontal">
 						<div class="control-group info">
-              <label class="control-label"><a href="{{ xpath_link }}" target="_blank">{% trans 'setup.item_xpath' %}</a>:</label>
+              <label class="control-label">
+                  <a class="label label-info" href="{{ xpath_link }}" target="_blank">?</a>
+                  {% trans 'setup.item_xpath' %}:</label>
 								<div class="controls">
-										<input type="text" id="ste-parent" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
-                    <span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
+										<input type="text" id="ste-parent" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
+                                        <span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
 						<div class="control-group info">
-								<label class="control-label"><a href="{{ xpath_link }}" target="_blank">{% trans 'setup.title_xpath' %}</a>:</label>
+								<label class="control-label">{% trans 'setup.title_xpath' %}:</label>
 								<div class="controls">
 										<select disabled>
 												<option selected="selected">{% trans 'setup.Required' %}</option>
@@ -78,7 +80,7 @@
 								</div>
 						</div>
 						<div class="control-group info">
-              <label class="control-label"><a href="{{ xpath_link }}" target="_blank">{% trans 'setup.link_xpath' %}</a>:</label>
+              <label class="control-label">{% trans 'setup.link_xpath' %}:</label>
 								<div class="controls">
 										<select style="width:100px" disabled>
 												<option>{% trans 'setup.Required' %}</option>
@@ -89,7 +91,7 @@
 								</div>
 						</div>
 						<div class="control-group info">
-              <label class="control-label"><a href="{{ xpath_link }}" target="_blank">{% trans 'setup.description_xpath' %}</a>:</label>
+              <label class="control-label">{% trans 'setup.description_xpath' %}:</label>
 								<div class="controls">
 										<select style="width:100px" disabled>
 												<option selected="selected">{% trans 'setup.Required' %}</option>
@@ -107,7 +109,8 @@
            confirm-text="You may loose your changes. Are you shure?"><img src="{% static 'frontend/images/target48.png' %}" /></a>
         <a id="st-ext-trigger" href="javascript:void(0)"  style="display:none" class="has-tooltip" title="{% trans 'setup.extended_tip' %}"
             data-trigger="hover focus manual" data-animation="true"><img src="{% static 'frontend/images/wrench48.png' %}" /></a>
-        <button id="create" class="btn btn-large btn-primary disabled" style="" data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
+        <button id="check" class="btn btn-large btn-primary" style="display:none">{% trans 'setup.check' %} <i class="icon-check icon-white" style="margin-top: 3px"></i></button>
+        <button id="create" class="btn btn-large btn-primary disabled"  data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </div>
 
 

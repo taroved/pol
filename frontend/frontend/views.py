@@ -88,7 +88,11 @@ def setup_get_selected_ids(request):
         return HttpResponse(json.dumps(resp))
 
 def _get_link_xpath(title_xpath):
-    return '('+ title_xpath +')[1]/ancestor-or-self::node()[name()="a"]/@href'
+    if title_xpath == './child::node()':
+        return './ancestor-or-self::node()[name()="a"]/@href'
+    else:
+        xpath = title_xpath[:len(title_xpath)-len('/child::node()')]
+        return xpath +'/ancestor-or-self::node()/@href'
 
 def _create_feed(url, xpathes):
     feed_xpath = xpathes[0]

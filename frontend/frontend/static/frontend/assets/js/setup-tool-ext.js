@@ -37,25 +37,37 @@ function check_pathes(pathes) {
 
 var _config = ['', {}];
 var _active = false;
+var _validated = false;
 
 function updateSelector(name, messages) {
     var control_group = $('#ste-'+ name).parent().parent();
     var help_text = control_group.find('.help-inline');
+
     if ('error' in messages) {
         control_group.removeClass('info').addClass('error');
         help_text.text(messages['error']);
     }
-    else {
+    else if ('count' in messages || $('#ste-'+ name).val().trim()) {
+        if (!('count' in messages))
+            messages['count'] = 0;
         control_group.removeClass('error').addClass('info');
         help_text.text(help_text.attr('count-tpl').replace('%s', messages['count']));
+    }
+    else {
+        control_group.removeClass('error').removeClass('info');
+        help_text.text('');
     }
 }
 
 // show status and error messages
 function updateUIMessages(data) {
     updateSelector('parent', data[0]);
-    for (name in data[1])
-        updateSelector(name, data[1][name]);
+    ['title', 'description', 'link'].forEach(function(name){
+        if (name in data[1])
+            updateSelector(name, data[1][name]);
+        else
+            updateSelector(name, {});
+    });
 }
 
 function updateUI(config) {
@@ -103,6 +115,9 @@ function changed() {
 function active() {
     return _active;
 }
+function validate() {
+    return _validate;
+}
 
 window.ET = {
     'showIcon': showIcon,
@@ -111,7 +126,8 @@ window.ET = {
     'updateUI': updateUI,
     'updateUIMessages': updateUIMessages,
     'getUIConfig': getUIConfig,
-    'active': active
+    'active': active,
+    'validate': validate
 };
 
 function show_ext(show) {
@@ -135,6 +151,10 @@ $(document).ready(function(){
             updateUI(_config);
         }
         return true;
+    });
+
+    $("input[id^='ste-']").keyup(function(){
+        $("#check")[0].style.display = changed() ? 'inline-block' : 'none';
     });
 
     /*var cfg = read('xpathes')
