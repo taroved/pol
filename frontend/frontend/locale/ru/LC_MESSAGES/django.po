@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-07-26 20:30+0300\n"
+"POT-Creation-Date: 2017-08-06 00:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -117,50 +117,58 @@ msgstr "и"
 msgid "setup.description"
 msgstr "Описание"
 
-#: templates/frontend/setup.html:63
+#: templates/frontend/setup.html:65
 msgid "setup.item_xpath"
 msgstr "Xpath поста"
 
-#: templates/frontend/setup.html:65 templates/frontend/setup.html.py:76
-#: templates/frontend/setup.html:87 templates/frontend/setup.html.py:98
+#: templates/frontend/setup.html:67 templates/frontend/setup.html.py:78
+#: templates/frontend/setup.html:89 templates/frontend/setup.html.py:100
 msgid "setup.skipped"
 msgstr "Пропущено"
 
-#: templates/frontend/setup.html:66 templates/frontend/setup.html.py:77
-#: templates/frontend/setup.html:88 templates/frontend/setup.html.py:99
+#: templates/frontend/setup.html:68 templates/frontend/setup.html.py:79
+#: templates/frontend/setup.html:90 templates/frontend/setup.html.py:101
 msgid "setup.Selected"
 msgstr "Выбрано %s элементов"
 
-#: templates/frontend/setup.html:70
+#: templates/frontend/setup.html:72
 msgid "setup.title_xpath"
 msgstr "Xpath названия"
 
-#: templates/frontend/setup.html:73 templates/frontend/setup.html.py:84
-#: templates/frontend/setup.html:95
+#: templates/frontend/setup.html:75 templates/frontend/setup.html.py:86
+#: templates/frontend/setup.html:97
 msgid "setup.Required"
 msgstr "Обязательное"
 
-#: templates/frontend/setup.html:74 templates/frontend/setup.html.py:85
-#: templates/frontend/setup.html:96
+#: templates/frontend/setup.html:76 templates/frontend/setup.html.py:87
+#: templates/frontend/setup.html:98
 msgid "setup.Optional"
 msgstr "Опциональное"
 
-#: templates/frontend/setup.html:81
+#: templates/frontend/setup.html:83
 msgid "setup.link_xpath"
 msgstr "Xpath ссылки"
 
-#: templates/frontend/setup.html:92
+#: templates/frontend/setup.html:94
 msgid "setup.description_xpath"
 msgstr "Xpath описания"
 
-#: templates/frontend/setup.html:105
+#: templates/frontend/setup.html:107
 msgid "setup.clicker_tip"
 msgstr "Визуальный конструктор"
 
-#: templates/frontend/setup.html:108
+#: templates/frontend/setup.html:109
+msgid "setup.confirm_loose"
+msgstr "Вы потеряете изменения. Вы уверены?"
+
+#: templates/frontend/setup.html:110
 msgid "setup.extended_tip"
 msgstr "Редактор селекторов"
 
-#: templates/frontend/setup.html:110
+#: templates/frontend/setup.html:112
+msgid "setup.check"
+msgstr "Проверить"
+
+#: templates/frontend/setup.html:113
 msgid "setup.create"
 msgstr "Создать"

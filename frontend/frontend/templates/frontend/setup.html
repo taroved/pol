@@ -27,19 +27,28 @@
 /* Portrait tablet to landscape and desktop */
 @media (min-width: 768px) and (max-width: 979px) {
 #st-extended .form-horizontal .controls {
-		width: 700px
+    width: 410px
+}
+#st-extended .form-horizontal .controls .input-xxlarge {
+    width: 270px
 }
 }
 /* Landscape phone to portrait tablet */
 @media (max-width: 767px) {
 #st-extended .form-horizontal .controls {
-		width: 400px
+    width: 340px
+}
+#st-extended .form-horizontal .controls .input-xxlarge {
+    width: 200px
 }
 }
 /* Landscape phones and down */
 @media (max-width: 480px) {
 #st-extended .form-horizontal .controls {
-		width: 250px
+    width: 340px
+}
+#st-extended .form-horizontal .controls .input-xxlarge {
+    width: 200px
 }
 }
 </style>
@@ -106,10 +115,10 @@
     <div style="float:right">
         <a id="st-clicker-trigger" href="javascript:void(0)" style="display:none" class="has-tooltip" title="{% trans 'setup.clicker_tip' %}"
            data-trigger="hover focus manual" data-animation="true"
-           confirm-text="You may loose your changes. Are you shure?"><img src="{% static 'frontend/images/target48.png' %}" /></a>
+           confirm-text="{% trans 'setup.confirm_loose' %}"><img src="{% static 'frontend/images/target48.png' %}" /></a>
         <a id="st-ext-trigger" href="javascript:void(0)"  style="display:none" class="has-tooltip" title="{% trans 'setup.extended_tip' %}"
             data-trigger="hover focus manual" data-animation="true"><img src="{% static 'frontend/images/wrench48.png' %}" /></a>
-        <button id="check" class="btn btn-large btn-primary" style="display:none">{% trans 'setup.check' %} <i class="icon-check icon-white" style="margin-top: 3px"></i></button>
+        <button id="check" class="btn btn-large" style="display:none">{% trans 'setup.check' %} <i class="icon-check" style="margin-top: 3px"></i></button>
         <button id="create" class="btn btn-large btn-primary disabled"  data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </div>
 

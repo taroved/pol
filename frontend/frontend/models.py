@@ -3,6 +3,7 @@ from django.db import models
 class Feed(models.Model):
     uri = models.CharField(max_length=2000)
     xpath = models.CharField(max_length=2000)
+    edited = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
 
 class Field(models.Model):

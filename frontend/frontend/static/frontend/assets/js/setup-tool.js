@@ -268,6 +268,8 @@ function getCookie(name) {
     return cookieValue;
 }
 
+window.getCookie = getCookie;
+
 // html2json [tag_name, {attributes_dict}, [children]]
 var iframeHtmlJson = null;
 
@@ -407,9 +409,14 @@ function onCreateButtonClick() {
         loader(true);
         createFeed().then(function(data){
             if (ET.active()) {
-				ET.updateUIMessages(JSON.parse(data));
-                //unfreez UI
-                loader(false);
+                var res = JSON.parse(data);
+                if (res.success)
+                    window.location.href = res.url; // feed_page_url
+                else {
+                    ET.updateUIMessages(res.messages);
+                    //unfreez UI
+                    loader(false);
+                }
             }
 			else
 				window.location.href = data; // feed_page_url
@@ -425,13 +432,6 @@ function createFeed() {
     var selectors = null;
     if (ET.active()) {
         selectors = ET.getUIConfig();
-        selectors[0] = selectors[0].trim();
-        
-        for (var name in selectors[1]) {
-            var xpath = selectors[1][name];
-            if (xpath.trim().length == 0)
-                delete selectors[1][name];
-        }
     }
     else {
         // gather selected tag-ids
@@ -472,6 +472,7 @@ function createFeed() {
 function loader(show) {
   document.getElementById("loader-bg").style.display = show ? "block" : "none";
 }
+window.loader = loader;
 
 $(document).ready(function(){
     // skip non setup page

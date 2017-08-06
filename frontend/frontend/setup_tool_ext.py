@@ -19,6 +19,7 @@ def build_xpath_results(selectors, file_name):
     feed_result = None
     field_results = {}
 
+    success = True
     post_elems = None
     try:
         doc = Selector(text=html)
@@ -32,7 +33,6 @@ def build_xpath_results(selectors, file_name):
                 for name, xpath in field_xpathes.iteritems():
                     if not (name in field_results):
                         field_results[name] = {}
-                    # import pdb;pdb.set_trace()
                     xpath = xpath.strip()
                     try:
                         extracts = elem.xpath(xpath).extract()
@@ -43,6 +43,7 @@ def build_xpath_results(selectors, file_name):
                             if not extracts:
                                 selected_required = False
                     except ValueError as ex:
+                        success = False
                         field_results[name]['error'] = ex.message
 
                 for name, xpath in field_xpathes.iteritems():
@@ -67,9 +68,11 @@ def build_xpath_results(selectors, file_name):
                         if not (name in field_results):
                             field_results[name] = {}
                         field_results[name]['error'] = ex.message
+                        success = False
 
 
     except ValueError as ex:
         feed_result = {'error': ex.message}
+        success = False
 
-    return [feed_result, field_results]
+    return [[feed_result, field_results], success]

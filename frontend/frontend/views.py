@@ -89,16 +89,16 @@ def setup_get_selected_ids(request):
 
 def _get_link_xpath(title_xpath):
     if title_xpath == './child::node()':
-        return './ancestor-or-self::node()[name()="a"]/@href'
+        return './ancestor-or-self::node()/@href'
     else:
         xpath = title_xpath[:len(title_xpath)-len('/child::node()')]
         return xpath +'/ancestor-or-self::node()/@href'
 
-def _create_feed(url, xpathes):
+def _create_feed(url, xpathes, edited=False):
     feed_xpath = xpathes[0]
     item_xpathes = xpathes[1]
 
-    feed = Feed(uri=url, xpath=feed_xpath)
+    feed = Feed(uri=url, xpath=feed_xpath, edited=edited)
     feed.save()
 
     fields = Field.objects.all()
@@ -153,7 +153,7 @@ def _validate_selectors(selectors):
                 item_xpathes_out[field.name] = item_xpathes[field.name]
     return [feed_xpath, item_xpathes_out]
 
-def setup_create_feed_ext(request):
+def setup_validate_selectors(request):
     if request.method == 'POST':
         obj = json.loads(request.body)
         if 'selectors' not in obj or 'snapshot_time' not in obj:
@@ -170,9 +170,35 @@ def setup_create_feed_ext(request):
         if not validated_selectors:
             return HttpResponseBadRequest('selectors are invalid')
 
-        results = build_xpath_results(validated_selectors, file_name)
+        results, success = build_xpath_results(validated_selectors, file_name)
 
-        return HttpResponse(json.dumps(results))
+        return HttpResponse(json.dumps({'success': success, 'messages': results}))
+
+def setup_create_feed_ext(request):
+    if request.method == 'POST':
+        obj = json.loads(request.body)
+        if 'selectors' not in obj or 'snapshot_time' not in obj or 'url' not in obj:
+            return HttpResponseBadRequest('"selectors", "snapshot_time" and "url" are required')
+
+        selectors = obj['selectors']
+        file_name = obj['snapshot_time']
+
+        if not re.match('^\d{10}\.\d+_[\da-f]{32}', file_name):
+            return HttpResponseBadRequest('"snapshot_time" is invalid')
+
+        validated_selectors = _validate_selectors(selectors)
+
+        if not validated_selectors:
+            return HttpResponseBadRequest('selectors are invalid')
+
+        results, success = build_xpath_results(validated_selectors, file_name)
+
+        if success:
+            url = obj['url']
+            feed_id = _create_feed(url, validated_selectors, True)
+            return HttpResponse(json.dumps({'success': True, 'url': reverse('preview', args=(feed_id,))}))
+        else:
+            return HttpResponse(json.dumps({'success': False, 'messages': results}))
 
 def preview(request, feed_id):
     if request.method == 'GET': 

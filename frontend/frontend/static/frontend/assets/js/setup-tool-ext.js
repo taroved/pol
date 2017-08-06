@@ -68,6 +68,8 @@ function updateUIMessages(data) {
         else
             updateSelector(name, {});
     });
+
+    hide_check_show_create(true);
 }
 
 function updateUI(config) {
@@ -86,11 +88,13 @@ function showIcon(show) {
 
 function getUIConfig() {
     var cfg = [
-        $('#ste-parent').val(),
+        $('#ste-parent').val().trim(),
         {}
     ];
     ['title', 'description', 'link'].forEach(function(name){
-        cfg[1][name] = $('#ste-'+ name).val();
+        var xpath = $('#ste-'+ name).val();
+        if (xpath.trim().length > 0)
+            cfg[1][name] = xpath;
     });
     return cfg;
 }
@@ -139,6 +143,38 @@ function show_ext(show) {
     _active = show;
 }
 
+function hide_check_show_create(hide) {
+    $("#check")[0].style.display = !hide ? 'inline-block' : 'none';
+    $("#create")[0].style.display = hide ? 'inline-block' : 'none';
+}
+
+function validateSelectors() {
+    if (true) {
+        var selectors = getUIConfig();
+        return new Promise(function(resolve, reject){
+            $.ajax({
+                type: 'POST',
+                url: "/setup_validate_selectors",
+                data: JSON.stringify({ selectors: selectors, snapshot_time: snapshot_time, url:$('#create').data('page-url') }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                headers: {"X-CSRFToken": getCookie('csrftoken')},
+                success: function(data){
+                    resolve(data)
+                },
+                failure: function(errMsg) {
+                    reject(errMsg);
+                }
+            });
+        });
+    }
+    else {
+        return new Promise(function(resolve, reject){
+            setTimeout(function(){ resolve({}); }, 0);
+        });
+    }
+}
+
 $(document).ready(function(){
     $("#st-ext-trigger").click(function(){
         show_ext(true);
@@ -154,7 +190,20 @@ $(document).ready(function(){
     });
 
     $("input[id^='ste-']").keyup(function(){
-        $("#check")[0].style.display = changed() ? 'inline-block' : 'none';
+        hide_check_show_create(!changed())
+    });
+    $("#check").click(function(){
+        loader(true);
+        validateSelectors().then(function(res){
+            ET.updateUIMessages(res.messages);
+            hide_check_show_create(res.success);
+            //unfreez UI
+            loader(false);
+        }, function(errMsg){
+            console.error(errMsg);
+            //unfreez UI
+            loader(false);
+        });
     });
 
     /*var cfg = read('xpathes')

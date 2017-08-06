@@ -215,7 +215,8 @@ class Downloader(resource.Resource):
         else: # neither page and feed
             return 'Url is required'
 
+port = sys.argv[1] if len(sys.argv) >= 2 else 1234
 
-endpoints.serverFromString(reactor, "tcp:1234").listen(server.Site(Downloader()))
-print 'Server starting at http://localhost:1234'
+endpoints.serverFromString(reactor, "tcp:%s" % port).listen(server.Site(Downloader()))
+print 'Server starting at http://localhost:%s' % port
 reactor.run()

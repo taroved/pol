@@ -92,10 +92,11 @@ def _build_link(html, doc_url, url):
 def buildFeed(response, feed_config):
     response.selector.remove_namespaces()
 
-    tree = response.selector.root.getroottree()
+    selector = response.selector
+    tree = selector.root.getroottree()
     # get data from html 
     items = []
-    for node in tree.xpath(feed_config['xpath']):
+    for node in selector.xpath(feed_config['xpath']):
         item = {}
         required_count = 0
         required_found = 0
@@ -103,13 +104,14 @@ def buildFeed(response, feed_config):
             if field_name in feed_config['fields']:
                 if feed_config['required'][field_name]:
                     required_count += 1
-                element_or_attr = node.xpath(feed_config['fields'][field_name])
-                if element_or_attr:
-                    item[field_name] = element_to_unicode(element_or_attr[0], response.encoding)
+
+                extracted = node.xpath(feed_config['fields'][field_name]).extract()
+                if extracted:
+                    item[field_name] = u''.join(extracted)
                     if feed_config['required'][field_name]:
                         required_found += 1
                     if field_name == 'link':
-                        item['link'] = _build_link(response.body_as_unicode(), feed_config['uri'], item['link'])
+                        item['link'] = _build_link(response.body_as_unicode(), feed_config['uri'], item[field_name])
 
         if required_count == required_found:
             items.append(item)
