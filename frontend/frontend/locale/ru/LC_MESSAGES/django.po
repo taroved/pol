@@ -61,7 +61,7 @@ msgstr "Polite Pol"
 #: templates/frontend/index.html:15 templates/frontend/index.html.py:16
 #: templates/frontend/index.html:43
 msgid "help"
-msgstr "Помощ"
+msgstr "Помощь"
 
 #: templates/frontend/index.html:22
 msgid "hello"
