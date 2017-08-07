@@ -138,7 +138,7 @@ def downloadDone(response_str, request, response, feed_config):
     if (isinstance(response, TextResponse)):
         if feed_config:
             response_str = buildFeed(response, feed_config)
-            request.setHeader(b"Content-Type", b'text/xml')
+            request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
         else:
             response_str, file_name = setBaseAndRemoveScriptsAndMore(response, url)
 

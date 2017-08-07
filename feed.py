@@ -26,6 +26,7 @@ def save_post(conn, created, feed_id, post_fields):
     post_id = conn.insert_id()
     for key in ['title', 'description', 'title_link']:
         if key in post_fields:
+            #import pdb;pdb.set_trace()
             cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
                             values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
             print(cur._last_executed)
@@ -96,6 +97,7 @@ def buildFeed(response, feed_config):
     tree = selector.root.getroottree()
     # get data from html 
     items = []
+    #import pdb;pdb.set_trace()
     for node in selector.xpath(feed_config['xpath']):
         item = {}
         required_count = 0
@@ -116,7 +118,7 @@ def buildFeed(response, feed_config):
         if required_count == required_found:
             items.append(item)
 
-    title = response.selector.xpath('//title/text()').extract()
+    title = selector.xpath('//title/text()').extract()
 
     #build feed
     feed = Rss201rev2Feed(
@@ -176,6 +178,6 @@ def getFeedData(request, feed_id):
 
 def get_conn():
     creds = DATABASES['default']
-    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'], init_command='SET NAMES UTF8')
+    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'], db=creds['NAME'], init_command='SET NAMES utf8mb4')
     db.autocommit(True)
     return db
