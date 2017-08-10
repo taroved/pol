@@ -156,13 +156,12 @@ def downloadError(error, request=None, url=None, response=None, feed_config=None
         d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
         return
-
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
     else:
         request.write(error_html('Something wrong. Contact us by email: politepol.com@gmail.com \n Scary mantra: ' + error.getErrorMessage()))
-    sys.stderr.write('\n'.join([str(datetime.utcnow()), url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
+    sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
     request.finish()
 
 
