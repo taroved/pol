@@ -17,6 +17,7 @@ from scrapy.selector import Selector
 
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
+from scrapy.core.downloader.contextfactory import ScrapyClientContextFactory
 
 from lxml import etree
 import re
@@ -42,7 +43,12 @@ def check_feed_request_time_limit(url):
         r.set(url, int(time.time()))
     return 0
 
-agent = BrowserLikeRedirectAgent(Agent(reactor, connectTimeout=10), redirectLimit=5)
+agent = BrowserLikeRedirectAgent(
+            Agent(reactor,
+                contextFactory=ScrapyClientContextFactory(), # skip certificate verification
+                connectTimeout=10),
+            redirectLimit=5
+        )
 
 def html2json(el):
     return [
