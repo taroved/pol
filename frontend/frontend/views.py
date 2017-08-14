@@ -104,11 +104,11 @@ def _create_feed(url, xpathes, edited=False):
     fields = Field.objects.all()
 
     for field in fields:
-        if field.name in item_xpathes:
-            ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
-            ff.save()
-        if field.name == 'link' and 'title' in item_xpathes:
+        if field.name == 'link' and 'title' in item_xpathes and not edited:
             ff = FeedField(feed=feed, field=field, xpath= _get_link_xpath(item_xpathes['title']))
+            ff.save()
+        elif field.name in item_xpathes:
+            ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
             ff.save()
 
     return feed.id
