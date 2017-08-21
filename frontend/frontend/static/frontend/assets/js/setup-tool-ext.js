@@ -217,6 +217,8 @@ $(document).ready(function(){
         save('xpathes', getUIConfig());
         return true;
     });*/
+
+    PR.prettyPrint()
 });
 
 

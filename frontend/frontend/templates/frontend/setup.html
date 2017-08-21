@@ -122,11 +122,56 @@
         <button id="create" class="btn btn-large btn-primary disabled"  data-page-url="{{ page_url }}" data-feed-page-url="{{ feed_page_url }}">{% trans 'setup.create' %} <i class="icon-arrow-right icon-white" style="margin-top: 3px"></i></button>
     </div>
 
+<style>
+.ext-results {
+	position: relative;
+    margin: 15px 0;
+    padding: 19px 9px 4px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+.ext-results:after {
+    content: "Результат";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: bold;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    color: #9da0a4;
+    -webkit-border-radius: 4px 0 4px 0;
+    -moz-border-radius: 4px 0 4px 0;
+    border-radius: 4px 0 4px 0;
+}
+.ext-results pre.prettyprint {
+	display: inline-block;
+	margin: 0;
+}
+</style>
+
+<div class="ext-results" style="display:block; clear: both">
+    <ol>
+        <li>
+            <dl>
+                <dt>Title:</dt>
+                <dd><pre class="prettyprint lang-html">&lt;body&gt;&lt;h1&gt;Hello world!&lt;/h1&gt;&lt;/body&gt;</pre></dd>
+                <dt>Description:</dt>
+                <dd><pre class="prettyprint lang-html">&lt;body&gt;&lt;h1&gt;Hello world!&lt;/h1&gt;&lt;/body&gt;</pre></dd>
+            </dl>
+        </li>
+    </ol>
+</div>
 
 <iframe src="{{ external_page_url }}" frameborder="0" style="width:100%;/*for footer*/; border:solid">
 
 </iframe>
-    <script type="text/javascript">
+
+    <script type="text/javascript"
         // Based on: http://www.quirksmode.org/js/findpos.html
         var getCumulativeOffset = function (obj) {
             var left, top;
