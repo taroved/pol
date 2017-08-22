@@ -116,6 +116,34 @@ function changed() {
     return ch;
 }
 
+function showPosts(posts) {
+    $('.ext-result:not(:first)').remove(); // clear results
+    $post_tpl = $('.ext-result:first');
+    posts.forEach(function(post){
+        var i = 0;
+        var $post = $post_tpl.clone();
+        var $post_fields = $post.find('dl > dd > pre');
+        var $post_dts = $post.find('dl > dt');
+        var $post_dds = $post.find('dl > dd');
+        
+        ['title', 'link', 'description'].forEach(function(name){
+            if (name in post) {
+                $($post_fields[i]).text(post[name].trim());
+                $($post_fields[i]).addClass('prettyprint');
+            }
+            else {
+                $($post_dts[i]).remove();
+                $($post_dds[i]).remove();
+            }
+            i++;
+        });
+        $post.appendTo($post_tpl.parent());
+        $post[0].style.display = null; // show
+    });
+    $('#ext-results')[0].style.display = posts.length > 0 ? 'block' : 'none';
+    PR.prettyPrint();
+}
+
 function active() {
     return _active;
 }
@@ -139,6 +167,9 @@ function show_ext(show) {
     $("#st-clicker-trigger")[0].style.display = show ? "inline-block" : "none";
     $("#st-extended")[0].style.display = show ? "block" : "none";
     $("#st-clicker")[0].style.display = !show ? "block" : "none";
+
+    if (!show)
+        $('#ext-results')[0].style.display = 'none';
     
     _active = show;
 }
@@ -196,6 +227,7 @@ $(document).ready(function(){
         loader(true);
         validateSelectors().then(function(res){
             ET.updateUIMessages(res.messages);
+            showPosts(res.posts);
             hide_check_show_create(res.success);
             //unfreez UI
             loader(false);
@@ -218,7 +250,6 @@ $(document).ready(function(){
         return true;
     });*/
 
-    PR.prettyPrint()
 });
 
 

@@ -19,6 +19,8 @@ def build_xpath_results(selectors, file_name):
     feed_result = None
     field_results = {}
 
+    extracted_posts = []
+
     success = True
     post_elems = None
     try:
@@ -30,6 +32,7 @@ def build_xpath_results(selectors, file_name):
             for elem in post_elems:
                 selected_required = True
                 selected_link = True
+                extracted_post = {}
                 for name, xpath in field_xpathes.iteritems():
                     if not (name in field_results):
                         field_results[name] = {}
@@ -39,15 +42,19 @@ def build_xpath_results(selectors, file_name):
                         if name == 'link':
                             if not extracts:
                                 selected_link = False
+                            else:
+                                extracted_post[name] = u''.join(extracts)
                         else:
                             if not extracts:
                                 selected_required = False
+                            else:
+                                extracted_post[name] = u''.join(extracts)
                     except ValueError as ex:
                         success = False
                         field_results[name]['error'] = ex.message
 
-                for name, xpath in field_xpathes.iteritems():
-                    if selected_required:
+                if selected_required:
+                    for name, xpath in field_xpathes.iteritems():
                         if name == 'link':
                             if selected_link:
                                 if 'count' in field_results[name]:
@@ -59,6 +66,8 @@ def build_xpath_results(selectors, file_name):
                                 field_results[name]['count'] += 1
                             else:
                                 field_results[name]['count'] = 1
+
+                    extracted_posts.append(extracted_post)
             else:
                 for name, xpath in field_xpathes.iteritems():
                     xpath = xpath.strip()
@@ -75,4 +84,4 @@ def build_xpath_results(selectors, file_name):
         feed_result = {'error': ex.message}
         success = False
 
-    return [[feed_result, field_results], success]
+    return [[feed_result, field_results], extracted_posts, success]

@@ -170,9 +170,9 @@ def setup_validate_selectors(request):
         if not validated_selectors:
             return HttpResponseBadRequest('selectors are invalid')
 
-        results, success = build_xpath_results(validated_selectors, file_name)
+        messages, posts, success = build_xpath_results(validated_selectors, file_name)
 
-        return HttpResponse(json.dumps({'success': success, 'messages': results}))
+        return HttpResponse(json.dumps({'success': success, 'messages': messages, 'posts': posts}))
 
 def setup_create_feed_ext(request):
     if request.method == 'POST':
@@ -191,14 +191,14 @@ def setup_create_feed_ext(request):
         if not validated_selectors:
             return HttpResponseBadRequest('selectors are invalid')
 
-        results, success = build_xpath_results(validated_selectors, file_name)
+        messages, posts, success = build_xpath_results(validated_selectors, file_name)
 
         if success:
             url = obj['url']
             feed_id = _create_feed(url, validated_selectors, True)
             return HttpResponse(json.dumps({'success': True, 'url': reverse('preview', args=(feed_id,))}))
         else:
-            return HttpResponse(json.dumps({'success': False, 'messages': results}))
+            return HttpResponse(json.dumps({'success': False, 'messages': messages}))
 
 def preview(request, feed_id):
     if request.method == 'GET': 

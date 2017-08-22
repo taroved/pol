@@ -123,7 +123,7 @@
     </div>
 
 <style>
-.ext-results {
+#ext-results {
 	position: relative;
     margin: 15px 0;
     padding: 19px 9px 4px;
@@ -133,8 +133,8 @@
     -moz-border-radius: 4px;
     border-radius: 4px;
 }
-.ext-results:after {
-    content: "Результат";
+#ext-results:after {
+    content: "{% trans 'setup.found_posts' %}";
     position: absolute;
     top: -1px;
     left: -1px;
@@ -148,20 +148,22 @@
     -moz-border-radius: 4px 0 4px 0;
     border-radius: 4px 0 4px 0;
 }
-.ext-results pre.prettyprint {
+#ext-results pre.prettyprint {
 	display: inline-block;
 	margin: 0;
 }
 </style>
 
-<div class="ext-results" style="display:block; clear: both">
+<div id="ext-results" style="display:none; clear:both">
     <ol>
-        <li>
+        <li class="ext-result" style="display:none">
             <dl>
-                <dt>Title:</dt>
-                <dd><pre class="prettyprint lang-html">&lt;body&gt;&lt;h1&gt;Hello world!&lt;/h1&gt;&lt;/body&gt;</pre></dd>
-                <dt>Description:</dt>
-                <dd><pre class="prettyprint lang-html">&lt;body&gt;&lt;h1&gt;Hello world!&lt;/h1&gt;&lt;/body&gt;</pre></dd>
+                <dt>{% trans 'setup.title' %}:</dt>
+                <dd><pre class="lang-html"></pre></dd>
+                <dt>{% trans 'setup.link' %}:</dt>
+                <dd><pre class="lang-html"></pre></dd>
+                <dt>{% trans 'setup.description' %}:</dt>
+                <dd><pre class="lang-html"></pre></dd>
             </dl>
         </li>
     </ol>
