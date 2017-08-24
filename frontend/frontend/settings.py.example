@@ -140,6 +140,7 @@ PIPELINE_CSS = {
           'frontend/assets/stylesheets/application.css',
           'frontend/assets/stylesheets/bootstrap_and_overrides.css.less',
           'frontend/assets/stylesheets/wizard.css.scss',
+          'frontend/assets/stylesheets/google-code-prettify/prettify.css',
         ),
         'output_filename': 'frontend/css/app.css',
         'extra_context': {
@@ -157,6 +158,7 @@ PIPELINE_JS = {
           'frontend/assets/js/bootstrap.js',
           'frontend/assets/js/bootstrap_and_overrides.js',
           'frontend/assets/js/xregexp-all.js',
+          'frontend/assets/js/google-code-prettify/prettify.js',
           'frontend/assets/js/setup-tool.js',
           'frontend/assets/js/setup-tool-ext.js',
           'frontend/assets/js/help.js',

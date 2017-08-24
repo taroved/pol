@@ -140,8 +140,14 @@ function showPosts(posts) {
         $post.appendTo($post_tpl.parent());
         $post[0].style.display = null; // show
     });
-    $('#ext-results')[0].style.display = posts.length > 0 ? 'block' : 'none';
     PR.prettyPrint();
+    $('#ext-results')[0].style.display = 'block';
+    $('#ext-results .no-data')[0].style.display = posts.length == 0 ? 'block' : 'none';
+    expandPosts(true);
+}
+
+function expandPosts(show) {
+    $('#ext-results').collapse(show ? 'show' : 'hide');
 }
 
 function active() {
@@ -209,19 +215,22 @@ function validateSelectors() {
 $(document).ready(function(){
     $("#st-ext-trigger").click(function(){
         show_ext(true);
+        hide_check_show_create(false);
         return true;
     });
     $("#st-clicker-trigger").click(function(){
         var ch = changed();
-        if (!ch || confirm($("#st-clicker-trigger").attr('confirm-text'))) {
+        if (!ch || confirm($("#st-clicker-trigger").attr('confirm-text'))) { // show visual constructor
             show_ext(false);
             updateUI(_config);
+            update_iframe_heignt();
+            hide_check_show_create(true);
         }
         return true;
     });
 
     $("input[id^='ste-']").keyup(function(){
-        hide_check_show_create(!changed())
+        hide_check_show_create(false)
     });
     $("#check").click(function(){
         loader(true);

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-06 00:07+0000\n"
+"POT-Creation-Date: 2017-08-24 20:51+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -91,84 +91,96 @@ msgstr "Загрузка..."
 msgid "subscribe.preview"
 msgstr "Предпросмотр"
 
-#: templates/frontend/setup.html:46
+#: templates/frontend/setup.html:55
 msgid "xpath.link"
 msgstr "http://zvon.org/xxl/XPathTutorial/Output_rus/examples.html"
 
-#: templates/frontend/setup.html:54
+#: templates/frontend/setup.html:63
 msgid "setup.you_are_creating_feed_with"
 msgstr "Вы создаете ленту содержащую"
 
-#: templates/frontend/setup.html:55
+#: templates/frontend/setup.html:64
 msgid "setup.help"
 msgstr ""
 "Нажмите на кнопку и переместите курсор на документ внизу и выберите нужный "
 "блок"
 
-#: templates/frontend/setup.html:56
+#: templates/frontend/setup.html:65 templates/frontend/setup.html.py:196
 msgid "setup.title"
 msgstr "Название"
 
-#: templates/frontend/setup.html:56
+#: templates/frontend/setup.html:65
 msgid "setup.and"
 msgstr "и"
 
-#: templates/frontend/setup.html:57
+#: templates/frontend/setup.html:66 templates/frontend/setup.html.py:200
 msgid "setup.description"
 msgstr "Описание"
 
-#: templates/frontend/setup.html:65
+#: templates/frontend/setup.html:74
 msgid "setup.item_xpath"
 msgstr "Xpath поста"
 
-#: templates/frontend/setup.html:67 templates/frontend/setup.html.py:78
-#: templates/frontend/setup.html:89 templates/frontend/setup.html.py:100
+#: templates/frontend/setup.html:76 templates/frontend/setup.html.py:87
+#: templates/frontend/setup.html:98 templates/frontend/setup.html.py:109
 msgid "setup.skipped"
 msgstr "Пропущено"
 
-#: templates/frontend/setup.html:68 templates/frontend/setup.html.py:79
-#: templates/frontend/setup.html:90 templates/frontend/setup.html.py:101
+#: templates/frontend/setup.html:77 templates/frontend/setup.html.py:88
+#: templates/frontend/setup.html:99 templates/frontend/setup.html.py:110
 msgid "setup.Selected"
-msgstr "Выбрано %s элементов"
+msgstr "Выбрано %s фрагментов"
 
-#: templates/frontend/setup.html:72
+#: templates/frontend/setup.html:81
 msgid "setup.title_xpath"
 msgstr "Xpath названия"
 
-#: templates/frontend/setup.html:75 templates/frontend/setup.html.py:86
-#: templates/frontend/setup.html:97
+#: templates/frontend/setup.html:84 templates/frontend/setup.html.py:95
+#: templates/frontend/setup.html:106
 msgid "setup.Required"
 msgstr "Обязательное"
 
-#: templates/frontend/setup.html:76 templates/frontend/setup.html.py:87
-#: templates/frontend/setup.html:98
+#: templates/frontend/setup.html:85 templates/frontend/setup.html.py:96
+#: templates/frontend/setup.html:107
 msgid "setup.Optional"
 msgstr "Опциональное"
 
-#: templates/frontend/setup.html:83
+#: templates/frontend/setup.html:92
 msgid "setup.link_xpath"
 msgstr "Xpath ссылки"
 
-#: templates/frontend/setup.html:94
+#: templates/frontend/setup.html:103
 msgid "setup.description_xpath"
 msgstr "Xpath описания"
 
-#: templates/frontend/setup.html:107
+#: templates/frontend/setup.html:116
 msgid "setup.clicker_tip"
 msgstr "Визуальный конструктор"
 
-#: templates/frontend/setup.html:109
+#: templates/frontend/setup.html:118
 msgid "setup.confirm_loose"
 msgstr "Вы потеряете изменения. Вы уверены?"
 
-#: templates/frontend/setup.html:110
+#: templates/frontend/setup.html:119
 msgid "setup.extended_tip"
 msgstr "Редактор селекторов"
 
-#: templates/frontend/setup.html:112
+#: templates/frontend/setup.html:121
 msgid "setup.check"
 msgstr "Проверить"
 
-#: templates/frontend/setup.html:113
+#: templates/frontend/setup.html:122
 msgid "setup.create"
 msgstr "Создать"
+
+#: templates/frontend/setup.html:137
+msgid "setup.found_posts"
+msgstr "Найденные посты"
+
+#: templates/frontend/setup.html:192
+msgid "setup.no_posts"
+msgstr "Посты не найдены"
+
+#: templates/frontend/setup.html:198
+msgid "setup.link"
+msgstr "Ссылка"
