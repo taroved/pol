@@ -12,9 +12,11 @@ from twisted.web.html import escape
 twisted_headers = Headers
 
 from scrapy.http.response.text import TextResponse
+from scrapy.downloadermiddlewares.httpcompression import HttpCompressionMiddleware
 from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
 from scrapy.selector import Selector
 
+from scrapy.http.request import Request
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
 from scrapy.core.downloader.contextfactory import ScrapyClientContextFactory
@@ -127,6 +129,9 @@ def buildScrapyResponse(response, body, url):
     respcls = responsetypes.from_args(headers=headers, url=url)
     return respcls(url=url, status=status, headers=headers, body=body)
 
+def buildScrapyRequest(url):
+    return Request(url)
+
 def downloadStarted(response, request, url, feed_config):
     d = readBody(response)
     d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
@@ -139,6 +144,7 @@ def downloadDone(response_str, request, response, feed_config):
     print 'Response <%s> ready (%s bytes)' % (url, len(response_str))
     response = buildScrapyResponse(response, response_str, url)
 
+    response = HttpCompressionMiddleware().process_response(Request(url), response, None)
     response = DecompressionMiddleware().process_response(None, response, None)
 
     if (isinstance(response, TextResponse)):
