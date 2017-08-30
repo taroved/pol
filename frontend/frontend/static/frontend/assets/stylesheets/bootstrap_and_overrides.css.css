@@ -1229,11 +1229,13 @@ input[type="checkbox"][readonly] {
 }
 .control-group.warning .checkbox,
 .control-group.warning .radio,
+.control-group.warning .uneditable-input,
 .control-group.warning input,
 .control-group.warning select,
 .control-group.warning textarea {
   color: #c09853;
 }
+.control-group.warning .uneditable-input,
 .control-group.warning input,
 .control-group.warning select,
 .control-group.warning textarea {
@@ -1242,6 +1244,7 @@ input[type="checkbox"][readonly] {
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
+.control-group.warning .uneditable-input:focus,
 .control-group.warning input:focus,
 .control-group.warning select:focus,
 .control-group.warning textarea:focus {
@@ -1263,11 +1266,13 @@ input[type="checkbox"][readonly] {
 }
 .control-group.error .checkbox,
 .control-group.error .radio,
+.control-group.error .uneditable-input,
 .control-group.error input,
 .control-group.error select,
 .control-group.error textarea {
   color: #b94a48;
 }
+.control-group.error .uneditable-input,
 .control-group.error input,
 .control-group.error select,
 .control-group.error textarea {
@@ -1276,6 +1281,7 @@ input[type="checkbox"][readonly] {
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
+.control-group.error .uneditable-input:focus,
 .control-group.error input:focus,
 .control-group.error select:focus,
 .control-group.error textarea:focus {
@@ -1297,11 +1303,13 @@ input[type="checkbox"][readonly] {
 }
 .control-group.success .checkbox,
 .control-group.success .radio,
+.control-group.success .uneditable-input,
 .control-group.success input,
 .control-group.success select,
 .control-group.success textarea {
   color: #468847;
 }
+.control-group.success .uneditable-input,
 .control-group.success input,
 .control-group.success select,
 .control-group.success textarea {
@@ -1310,6 +1318,7 @@ input[type="checkbox"][readonly] {
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
+.control-group.success .uneditable-input:focus,
 .control-group.success input:focus,
 .control-group.success select:focus,
 .control-group.success textarea:focus {
@@ -1331,11 +1340,13 @@ input[type="checkbox"][readonly] {
 }
 .control-group.info .checkbox,
 .control-group.info .radio,
+.control-group.info .uneditable-input,
 .control-group.info input,
 .control-group.info select,
 .control-group.info textarea {
   color: #3a87ad;
 }
+.control-group.info .uneditable-input,
 .control-group.info input,
 .control-group.info select,
 .control-group.info textarea {
@@ -1344,6 +1355,7 @@ input[type="checkbox"][readonly] {
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
+.control-group.info .uneditable-input:focus,
 .control-group.info input:focus,
 .control-group.info select:focus,
 .control-group.info textarea:focus {
@@ -8035,11 +8047,13 @@ footer {
 }
 .field_with_errors .checkbox,
 .field_with_errors .radio,
+.field_with_errors .uneditable-input,
 .field_with_errors input,
 .field_with_errors select,
 .field_with_errors textarea {
   color: #b94a48;
 }
+.field_with_errors .uneditable-input,
 .field_with_errors input,
 .field_with_errors select,
 .field_with_errors textarea {
@@ -8048,6 +8062,7 @@ footer {
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
+.field_with_errors .uneditable-input:focus,
 .field_with_errors input:focus,
 .field_with_errors select:focus,
 .field_with_errors textarea:focus {
