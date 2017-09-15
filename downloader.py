@@ -2,6 +2,7 @@ import json
 import time, sys
 from hashlib import md5
 from datetime import datetime
+import gc
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints, defer
@@ -44,6 +45,16 @@ def check_feed_request_time_limit(url):
                 return FEED_REQUEST_PERIOD_LIMIT - time_passed
         r.set(url, int(time.time()))
     return 0
+
+GC_PERIOD_SECONDS = 3 * 60 * 60 # 3 hours
+
+def periodical_garbage_collect():
+    tm = int(time.time())
+    if tm - periodical_garbage_collect.time >= GC_PERIOD_SECONDS:
+        print('GC: the number of unreachable objects: %s' % gc.collect())
+        periodical_garbage_collect.time = tm
+
+periodical_garbage_collect.time = int(time.time())
 
 agent = BrowserLikeRedirectAgent(
             Agent(reactor,
@@ -156,6 +167,8 @@ def downloadDone(response_str, request, response, feed_config):
 
     request.write(response_str)
     request.finish()
+    
+    periodical_garbage_collect()
 
 def error_html(msg):
     return "<html><body>%s</body></html" % escape(msg).replace("\n", "<br/>\n")
