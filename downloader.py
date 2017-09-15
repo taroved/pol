@@ -46,13 +46,110 @@ def check_feed_request_time_limit(url):
         r.set(url, int(time.time()))
     return 0
 
-GC_PERIOD_SECONDS = 3 * 60 * 60 # 3 hours
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+GC_PERIOD_SECONDS = 1 #3 * 60 * 60 # 3 hours
+
+def get_gc_stats():
+    go = {}
+    for o in gc.garbage:
+        tpe = str(type(o))
+        if tpe not in go:
+            go[tpe] = [1, sys.getsizeof(o)]
+        else:
+            go[tpe][0] += 1
+            go[tpe][1] += sys.getsizeof(o)
+    allo = {}
+    for o in gc.get_objects():
+        tpe = str(type(o))
+        if tpe not in allo:
+            allo[tpe] = [1, sys.getsizeof(o)]
+        else:
+            allo[tpe][0] += 1
+            allo[tpe][1] += sys.getsizeof(o)
+    return [go, allo]
+
+def stats_str(stat):
+    tpe, count, size = stat
+    prev_diff = [0, 0]
+    
+    if tpe in periodical_garbage_collect.prev_stats:
+        prev_diff[0] = count - periodical_garbage_collect.prev_stats[tpe][0]
+        prev_diff[1] = size -periodical_garbage_collect.prev_stats[tpe][1]
+    
+    first_diff = [0, 0]
+    
+    if tpe in periodical_garbage_collect.first_stats:
+        first_diff[0] = count -periodical_garbage_collect.first_stats[tpe][0]
+        first_diff[1] = size - periodical_garbage_collect.first_stats[tpe][1]
+    
+    prev_count_sigh = ''
+    if prev_diff[0] > 0:
+        prev_count_sigh = '+'
+
+    first_count_sigh = ''
+    if first_diff[0] > 0:
+        first_count_sigh = '+'
+    
+    prev_size_sigh = ''
+    if prev_diff[1] > 0:
+        prev_size_sigh = '+'
+
+    first_size_sigh = ''
+    if first_diff[1] > 0:
+        first_size_sigh = '+'
+    s = "%s: %s,%s%s,%s%s %s,%s%s,%s%s" % (tpe, count, prev_count_sigh, prev_diff[0], first_count_sigh, first_diff[0], size, prev_size_sigh, prev_diff[1], first_size_sigh, first_diff[1])
+
+    if prev_diff[0] != 0 or prev_diff[1] != 0 or first_diff[0] != 0 or first_diff[1] != 0:
+	if prev_diff[0] != 0 or prev_diff[1] != 0:
+	    return bcolors.OKBLUE + s + bcolors.ENDC
+        else:
+	    return bcolors.WARNING + s + bcolors.ENDC
+    else:
+        return s # not changed
 
 def periodical_garbage_collect():
     tm = int(time.time())
     if tm - periodical_garbage_collect.time >= GC_PERIOD_SECONDS:
-        print('GC: the number of unreachable objects: %s' % gc.collect())
+        print('GC: COLLECTED: %s' % gc.collect())
+        go, allo = get_gc_stats()
+        print("GC: GARBAGE OBJECTS STATS (%s)" % len(go))
+        for tpe, stats in sorted(go.iteritems(), key=lambda t: t[0]):
+            print("GC: %s: %s, %s" % (tpe, stats[0]. stats[1]))
+        
+        print("GC: ALL OBJECTS STATS (%s)" % len(allo))
+
+        if not periodical_garbage_collect.first_stats:
+            periodical_garbage_collect.first_stats = allo
+ 
+        size = 0
+        for tpe, stats in sorted(allo.iteritems(), key=lambda t: t[0]):
+            #import pdb;pdb.set_trace()
+            size += stats[1]
+            print("GC: %s" % stats_str([tpe, stats[0], stats[1]]))
+	periodical_garbage_collect.prev_size = size
+        
+        if not periodical_garbage_collect.first_size:
+            periodical_garbage_collect.first_size = size
+        print('GC: ALL OBJECT SIZE: %s,%s,%s' % (size, size - periodical_garbage_collect.prev_size, size - periodical_garbage_collect.first_size))
+
+        periodical_garbage_collect.prev_stats = allo
+	periodical_garbage_collect.prev_size = size
+
         periodical_garbage_collect.time = tm
+
+periodical_garbage_collect.first_stats = None
+periodical_garbage_collect.prev_stats = {}
+periodical_garbage_collect.first_size = None
+periodical_garbage_collect.prev_size = None
 
 periodical_garbage_collect.time = int(time.time())
 
