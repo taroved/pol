@@ -196,7 +196,12 @@ pgc.prev_size = None
 
 pgc.hist_ids = []
 pgc.ids = []
-pgc.id_types = ["<type 'tuple'>"]
+pgc.id_types = [
+        #"<type 'function'>",
+        #"<type 'cell'>",
+        "<class 'twisted.logger._logger.Logger'>",
+        #"<type 'tuple'>"
+        ]
 
 pgc.time = int(time.time())
 
