@@ -165,6 +165,23 @@ def pgc(none): # periodical_garbage_collect
                         new_ids.append(_id)
                 print('GC new obj %s: %s items' % (tpe, count))
 
+            step = -1
+            for ids in pgc.hist_ids:
+                step_ids = []
+                for tpe in pgc.id_types:
+                    objects = allo[tpe][2]
+                    count = 0
+                    for _id, _str in objects:
+                        if _id in ids:
+                            print('GC %s new obj %s(%s): %s' % (step, tpe, _id, _str))
+                            count += 1
+                            step_ids.append(_id)
+                    print('GC %s new obj %s: %s items' % (step, tpe, count))
+                step -= 1
+                ids[:] = [] #clear list
+                ids.extend(step_ids) # add evailable
+            pgc.hist_ids.insert(0, new_ids)
+
 
         pgc.ids = cur_ids
         pgc.prev_stats = allo
