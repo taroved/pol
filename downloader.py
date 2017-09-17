@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 import time, sys
 from hashlib import md5
@@ -63,33 +64,36 @@ def get_gc_stats():
     for o in gc.garbage:
         tpe = str(type(o))
         if tpe not in go:
-            go[tpe] = [1, sys.getsizeof(o)]
+            go[tpe] = [1, sys.getsizeof(o), []]
         else:
             go[tpe][0] += 1
             go[tpe][1] += sys.getsizeof(o)
+            go[tpe][2].append([id(o), str(o)])
     allo = {}
     for o in gc.get_objects():
         tpe = str(type(o))
         if tpe not in allo:
-            allo[tpe] = [1, sys.getsizeof(o)]
+            allo[tpe] = [1, sys.getsizeof(o), []]
         else:
             allo[tpe][0] += 1
             allo[tpe][1] += sys.getsizeof(o)
+            if tpe in pgc.id_types:
+                allo[tpe][2].append([id(o), str(o)])
     return [go, allo]
 
 def stats_str(stat):
     tpe, count, size = stat
     prev_diff = [0, 0]
     
-    if tpe in periodical_garbage_collect.prev_stats:
-        prev_diff[0] = count - periodical_garbage_collect.prev_stats[tpe][0]
-        prev_diff[1] = size -periodical_garbage_collect.prev_stats[tpe][1]
+    if tpe in pgc.prev_stats:
+        prev_diff[0] = count - pgc.prev_stats[tpe][0]
+        prev_diff[1] = size - pgc.prev_stats[tpe][1]
     
     first_diff = [0, 0]
     
-    if tpe in periodical_garbage_collect.first_stats:
-        first_diff[0] = count -periodical_garbage_collect.first_stats[tpe][0]
-        first_diff[1] = size - periodical_garbage_collect.first_stats[tpe][1]
+    if tpe in pgc.first_stats:
+        first_diff[0] = count - pgc.first_stats[tpe][0]
+        first_diff[1] = size - pgc.first_stats[tpe][1]
     
     prev_count_sigh = ''
     if prev_diff[0] > 0:
@@ -106,52 +110,78 @@ def stats_str(stat):
     first_size_sigh = ''
     if first_diff[1] > 0:
         first_size_sigh = '+'
+
     s = "%s: %s,%s%s,%s%s %s,%s%s,%s%s" % (tpe, count, prev_count_sigh, prev_diff[0], first_count_sigh, first_diff[0], size, prev_size_sigh, prev_diff[1], first_size_sigh, first_diff[1])
 
     if prev_diff[0] != 0 or prev_diff[1] != 0 or first_diff[0] != 0 or first_diff[1] != 0:
-	if prev_diff[0] != 0 or prev_diff[1] != 0:
-	    return bcolors.OKBLUE + s + bcolors.ENDC
+        if prev_diff[0] != 0 or prev_diff[1] != 0:
+            return bcolors.WARNING + s + bcolors.ENDC
         else:
-	    return bcolors.WARNING + s + bcolors.ENDC
+            return bcolors.OKBLUE + s + bcolors.ENDC
     else:
-        return s # not changed
+        return None #s # not changed
 
-def periodical_garbage_collect():
+def pgc(none): # periodical_garbage_collect
     tm = int(time.time())
-    if tm - periodical_garbage_collect.time >= GC_PERIOD_SECONDS:
+    if tm - pgc.time >= GC_PERIOD_SECONDS:
         print('GC: COLLECTED: %s' % gc.collect())
         go, allo = get_gc_stats()
         print("GC: GARBAGE OBJECTS STATS (%s)" % len(go))
         for tpe, stats in sorted(go.iteritems(), key=lambda t: t[0]):
             print("GC: %s: %s, %s" % (tpe, stats[0]. stats[1]))
-        
+
         print("GC: ALL OBJECTS STATS (%s)" % len(allo))
 
-        if not periodical_garbage_collect.first_stats:
-            periodical_garbage_collect.first_stats = allo
- 
+        if not pgc.first_stats:
+            pgc.first_stats = allo
+
         size = 0
+        cur_ids = []
         for tpe, stats in sorted(allo.iteritems(), key=lambda t: t[0]):
-            #import pdb;pdb.set_trace()
-            size += stats[1]
-            print("GC: %s" % stats_str([tpe, stats[0], stats[1]]))
-	periodical_garbage_collect.prev_size = size
-        
-        if not periodical_garbage_collect.first_size:
-            periodical_garbage_collect.first_size = size
-        print('GC: ALL OBJECT SIZE: %s,%s,%s' % (size, size - periodical_garbage_collect.prev_size, size - periodical_garbage_collect.first_size))
+            scount = stats[0]
+            ssize = stats[1]
+            objects = stats[2]
+            sstr = stats_str([tpe, scount, ssize])
+            if sstr:
+                print("GC: %s" % sstr)
+            size += ssize
+            if tpe in pgc.id_types:
+                cur_ids.extend([_id for _id, _str in objects])
+        if not pgc.first_size:
+            pgc.first_size = size
+            pgc.prev_size = size
+        print('GC: ALL OBJECT SIZE: %s,%s,%s' % (size, size - pgc.prev_size, size - pgc.first_size))
 
-        periodical_garbage_collect.prev_stats = allo
-	periodical_garbage_collect.prev_size = size
+        if pgc.ids:
+            for tpe in pgc.id_types:
+                #import pdb;pdb.set_trace()
+                objects = allo[tpe][2]
+                count = 0
+                new_ids = []
+                for _id, _str in objects:
+                    if _id not in pgc.ids:
+                        print('GC new obj %s(%s): %s' % (tpe, _id, _str))
+                        count += 1
+                        new_ids.append(_id)
+                print('GC new obj %s: %s items' % (tpe, count))
 
-        periodical_garbage_collect.time = tm
 
-periodical_garbage_collect.first_stats = None
-periodical_garbage_collect.prev_stats = {}
-periodical_garbage_collect.first_size = None
-periodical_garbage_collect.prev_size = None
+        pgc.ids = cur_ids
+        pgc.prev_stats = allo
+        pgc.prev_size = size
 
-periodical_garbage_collect.time = int(time.time())
+        pgc.time = tm
+
+pgc.first_stats = None
+pgc.prev_stats = {}
+pgc.first_size = None
+pgc.prev_size = None
+
+pgc.hist_ids = []
+pgc.ids = []
+pgc.id_types = ["<type 'tuple'>"]
+
+pgc.time = int(time.time())
 
 agent = BrowserLikeRedirectAgent(
             Agent(reactor,
@@ -249,7 +279,7 @@ def downloadStarted(response, request, url, feed_config):
 def downloadDone(response_str, request, response, feed_config):
     url = response.request.absoluteURI
 
-    print 'Response <%s> ready (%s bytes)' % (url, len(response_str))
+    print('Response <%s> ready (%s bytes)' % (url, len(response_str)))
     response = buildScrapyResponse(response, response_str, url)
 
     response = HttpCompressionMiddleware().process_response(Request(url), response, None)
@@ -265,7 +295,10 @@ def downloadDone(response_str, request, response, feed_config):
     request.write(response_str)
     request.finish()
     
-    periodical_garbage_collect()
+    d = defer.Deferred()
+    reactor.callLater(0, d.callback, None)
+    d.addCallback(pgc)
+    d.addErrback(lambda err: print("PGC error: %s\nPGC traceback: %s" % (err.getErrorMessage(), err.getTraceback())))
 
 def error_html(msg):
     return "<html><body>%s</body></html" % escape(msg).replace("\n", "<br/>\n")
@@ -303,7 +336,7 @@ class Downloader(resource.Resource):
             }),
             None
         )
-        print 'Request <GET %s> started' % (url,)
+        print('Request <GET %s> started' % (url,))
         d.addCallback(downloadStarted, request=request, url=url, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url)
 
@@ -339,5 +372,5 @@ class Downloader(resource.Resource):
 port = sys.argv[1] if len(sys.argv) >= 2 else 1234
 
 endpoints.serverFromString(reactor, "tcp:%s" % port).listen(server.Site(Downloader()))
-print 'Server starting at http://localhost:%s' % port
+print('Server starting at http://localhost:%s' % port)
 reactor.run()
