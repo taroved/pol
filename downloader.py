@@ -7,7 +7,7 @@ import gc
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints, defer
-from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError
+from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
 from twisted.web.html import escape
@@ -122,6 +122,9 @@ def stats_str(stat):
         return None #s # not changed
 
 def pgc(none): # periodical_garbage_collect
+    global pool
+    pool.closeCachedConnections()
+
     tm = int(time.time())
     if tm - pgc.time >= GC_PERIOD_SECONDS:
         print('GC: COLLECTED: %s' % gc.collect())
@@ -197,18 +200,23 @@ pgc.prev_size = None
 pgc.hist_ids = []
 pgc.ids = []
 pgc.id_types = [
-        #"<type 'function'>",
+        "<type 'instance'>",
+        #"<type 'instancemethod'>",
         #"<type 'cell'>",
-        "<class 'twisted.logger._logger.Logger'>",
+        #"<class 'twisted.logger._logger.Logger'>",
         #"<type 'tuple'>"
         ]
 
 pgc.time = int(time.time())
 
+pool = HTTPConnectionPool(reactor, persistent=False)
+pool.cachedConnectionTimeout = 3
+
 agent = BrowserLikeRedirectAgent(
             Agent(reactor,
                 contextFactory=ScrapyClientContextFactory(), # skip certificate verification
-                connectTimeout=10),
+                connectTimeout=10,
+                pool=pool),
             redirectLimit=5
         )
 
@@ -390,6 +398,10 @@ class Downloader(resource.Resource):
                 return NOT_DONE_YET
         else: # neither page and feed
             return 'Url is required'
+
+from twisted.logger import globalLogPublisher
+
+globalLogPublisher.addObserver(print)
 
 port = sys.argv[1] if len(sys.argv) >= 2 else 1234
 
