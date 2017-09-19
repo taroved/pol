@@ -31,6 +31,11 @@ from feed import getFeedData, buildFeed
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG, SNAPSHOT_DIR
 
 
+from twisted.logger import globalLogBeginner
+
+globalLogBeginner.beginLoggingTo([print], discardBuffer=True, redirectStandardIO=False) # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
+
+
 if FEED_REQUEST_PERIOD_LIMIT:
     import redis
 
@@ -59,6 +64,14 @@ class bcolors:
 
 GC_PERIOD_SECONDS = 1 #3 * 60 * 60 # 3 hours
 
+def is_hist_obj(tpe, _str_or_o):
+    for t in pgc.id_types:
+        if type(t) is str:
+            return str(type(o)) == t
+        elif tpe == t[0] and (_str_or_o if type(_str_or_o) is str else str(_str_or_o)).startswith(t[1]): # [type, val_start]
+            return True
+    return False
+
 def get_gc_stats():
     go = {}
     for o in gc.garbage:
@@ -77,8 +90,8 @@ def get_gc_stats():
         else:
             allo[tpe][0] += 1
             allo[tpe][1] += sys.getsizeof(o)
-            if tpe in pgc.id_types:
-                allo[tpe][2].append([id(o), str(o)])
+            if is_hist_obj(tpe, o):
+                allo[tpe][2].append([id(o), str(o)[:180]])
     return [go, allo]
 
 def stats_str(stat):
@@ -148,21 +161,26 @@ def pgc(none): # periodical_garbage_collect
             if sstr:
                 print("GC: %s" % sstr)
             size += ssize
-            if tpe in pgc.id_types:
-                cur_ids.extend([_id for _id, _str in objects])
+            for _id, _str in objects:
+                if is_hist_obj(tpe, _str):
+                    cur_ids.append(_id)
         if not pgc.first_size:
             pgc.first_size = size
             pgc.prev_size = size
         print('GC: ALL OBJECT SIZE: %s,%s,%s' % (size, size - pgc.prev_size, size - pgc.first_size))
 
         if pgc.ids:
-            for tpe in pgc.id_types:
+            for tpe_filter in pgc.id_types:
                 #import pdb;pdb.set_trace()
+                if type(tpe_filter) is str:
+                    tpe = tpe_filter
+                else:
+                    tpe = tpe_filter[0]
                 objects = allo[tpe][2]
                 count = 0
                 new_ids = []
                 for _id, _str in objects:
-                    if _id not in pgc.ids:
+                    if is_hist_obj(tpe, _str):
                         print('GC new obj %s(%s): %s' % (tpe, _id, _str))
                         count += 1
                         new_ids.append(_id)
@@ -171,11 +189,15 @@ def pgc(none): # periodical_garbage_collect
             step = -1
             for ids in pgc.hist_ids:
                 step_ids = []
-                for tpe in pgc.id_types:
+                for tpe_filter in pgc.id_types:
+                    if type(tpe_filter) is str:
+                        tpe = tpe_filter
+                    else:
+                        tpe = tpe_filter[0]
                     objects = allo[tpe][2]
                     count = 0
                     for _id, _str in objects:
-                        if _id in ids:
+                        if _id in ids and is_hist_obj(tpe, _str):
                             print('GC %s new obj %s(%s): %s' % (step, tpe, _id, _str))
                             count += 1
                             step_ids.append(_id)
@@ -183,7 +205,12 @@ def pgc(none): # periodical_garbage_collect
                 step -= 1
                 ids[:] = [] #clear list
                 ids.extend(step_ids) # add evailable
+                if step_ids:
+                    pgc.oldest_id = step_ids[-1]
             pgc.hist_ids.insert(0, new_ids)
+            print('GC oldest id %s' % pgc.oldest_id)
+            if pgc.oldest_id:
+                print_obj_id_refs(pgc.oldest_id)
 
 
         pgc.ids = cur_ids
@@ -192,17 +219,52 @@ def pgc(none): # periodical_garbage_collect
 
         pgc.time = tm
 
+OLDEST_OBJ_DEPTH = 1
+
+def print_obj_ref(depth, os):
+    for o in os:
+        refs = gc.get_referrers(o)
+        print('GC oldest %s ref cnt:%s %s(%s): %s' % ('*' * depth, len(refs), str(type(o)), id(o), str(o)[:500]))
+        if depth < OLDEST_OBJ_DEPTH:
+            print_obj_ref(depth+1, refs)
+
+def get_obj_by_id(o_id):
+    return [o for o in gc.get_objects() if id(o)==o_id][0]
+
+def print_obj_id_refs(o_id):
+    #print_obj_ref(0, (get_obj_by_id(o_id),))
+    o = get_obj_by_id(o_id)
+    refs = gc.get_referrers(o)
+    print('gc oldest obj cnt:%s %s(%s): %s' % (len(refs), str(type(o)), id(o), str(o)[:500]))
+    #import types
+    first = True
+    for r in refs:
+        #    import pdb;pdb.set_trace()
+        print('gc oldest %s ref cnt:%s %s(%s): %s' % ('*', -1, str(type(r)), id(r), str(r)[:500].replace(hex(o_id), bcolors.WARNING + str(hex(o_id)) + bcolors.ENDC)))
+        if first and type(r) is dict:
+            refs2 = gc.get_referrers(r)
+            for r2 in refs2:
+                print('gc oldest %s ref cnt:%s %s(%s): %s' % ('**', -2, str(type(r2)), id(r2), str(r2)[:500].replace(hex(id(r)), bcolors.WARNING + str(hex(id(r))) + bcolors.ENDC)))
+                if str(type(r2)) == "<type 'collections.deque'>":
+                    refs3= gc.get_referrers(r2)
+                    for r3 in refs3:
+                        print('gc oldest %s ref cnt:%s %s(%s): %s' % ('**', -3, str(type(r3)), id(r3), str(r3)[:500].replace(hex(id(r2)), bcolors.WARNING + str(hex(id(r2))) + bcolors.ENDC)))
+
+            first = False
+
+
 pgc.first_stats = None
 pgc.prev_stats = {}
 pgc.first_size = None
 pgc.prev_size = None
 
+pgc.oldest_id = None
 pgc.hist_ids = []
 pgc.ids = []
 pgc.id_types = [
-        "<type 'instance'>",
+        #["<type 'instance'>", "<twisted.web.client._HTTP11ClientFactory instance"],
         #"<type 'instancemethod'>",
-        #"<type 'cell'>",
+        "<type 'list'>",
         #"<class 'twisted.logger._logger.Logger'>",
         #"<type 'tuple'>"
         ]
@@ -399,9 +461,6 @@ class Downloader(resource.Resource):
         else: # neither page and feed
             return 'Url is required'
 
-from twisted.logger import globalLogPublisher
-
-globalLogPublisher.addObserver(print)
 
 port = sys.argv[1] if len(sys.argv) >= 2 else 1234
 
