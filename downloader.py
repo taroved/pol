@@ -67,7 +67,7 @@ GC_PERIOD_SECONDS = 1 #3 * 60 * 60 # 3 hours
 def is_hist_obj(tpe, _str_or_o):
     for t in pgc.id_types:
         if type(t) is str:
-            return str(type(o)) == t
+            return t == tpe
         elif tpe == t[0] and (_str_or_o if type(_str_or_o) is str else str(_str_or_o)).startswith(t[1]): # [type, val_start]
             return True
     return False
@@ -262,9 +262,9 @@ pgc.oldest_id = None
 pgc.hist_ids = []
 pgc.ids = []
 pgc.id_types = [
-        #["<type 'instance'>", "<twisted.web.client._HTTP11ClientFactory instance"],
+        ["<type 'instance'>", "<twisted.web.client._HTTP11ClientFactory instance"],
         #"<type 'instancemethod'>",
-        "<type 'list'>",
+        #"<type 'list'>",
         #"<class 'twisted.logger._logger.Logger'>",
         #"<type 'tuple'>"
         ]
