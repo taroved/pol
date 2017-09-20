@@ -44,9 +44,10 @@ class bcolors:
 
 def print_log(event):
     if 'isError' in event and event['isError']:
-        print(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
+        sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
+        sys.stderr.write(formatEventAsClassicLogText(event))
     else:
-        print(formatEventAsClassicLogText(event))
+        sys.stdout.write(formatEventAsClassicLogText(event))
 
 globalLogBeginner.beginLoggingTo([print_log], discardBuffer=True, redirectStandardIO=False) # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
 
