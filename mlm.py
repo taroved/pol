@@ -14,7 +14,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-GC_PERIOD_SECONDS = 3 * 60 * 60 # 3 hours
+GC_PERIOD_SECONDS = 1#3 * 60 * 60 # 3 hours
 
 def is_hist_obj(tpe, _str_or_o):
     for t in pgc.id_types:
@@ -24,26 +24,32 @@ def is_hist_obj(tpe, _str_or_o):
             return True
     return False
 
+class Stat:
+    def __init__(self, count, size, objects):
+        self.count = count
+        self.size = size
+        self.objects = objects
+
 def get_gc_stats():
     go = {}
     for o in gc.garbage:
-        tpe = str(type(o))
+        tpe = type_str(o)
         if tpe not in go:
-            go[tpe] = [1, sys.getsizeof(o), []]
+            go[tpe] = Stat(1, sys.getsizeof(o), [])
         else:
-            go[tpe][0] += 1
-            go[tpe][1] += sys.getsizeof(o)
-            go[tpe][2].append([id(o), str(o)])
+            go[tpe].count += 1
+            go[tpe].size += sys.getsizeof(o)
+            go[tpe].objects.append((id(o), str(o)))
     allo = {}
     for o in gc.get_objects():
-        tpe = str(type(o))
+        tpe = type_str(o)
         if tpe not in allo:
-            allo[tpe] = [1, sys.getsizeof(o), []]
+            allo[tpe] = Stat(1, sys.getsizeof(o), [])
         else:
-            allo[tpe][0] += 1
-            allo[tpe][1] += sys.getsizeof(o)
+            allo[tpe].count += 1
+            allo[tpe].size += sys.getsizeof(o)
             if is_hist_obj(tpe, o):
-                allo[tpe][2].append([id(o), str(o)[:180]])
+                allo[tpe].objects.append((id(o), str(o)[:180]))
     return [go, allo]
 
 def stats_str(stat):
@@ -51,14 +57,14 @@ def stats_str(stat):
     prev_diff = [0, 0]
     
     if tpe in pgc.prev_stats:
-        prev_diff[0] = count - pgc.prev_stats[tpe][0]
-        prev_diff[1] = size - pgc.prev_stats[tpe][1]
+        prev_diff[0] = count - pgc.prev_stats[tpe].count
+        prev_diff[1] = size - pgc.prev_stats[tpe].size
     
     first_diff = [0, 0]
     
     if tpe in pgc.first_stats:
-        first_diff[0] = count - pgc.first_stats[tpe][0]
-        first_diff[1] = size - pgc.first_stats[tpe][1]
+        first_diff[0] = count - pgc.first_stats[tpe].count
+        first_diff[1] = size - pgc.first_stats[tpe].size
     
     prev_count_sigh = ''
     if prev_diff[0] > 0:
@@ -79,8 +85,10 @@ def stats_str(stat):
     s = "%s: %s,%s%s,%s%s %s,%s%s,%s%s" % (tpe, count, prev_count_sigh, prev_diff[0], first_count_sigh, first_diff[0], size, prev_size_sigh, prev_diff[1], first_size_sigh, first_diff[1])
 
     if prev_diff[0] != 0 or prev_diff[1] != 0 or first_diff[0] != 0 or first_diff[1] != 0:
-        if prev_diff[0] != 0 or prev_diff[1] != 0:
+        if prev_diff[0] > 0 or prev_diff[1] > 0:
             return bcolors.WARNING + s + bcolors.ENDC
+        elif prev_diff[0] < 0 or prev_diff[1] < 0:
+            return bcolors.OKGREEN + s + bcolors.ENDC
         else:
             return bcolors.OKBLUE + s + bcolors.ENDC
     else:
@@ -96,7 +104,7 @@ def pgc(none): # periodical_garbage_collect
         go, allo = get_gc_stats()
         log.info("GC: GARBAGE OBJECTS STATS (%s)" % len(go))
         for tpe, stats in sorted(go.iteritems(), key=lambda t: t[0]):
-            log.info("GC: %s: %s, %s" % (tpe, stats[0]. stats[1]))
+            log.info("GC: %s: %s, %s" % (tpe, stats.count. stats.size))
 
         log.info("GC: ALL OBJECTS STATS (%s)" % len(allo))
 
@@ -105,10 +113,11 @@ def pgc(none): # periodical_garbage_collect
 
         size = 0
         cur_ids = []
+        cur_values = []
         for tpe, stats in sorted(allo.iteritems(), key=lambda t: t[0]):
-            scount = stats[0]
-            ssize = stats[1]
-            objects = stats[2]
+            scount = stats.count
+            ssize = stats.size
+            objects = stats.objects
             sstr = stats_str([tpe, scount, ssize])
             if sstr:
                 log.info("GC: %s" % sstr)
@@ -116,24 +125,25 @@ def pgc(none): # periodical_garbage_collect
             for _id, _str in objects:
                 if is_hist_obj(tpe, _str):
                     cur_ids.append(_id)
+                    cur_values.append(_str)
         if not pgc.first_size:
             pgc.first_size = size
             pgc.prev_size = size
         log.info('GC: ALL OBJECT SIZE: %s,%s,%s' % (size, size - pgc.prev_size, size - pgc.first_size))
 
         if pgc.ids:
+            new_ids = []
             for tpe_filter in pgc.id_types:
                 #import pdb;pdb.set_trace()
                 if type(tpe_filter) is str:
                     tpe = tpe_filter
                 else:
                     tpe = tpe_filter[0]
-                objects = allo[tpe][2]
+                objects = allo[tpe].objects
                 count = 0
-                new_ids = []
                 for _id, _str in objects:
-                    if is_hist_obj(tpe, _str):
-                        log.info('GC new obj %s(%s): %s' % (tpe, _id, _str))
+                    if is_hist_obj(tpe, _str) and _id not in pgc.ids and (not pgc.filter_by_value or _str not in pgc.values):
+                        log.info('GC new obj %s(%s): {str!r}' % (tpe, _id), str=_str)
                         count += 1
                         new_ids.append(_id)
                 log.info('GC new obj %s: %s items' % (tpe, count))
@@ -146,13 +156,14 @@ def pgc(none): # periodical_garbage_collect
                         tpe = tpe_filter
                     else:
                         tpe = tpe_filter[0]
-                    objects = allo[tpe][2]
+                    objects = allo[tpe].objects
                     count = 0
                     for _id, _str in objects:
-                        if _id in ids and is_hist_obj(tpe, _str):
-                            log.info('GC %s new obj %s(%s): %s' % (step, tpe, _id, _str))
+                        if _id in ids and is_hist_obj(tpe, _str) and (not pgc.filter_by_value or _str not in pgc.values):
+                            log.info('GC %s new obj %s(%s): {str!r}' % (step, tpe, _id), str = _str)
                             count += 1
                             step_ids.append(_id)
+                            break
                     log.info('GC %s new obj %s: %s items' % (step, tpe, count))
                 step -= 1
                 ids[:] = [] #clear list
@@ -160,12 +171,14 @@ def pgc(none): # periodical_garbage_collect
                 if step_ids:
                     pgc.oldest_id = step_ids[-1]
             pgc.hist_ids.insert(0, new_ids)
+            pgc.hist_ids[:] = pgc.hist_ids[0:3]
             log.info('GC oldest id %s' % pgc.oldest_id)
-            if pgc.oldest_id:
-                print_obj_id_refs(pgc.oldest_id)
+            #if pgc.oldest_id:
+            #    print_obj_id_refs(pgc.oldest_id)
 
 
         pgc.ids = cur_ids
+        pgc.values = cur_values
         pgc.prev_stats = allo
         pgc.prev_size = size
 
@@ -187,20 +200,20 @@ def print_obj_id_refs(o_id):
     #print_obj_ref(0, (get_obj_by_id(o_id),))
     o = get_obj_by_id(o_id)
     refs = gc.get_referrers(o)
-    log.info('gc oldest obj cnt:%s %s(%s): %s' % (len(refs), str(type(o)), id(o), str(o)[:500]))
+    log.info('gc oldest obj cnt:%s %s(%s): {str!r}' % (len(refs), str(type(o)), id(o)), {'str': str(o)[:500]})
     #import types
     first = True
     for r in refs:
         #    import pdb;pdb.set_trace()
-        log.info('gc oldest %s ref cnt:%s %s(%s): %s' % ('*', -1, str(type(r)), id(r), str(r)[:500].replace(hex(o_id), bcolors.WARNING + str(hex(o_id)) + bcolors.ENDC)))
+        log.info('gc oldest %s ref cnt:%s %s(%s): {str!r}' % ('*', -1, str(type(r)), id(r)), {'str': str(r)[:500].replace(hex(o_id), bcolors.WARNING + str(hex(o_id)) + bcolors.ENDC)})
         if first and type(r) is dict:
             refs2 = gc.get_referrers(r)
             for r2 in refs2:
-                log.info('gc oldest %s ref cnt:%s %s(%s): %s' % ('**', -2, str(type(r2)), id(r2), str(r2)[:500].replace(hex(id(r)), bcolors.WARNING + str(hex(id(r))) + bcolors.ENDC)))
+                log.info('gc oldest %s ref cnt:%s %s(%s): {str!r}' % ('**', -2, str(type(r2)), id(r2)), {'str': str(r2)[:500].replace(hex(id(r)), bcolors.WARNING + str(hex(id(r))) + bcolors.ENDC)})
                 if str(type(r2)) == "<type 'collections.deque'>":
                     refs3= gc.get_referrers(r2)
                     for r3 in refs3:
-                        log.info('gc oldest %s ref cnt:%s %s(%s): %s' % ('**', -3, str(type(r3)), id(r3), str(r3)[:500].replace(hex(id(r2)), bcolors.WARNING + str(hex(id(r2))) + bcolors.ENDC)))
+                        log.info('gc oldest %s ref cnt:%s %s(%s): {str!r}' % ('**', -3, str(type(r3)), id(r3)), {'str': str(r3)[:500].replace(hex(id(r2)), bcolors.WARNING + str(hex(id(r2))) + bcolors.ENDC)})
 
             first = False
 
@@ -212,13 +225,25 @@ pgc.prev_size = None
 
 pgc.oldest_id = None
 pgc.hist_ids = []
+
+
+def type_str(obj):
+    switcher = {
+            "<type 'instance'>": lambda o: str(type(o)) + '(' + o.__class__.__name__ + ')',
+            "<type 'instancemethod'>": lambda o: str(type(o)) + '(' + str(o) + ')'
+        }
+    func = switcher.get(str(type(obj)), lambda o: str(type(o)))
+    return func(obj)
+
 pgc.ids = []
 pgc.id_types = [
         #["<type 'instance'>", "<twisted.web.client._HTTP11ClientFactory instance"],
         #"<type 'instancemethod'>",
-        #"<type 'list'>",
+        #"<type 'instance'>(DelayedCall)",
         #"<class 'twisted.logger._logger.Logger'>",
-        #"<type 'tuple'>"
+        #"<type 'list'>"
         ]
+pgc.values = []
+pgc.filter_by_value = False
 
 pgc.time = int(time.time())

@@ -46,8 +46,10 @@ def print_log(event):
     if 'isError' in event and event['isError']:
         sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
         sys.stderr.write(formatEventAsClassicLogText(event))
+        sys.stderr.flush()
     else:
         sys.stdout.write(formatEventAsClassicLogText(event))
+    sys.stdout.flush()
 
 globalLogBeginner.beginLoggingTo([print_log], discardBuffer=True, redirectStandardIO=False) # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
 
@@ -184,7 +186,9 @@ def downloadDone(response_str, request, response, feed_config):
 
     request.write(response_str)
     request.finish()
-    
+    #run_pgc()
+
+def run_pgc():
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
     d.addCallback(pgc)
