@@ -71,14 +71,14 @@ def check_feed_request_time_limit(url):
     return 0
 
 
-#pool = HTTPConnectionPool(reactor, persistent=False)
-#pool.cachedConnectionTimeout = 3
+pool = HTTPConnectionPool(reactor, persistent=False)
+pool.cachedConnectionTimeout = 3
 
 agent = BrowserLikeRedirectAgent(
             Agent(reactor,
                 contextFactory=ScrapyClientContextFactory(), # skip certificate verification
-                connectTimeout=10),
-                #pool=pool),
+                connectTimeout=10,
+                pool=pool),
             redirectLimit=5
         )
 
@@ -186,12 +186,35 @@ def downloadDone(response_str, request, response, feed_config):
 
     request.write(response_str)
     request.finish()
-    #run_pgc()
+    run_pgc()
+
+from pympler import summary, muppy, tracker, refbrowser
+import gc
+#sum = None
+tr = tracker.SummaryTracker()
+iterator = 0
+def mon(none):
+    global pool
+    pool.closeCachedConnections()
+    #gc.collect()
+    global tr
+    tr.print_diff()
+    global iterator
+    iterator += 1
+    if iterator % 4 == 0:
+        global reactor
+        ib = refbrowser.InteractiveBrowser(reactor)
+        ib.main()
+        #cb = refbrowser.ConsoleBrowser(reactor, maxdepth=2, str_func=output_function)
+        #cb.print_tree()
+
+def output_function(o):
+    return str(type(o))
 
 def run_pgc():
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
-    d.addCallback(pgc)
+    d.addCallback(mon)
     d.addErrback(lambda err: print("PGC error: %s\nPGC traceback: %s" % (err.getErrorMessage(), err.getTraceback())))
 
 def error_html(msg):
