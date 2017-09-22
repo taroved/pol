@@ -192,7 +192,7 @@ from pympler import tracker
 import gc
 
 tr = tracker.SummaryTracker()
-MON_PERIOD_SECONDS = 1 * 60 * 60 # 1 hours
+MON_PERIOD_SECONDS = 10 * 60 # 1 hours
 mon_time = None
 def mon(none):
     global mon_time
@@ -204,7 +204,7 @@ def mon(none):
         global tr
         for line in tr.format_diff():
             log.info(line)
-    mon_time = tm
+        mon_time = tm
 
 def run_pgc():
     d = defer.Deferred()
