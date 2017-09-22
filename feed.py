@@ -21,7 +21,7 @@ def save_post(conn, created, feed_id, post_fields):
     cur = conn.cursor()
     cur.execute("""insert into frontend_post (md5sum, created, feed_id)
                     values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
-    print(cur._last_executed)
+    #print(cur._last_executed)
 
     post_id = conn.insert_id()
     for key in ['title', 'description', 'title_link']:
@@ -29,7 +29,7 @@ def save_post(conn, created, feed_id, post_fields):
             #import pdb;pdb.set_trace()
             cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
                             values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
-            print(cur._last_executed)
+            #print(cur._last_executed)
 
 def fill_time(feed_id, items):
     if not items:
@@ -54,7 +54,7 @@ def fill_time(feed_id, items):
                        where p.md5sum in (%s)
                        and p.feed_id=%s""" % (quoted_hashes, feed_id,))
         rows = cur.fetchall()
-        print(cur._last_executed)
+        print('Selected %s posts' % len(rows))
         for row in rows:
             md5hash = row[0]
             created = row[1]
@@ -68,6 +68,7 @@ def fill_time(feed_id, items):
         else:
             item['time'] = cur_time
             save_post(db, cur_time, feed_id, item)
+            print('Saved post')
             cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
 
 
