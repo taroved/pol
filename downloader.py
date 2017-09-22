@@ -29,7 +29,6 @@ import re
 from feed import getFeedData, buildFeed
 
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG, SNAPSHOT_DIR
-from mlm import pgc
 
 
 class bcolors:
@@ -71,14 +70,14 @@ def check_feed_request_time_limit(url):
     return 0
 
 
-pool = HTTPConnectionPool(reactor, persistent=False)
-pool.cachedConnectionTimeout = 3
+#pool = HTTPConnectionPool(reactor, persistent=False)
+#pool.cachedConnectionTimeout = 3
 
 agent = BrowserLikeRedirectAgent(
             Agent(reactor,
                 contextFactory=ScrapyClientContextFactory(), # skip certificate verification
-                connectTimeout=10,
-                pool=pool),
+                connectTimeout=10),
+                #pool=pool),
             redirectLimit=5
         )
 
@@ -188,28 +187,22 @@ def downloadDone(response_str, request, response, feed_config):
     request.finish()
     run_pgc()
 
-from pympler import summary, muppy, tracker, refbrowser
+from pympler import tracker
 import gc
 #sum = None
 tr = tracker.SummaryTracker()
-iterator = 0
+MON_PERIOD_SECONDS = 5#3 * 60 * 60 # 3 hours
+mon_time = None
 def mon(none):
-    global pool
-    pool.closeCachedConnections()
-    #gc.collect()
-    global tr
-    tr.print_diff()
-    global iterator
-    iterator += 1
-    if iterator % 4 == 0:
-        global reactor
-        ib = refbrowser.InteractiveBrowser(reactor)
-        ib.main()
-        #cb = refbrowser.ConsoleBrowser(reactor, maxdepth=2, str_func=output_function)
-        #cb.print_tree()
-
-def output_function(o):
-    return str(type(o))
+    global mon_time
+    tm = int(time.time())
+    if not mon_time or tm - mon_time >= MON_PERIOD_SECONDS:
+        #global pool
+        #pool.closeCachedConnections()
+        gc.collect()
+        global tr
+        tr.print_diff()
+    mon_time = tm
 
 def run_pgc():
     d = defer.Deferred()
