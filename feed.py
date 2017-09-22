@@ -41,7 +41,7 @@ def fill_time(feed_id, items):
         h = md5('')
         for key in ['title', 'description', 'link']:
             if key in item:
-                h.update(item[key].encode('utf-8')) 
+                h.update(item[key].encode('utf-8'))
         item['md5'] = h.hexdigest()
 
     #fetch dates from db
@@ -97,7 +97,7 @@ def buildFeed(response, feed_config):
 
     selector = response.selector
     tree = selector.root.getroottree()
-    # get data from html 
+    # get data from html
     items = []
     #import pdb;pdb.set_trace()
     for node in selector.xpath(feed_config['xpath']):
