@@ -11,7 +11,10 @@ import datetime
 import MySQLdb
 from contextlib import closing
 from settings import DATABASES, DOWNLOADER_USER_AGENT
+from twisted.logger import Logger
 
+
+log = Logger()
 
 url_hash_regexp = re.compile('(#.*)?$')
 
@@ -23,15 +26,14 @@ def save_post(conn, created, feed_id, post_fields):
     with conn as cur:
         cur.execute("""insert into frontend_post (md5sum, created, feed_id)
                         values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
-        print(cur._last_executed)
+        post_id = cur._last_executed
 
         post_id = conn.insert_id()
         for key in ['title', 'description', 'title_link']:
             if key in post_fields:
-                #import pdb;pdb.set_trace()
                 cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
                                 values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
-                print(cur._last_executed)
+        log.info('Post saved id:{id!r}', id=post_id)
 
 def fill_time(feed_id, items):
     if not items:
@@ -55,7 +57,7 @@ def fill_time(feed_id, items):
                            where p.md5sum in (%s)
                            and p.feed_id=%s""" % (quoted_hashes, feed_id,))
             rows = cur.fetchall()
-            print(cur._last_executed)
+            log.debug('Selected {count!r} posts', count=len(rows))
             for row in rows:
                 md5hash = row[0]
                 created = row[1]
@@ -99,7 +101,6 @@ def buildFeed(response, feed_config):
     tree = selector.root.getroottree()
     # get data from html 
     items = []
-    #import pdb;pdb.set_trace()
     for node in selector.xpath(feed_config['xpath']):
         item = {}
         required_count = 0

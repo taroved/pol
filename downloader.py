@@ -4,7 +4,7 @@ import time, sys
 from hashlib import md5
 from datetime import datetime
 
-from twisted.logger import globalLogBeginner, formatEventAsClassicLogText
+from twisted.logger import globalLogBeginner, formatEventAsClassicLogText, Logger
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints, defer
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
@@ -52,6 +52,7 @@ def print_log(event):
 
 globalLogBeginner.beginLoggingTo([print_log], discardBuffer=True, redirectStandardIO=False) # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
 
+log = Logger()
 
 if FEED_REQUEST_PERIOD_LIMIT:
     import redis
@@ -189,9 +190,9 @@ def downloadDone(response_str, request, response, feed_config):
 
 from pympler import tracker
 import gc
-#sum = None
+
 tr = tracker.SummaryTracker()
-MON_PERIOD_SECONDS = 5#3 * 60 * 60 # 3 hours
+MON_PERIOD_SECONDS = 1 * 60 * 60 # 1 hours
 mon_time = None
 def mon(none):
     global mon_time
@@ -201,7 +202,8 @@ def mon(none):
         #pool.closeCachedConnections()
         gc.collect()
         global tr
-        tr.print_diff()
+        for line in tr.format_diff():
+            log.info(line)
     mon_time = tm
 
 def run_pgc():
