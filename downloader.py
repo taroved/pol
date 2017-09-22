@@ -4,7 +4,7 @@ import time, sys
 from hashlib import md5
 from datetime import datetime
 
-from twisted.logger import globalLogBeginner, formatEventAsClassicLogText
+from twisted.logger import globalLogBeginner, formatEventAsClassicLogText, Logger
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints, defer
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
@@ -29,7 +29,6 @@ import re
 from feed import getFeedData, buildFeed
 
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG, SNAPSHOT_DIR
-from mlm import pgc
 
 
 class bcolors:
@@ -53,6 +52,7 @@ def print_log(event):
 
 globalLogBeginner.beginLoggingTo([print_log], discardBuffer=True, redirectStandardIO=False) # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
 
+log = Logger()
 
 if FEED_REQUEST_PERIOD_LIMIT:
     import redis
@@ -186,12 +186,30 @@ def downloadDone(response_str, request, response, feed_config):
 
     request.write(response_str)
     request.finish()
-    #run_pgc()
+    run_pgc()
+
+from pympler import tracker
+import gc
+
+tr = tracker.SummaryTracker()
+MON_PERIOD_SECONDS = 1 * 60 * 60 # 1 hours
+mon_time = None
+def mon(none):
+    global mon_time
+    tm = int(time.time())
+    if not mon_time or tm - mon_time >= MON_PERIOD_SECONDS:
+        #global pool
+        #pool.closeCachedConnections()
+        gc.collect()
+        global tr
+        for line in tr.format_diff():
+            log.info(line)
+    mon_time = tm
 
 def run_pgc():
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
-    d.addCallback(pgc)
+    d.addCallback(mon)
     d.addErrback(lambda err: print("PGC error: %s\nPGC traceback: %s" % (err.getErrorMessage(), err.getTraceback())))
 
 def error_html(msg):
