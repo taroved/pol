@@ -9,7 +9,12 @@ from feedgenerator import Rss201rev2Feed, Enclosure
 import datetime
 
 import MySQLdb
+from contextlib import closing
 from settings import DATABASES, DOWNLOADER_USER_AGENT
+from twisted.logger import Logger
+
+
+log = Logger()
 
 url_hash_regexp = re.compile('(#.*)?$')
 
@@ -18,18 +23,17 @@ POST_TIME_DISTANCE = 15 # minutes, RSS Feed Reader skip same titles created in 1
 FIELD_IDS = {'title': 1, 'description': 2, 'link': 3}
 
 def save_post(conn, created, feed_id, post_fields):
-    cur = conn.cursor()
-    cur.execute("""insert into frontend_post (md5sum, created, feed_id)
-                    values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
-    #print(cur._last_executed)
+    with conn as cur:
+        cur.execute("""insert into frontend_post (md5sum, created, feed_id)
+                        values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
+        post_id = cur._last_executed
 
-    post_id = conn.insert_id()
-    for key in ['title', 'description', 'title_link']:
-        if key in post_fields:
-            #import pdb;pdb.set_trace()
-            cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
-                            values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
-            #print(cur._last_executed)
+        post_id = conn.insert_id()
+        for key in ['title', 'description', 'title_link']:
+            if key in post_fields:
+                cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
+                                values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
+        log.info('Post saved id:{id!r}', id=post_id)
 
 def fill_time(feed_id, items):
     if not items:
@@ -44,32 +48,31 @@ def fill_time(feed_id, items):
 
     #fetch dates from db
     fetched_dates = {}
-    db = get_conn()
-    with db:
-        quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
+    with closing(get_conn()) as conn:
+        with conn as cur:
+            quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
 
-        cur = db.cursor()
-        cur.execute("""select p.md5sum, p.created, p.id
-                       from frontend_post p
-                       where p.md5sum in (%s)
-                       and p.feed_id=%s""" % (quoted_hashes, feed_id,))
-        rows = cur.fetchall()
-        print('Selected %s posts' % len(rows))
-        for row in rows:
-            md5hash = row[0]
-            created = row[1]
-            post_id = row[2]
-            fetched_dates[md5hash] = created
-    cur_time = datetime.datetime.utcnow()
-    new_posts = []
-    for item in items:
-        if item['md5'] in fetched_dates:
-            item['time'] = fetched_dates[item['md5']]
-        else:
-            item['time'] = cur_time
-            save_post(db, cur_time, feed_id, item)
-            print('Saved post')
-            cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
+            cur.execute("""select p.md5sum, p.created, p.id
+                           from frontend_post p
+                           where p.md5sum in (%s)
+                           and p.feed_id=%s""" % (quoted_hashes, feed_id,))
+            rows = cur.fetchall()
+            log.debug('Selected {count!r} posts', count=len(rows))
+            for row in rows:
+                md5hash = row[0]
+                created = row[1]
+                post_id = row[2]
+                fetched_dates[md5hash] = created
+
+        cur_time = datetime.datetime.utcnow()
+        new_posts = []
+        for item in items:
+            if item['md5'] in fetched_dates:
+                item['time'] = fetched_dates[item['md5']]
+            else:
+                item['time'] = cur_time
+                save_post(conn, cur_time, feed_id, item)
+                cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
 
 
 def decode(text, encoding): # it's strange but true
@@ -98,7 +101,6 @@ def buildFeed(response, feed_config):
     tree = selector.root.getroottree()
     # get data from html 
     items = []
-    #import pdb;pdb.set_trace()
     for node in selector.xpath(feed_config['xpath']):
         item = {}
         required_count = 0
@@ -153,24 +155,24 @@ def buildFeed(response, feed_config):
 def getFeedData(request, feed_id):
     # get url, xpathes
     feed = {}
-    db = get_conn()
-    with db:
-        cur = db.cursor()
-        cur.execute("""select f.uri, f.xpath, fi.name, ff.xpath, fi.required from frontend_feed f
-                       right join frontend_feedfield ff on ff.feed_id=f.id
-                       left join frontend_field fi on fi.id=ff.field_id
-                       where f.id=%s""", (feed_id,))
-        rows = cur.fetchall()
 
-        for row in rows:
-            if not feed:
-                feed['id'] = feed_id
-                feed['uri'] = row[0]
-                feed['xpath'] = row[1]
-                feed['fields'] = {}
-                feed['required'] = {}
-            feed['fields'][row[2]] = row[3]
-            feed['required'][row[2]] = row[4]
+    with closing(get_conn()) as conn:
+        with conn as cur:
+            cur.execute("""select f.uri, f.xpath, fi.name, ff.xpath, fi.required from frontend_feed f
+                           right join frontend_feedfield ff on ff.feed_id=f.id
+                           left join frontend_field fi on fi.id=ff.field_id
+                           where f.id=%s""", (feed_id,))
+            rows = cur.fetchall()
+
+            for row in rows:
+                if not feed:
+                    feed['id'] = feed_id
+                    feed['uri'] = row[0]
+                    feed['xpath'] = row[1]
+                    feed['fields'] = {}
+                    feed['required'] = {}
+                feed['fields'][row[2]] = row[3]
+                feed['required'][row[2]] = row[4]
 
     if feed:
         return [feed['uri'], feed]
