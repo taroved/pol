@@ -26,7 +26,6 @@ def save_post(conn, created, feed_id, post_fields):
     with conn as cur:
         cur.execute("""insert into frontend_post (md5sum, created, feed_id)
                         values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
-        post_id = cur._last_executed
 
         post_id = conn.insert_id()
         for key in ['title', 'description', 'title_link']:
@@ -38,6 +37,8 @@ def save_post(conn, created, feed_id, post_fields):
 def fill_time(feed_id, items):
     if not items:
         return []
+
+    new_post_cnt = 0
     for item in items:
         #create md5
         h = md5('')
@@ -65,15 +66,15 @@ def fill_time(feed_id, items):
                 fetched_dates[md5hash] = created
 
         cur_time = datetime.datetime.utcnow()
-        new_posts = []
         for item in items:
             if item['md5'] in fetched_dates:
                 item['time'] = fetched_dates[item['md5']]
             else:
                 item['time'] = cur_time
                 save_post(conn, cur_time, feed_id, item)
+                new_post_cnt += 1
                 cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
-
+    return new_post_cnt
 
 def decode(text, encoding): # it's strange but true
     if isinstance(text, unicode):
@@ -132,7 +133,7 @@ def buildFeed(response, feed_config):
         language="en",
     )
 
-    fill_time(feed_config['id'], items)
+    new_post_cnt = fill_time(feed_config['id'], items)
 
     for item in items:
         title = item['title'] if 'title' in item else ''
@@ -150,7 +151,7 @@ def buildFeed(response, feed_config):
             #enclosure=Enclosure(fields[4], "32000", "image/jpeg") if  4 in fields else None, #"Image"
             pubdate = time
         )
-    return feed.writeString('utf-8')
+    return [feed.writeString('utf-8'), len(items), new_post_cnt]
 
 def getFeedData(request, feed_id):
     # get url, xpathes
