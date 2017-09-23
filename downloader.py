@@ -26,7 +26,8 @@ from scrapy.core.downloader.contextfactory import ScrapyClientContextFactory
 from lxml import etree
 import re
 
-from feed import getFeedData, buildFeed
+from feed import getFeedData, buildFeed, get_conn
+from contextlib import closing
 
 from settings import DOWNLOADER_USER_AGENT, FEED_REQUEST_PERIOD_LIMIT, DEBUG, SNAPSHOT_DIR
 
@@ -41,12 +42,45 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+class RequestStat:
+    def __init__(self, ip, feed_id, post_cnt, new_post_cnt, url=None, ex_msg=None, ex_callstack=None):
+        self.ip = ip
+        self.feed_id = feed_id
+        self.post_cnt = post_cnt
+        self.new_post_cnt = new_post_cnt
+        self.url = url
+        self.ex_msg = ex_msg
+        self.ex_callstack = ex_callstack
+
+def get_ip_id(ip, cur):
+    #import pdb;pdb.set_trace()
+    cur.execute("""select id from ips where address=%s""", (ip,))
+    ip_id = cur.fetchone()
+    if not ip_id:
+        cur.execute("insert into ips (address) values (%s)", (ip,))
+        ip_id = cur.lastrowid
+    return ip_id
+
+
+def save_stat(stat):
+    with closing(get_conn()) as conn:
+        with conn as cur:
+            ip_id = get_ip_id(stat.ip, cur)
+            cur.execute("""insert into requests (ip_id, feed_id, post_cnt, new_post_cnt)
+                            values (%s, %s, %s, %s)""", (ip_id, stat.feed_id, stat.post_cnt, stat.new_post_cnt))
+            stat_id = cur.lastrowid
+            if not stat.feed_id:
+                cur.execute("insert into request_urls (url, request_id) values (%s, %s)", (stat.url.encode('utf-8'), stat_id))
+
+
 def print_log(event):
     if 'isError' in event and event['isError']:
         sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
         sys.stderr.write(formatEventAsClassicLogText(event))
         sys.stderr.flush()
     else:
+        if 'stat' in event and event['stat']:
+            save_stat(event['request'])
         sys.stdout.write(formatEventAsClassicLogText(event))
     sys.stdout.flush()
 
@@ -179,10 +213,27 @@ def downloadDone(response_str, request, response, feed_config):
 
     if (isinstance(response, TextResponse)):
         if feed_config:
-            response_str = buildFeed(response, feed_config)
+            [response_str, post_cnt, new_post_cnt] = buildFeed(response, feed_config)
             request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
+            log.debug('Stat: ip={request.ip} feed_id={request.feed_id} new_post_cnt={request.post_cnt} new_post_cnt={request.new_post_cnt}', request=RequestStat(
+                    ip=request.client.host,
+                    feed_id=feed_config['id'],
+                    post_cnt=post_cnt,
+                    new_post_cnt=new_post_cnt
+                ),
+                stat=True
+            )
         else:
             response_str, file_name = setBaseAndRemoveScriptsAndMore(response, url)
+            log.debug('Stat: ip={request.ip} url={request.url}', request=RequestStat(
+                    ip=request.client.host,
+                    feed_id=0,
+                    post_cnt=0,
+                    new_post_cnt=0,
+                    url=url                    
+                ),
+                stat=True
+            )
 
     request.write(response_str)
     request.finish()
