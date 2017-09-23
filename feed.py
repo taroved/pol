@@ -36,7 +36,7 @@ def save_post(conn, created, feed_id, post_fields):
 
 def fill_time(feed_id, items):
     if not items:
-        return []
+        return 0
 
     new_post_cnt = 0
     for item in items:
@@ -132,7 +132,6 @@ def buildFeed(response, feed_config):
             "Source page url: " + feed_config['uri'],
         language="en",
     )
-
     new_post_cnt = fill_time(feed_config['id'], items)
 
     for item in items:

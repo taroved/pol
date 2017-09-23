@@ -1,6 +1,6 @@
 from __future__ import print_function
 import json
-import time, sys
+import time, sys, traceback
 from hashlib import md5
 from datetime import datetime
 
@@ -63,15 +63,21 @@ def get_ip_id(ip, cur):
 
 
 def save_stat(stat):
-    with closing(get_conn()) as conn:
-        with conn as cur:
-            ip_id = get_ip_id(stat.ip, cur)
-            cur.execute("""insert into requests (ip_id, feed_id, post_cnt, new_post_cnt)
-                            values (%s, %s, %s, %s)""", (ip_id, stat.feed_id, stat.post_cnt, stat.new_post_cnt))
-            stat_id = cur.lastrowid
-            if not stat.feed_id:
-                cur.execute("insert into request_urls (url, request_id) values (%s, %s)", (stat.url.encode('utf-8'), stat_id))
+    try:
+        with closing(get_conn()) as conn:
+            with conn as cur:
+                ip_id = get_ip_id(stat.ip, cur)
+                cur.execute("""insert into requests (ip_id, feed_id, post_cnt, new_post_cnt)
+                                values (%s, %s, %s, %s)""", (ip_id, stat.feed_id, stat.post_cnt, stat.new_post_cnt))
+                stat_id = cur.lastrowid
+                if not stat.feed_id:
+                    cur.execute("insert into request_urls (url, request_id) values (%s, %s)", (stat.url.encode('utf-8')[:2000], stat_id))
 
+                if stat.ex_msg:
+                    cur.execute("""insert into request_fails (request_id, ex_msg, ex_callstack)
+                                    values (%s, %s, %s)""", (stat_id, stat.ex_msg[0:2000], stat.ex_callstack[:2000]))
+    except:
+        traceback.print_exc(file=sys.stdout)
 
 def print_log(event):
     if 'isError' in event and event['isError']:
@@ -212,11 +218,12 @@ def downloadDone(response_str, request, response, feed_config):
     response = DecompressionMiddleware().process_response(None, response, None)
 
     if (isinstance(response, TextResponse)):
+        ip = request.getHeader('x-real-ip') or request.client.host
         if feed_config:
             [response_str, post_cnt, new_post_cnt] = buildFeed(response, feed_config)
             request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
-            log.debug('Stat: ip={request.ip} feed_id={request.feed_id} new_post_cnt={request.post_cnt} new_post_cnt={request.new_post_cnt}', request=RequestStat(
-                    ip=request.client.host,
+            log.info('Stat: ip={request.ip} feed_id={request.feed_id} post_cnt={request.post_cnt} new_post_cnt={request.new_post_cnt}', request=RequestStat(
+                    ip=ip,
                     feed_id=feed_config['id'],
                     post_cnt=post_cnt,
                     new_post_cnt=new_post_cnt
@@ -225,8 +232,8 @@ def downloadDone(response_str, request, response, feed_config):
             )
         else:
             response_str, file_name = setBaseAndRemoveScriptsAndMore(response, url)
-            log.debug('Stat: ip={request.ip} url={request.url}', request=RequestStat(
-                    ip=request.client.host,
+            log.info('Stat: ip={request.ip} url={request.url}', request=RequestStat(
+                    ip=ip,
                     feed_id=0,
                     post_cnt=0,
                     new_post_cnt=0,
@@ -274,6 +281,7 @@ def downloadError(error, request=None, url=None, response=None, feed_config=None
         d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
         d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
         return
+
     if DEBUG:
         request.write('Downloader error: ' + error.getErrorMessage())
         request.write('Traceback: ' + error.getTraceback())
@@ -281,6 +289,26 @@ def downloadError(error, request=None, url=None, response=None, feed_config=None
         request.write(error_html('Something wrong. Contact us by email: politepol.com@gmail.com \n Scary mantra: ' + error.getErrorMessage()))
     sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
     request.finish()
+    
+    try:
+        feed_id = feed_config and feed_config['id']
+        s_url = None
+        if not feed_id:
+            feed_id = 0
+            s_url = url
+        log.info('Stat: ip={request.ip} feed_id={request.feed_id} url="{request.url}" error="{request.ex_msg}"', request=RequestStat(
+                ip = request.getHeader('x-real-ip') or request.client.host,
+                feed_id = feed_id,
+                post_cnt=0,
+                new_post_cnt=0,
+                url=s_url,
+                ex_msg=error.getErrorMessage(),
+                ex_callstack=error.getTraceback()
+            ),
+            stat=True
+        )
+    except:
+        traceback.print_exc(file=sys.stdout)
 
 
 class Downloader(resource.Resource):
