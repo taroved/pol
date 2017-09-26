@@ -14,20 +14,20 @@ class bcolors:
 
 
 class LogHandler(object):
-	"""Handler of twisted log meaasges"""
+    """Handler of twisted log meaasges"""
 
-	def __init__(self, stat_tool=None):
-		self.stat_tool = stat_tool
-		# requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
-		globalLogBeginner.beginLoggingTo([self.print_log], discardBuffer=True, redirectStandardIO=False)
+    def __init__(self, stat_tool=None):
+        self.stat_tool = stat_tool
+        # requred, discardBuffer gets rid of the LimitedHistoryLogObserver, redirectStandardIO will loop print action
+        globalLogBeginner.beginLoggingTo([self.print_log], discardBuffer=True, redirectStandardIO=False)
 
 
-	def print_log(event):
-	    if 'isError' in event and event['isError']:
-	        sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
-	        sys.stderr.write(formatEventAsClassicLogText(event))
-	        sys.stderr.flush()
-	    else:
-	        sys.stdout.write(formatEventAsClassicLogText(event))
-	    sys.stdout.flush()
+    def print_log(self, event):
+        if 'isError' in event and event['isError']:
+            sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
+            sys.stderr.write(formatEventAsClassicLogText(event))
+            sys.stderr.flush()
+        else:
+            sys.stdout.write(formatEventAsClassicLogText(event))
+        sys.stdout.flush()
 
