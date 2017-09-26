@@ -19,7 +19,9 @@ class MFTests(object):
     def test_log_handler(self):
         handler = LogHandler()
         self.log.info('Test msg with {parameter} is OK', parameter="value")
-        self.log.error('Test error with {parameter} is OK', parameter="value", isError=True)
+        self.log.error('Test error with {parameter} is OK', parameter="value")
+        self.log.error('Test error with {parameter} (isError={isError}) is OK', parameter="value", isError=False)
+        self.log.error('Test error with {parameter} (isError={isError}) is OK', parameter="value", isError=True)
 
         d = defer.Deferred()
         reactor.callLater(0, d.callback, None)
