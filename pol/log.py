@@ -23,10 +23,10 @@ class LogHandler(object):
 
 
     def print_log(self, event):
-        if 'isError' in event and event['isError']:
-            sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
+        if event['log_level'].name == 'error' or 'isError' in event and event['isError']:
             sys.stderr.write(formatEventAsClassicLogText(event))
             sys.stderr.flush()
+            sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
         else:
             sys.stdout.write(formatEventAsClassicLogText(event))
         sys.stdout.flush()
