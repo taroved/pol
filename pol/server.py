@@ -1,3 +1,4 @@
+from __future__ import print_function
 from datetime import datetime
 from hashlib import md5
 import json
@@ -7,9 +8,9 @@ import re
 from lxml import etree
 
 from twisted.web import server, resource
-from twisted.internet import reactor, endpoints, 
+from twisted.internet import reactor, endpoints
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
-from twisted.web.server import 
+from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
 from twisted.web.html import escape
 twisted_headers = Headers
@@ -23,14 +24,21 @@ from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
 from scrapy.core.downloader.contextfactory import ScrapyClientContextFactory
 
+from pol.log import LogHandler
 from .feed import Feed
+
+from twisted.logger import Logger
+
+
+log = Logger()
 
 class Downloader(object):
 
-    def __init__(self, debug, stat_tool=None, mem_mon=None):
+    def __init__(self, debug, stat_tool=None, mem_mon=None, limiter=None):
         self.debug = debug
         self.stat_tool = stat_tool
         self.mem_mon = mem_mon
+        self.limiter = limiter
 
     def html2json(self, el):
         return [
@@ -110,7 +118,7 @@ class Downloader(object):
         return respcls(url=url, status=status, headers=headers, body=body)
 
     def error_html(self, msg):
-        return "<html><body>%s</body></html" % escape(msg).replace("\n", "<br/>\n")
+        return "<html><body>%s</body></html" % msg.replace("\n", "<br/>\n")
 
     def downloadError(self, error, request=None, url=None, response=None, feed_config=None):
         # read for details: https://stackoverflow.com/questions/29423986/twisted-giving-twisted-web-client-partialdownloaderror-200-ok
@@ -125,7 +133,7 @@ class Downloader(object):
             request.write('Downloader error: ' + error.getErrorMessage())
             request.write('Traceback: ' + error.getTraceback())
         else:
-            request.write(self.error_html('Something wrong. Contact us by email: politepol.com@gmail.com \n Scary mantra: ' + error.getErrorMessage()))
+            request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: politepol.com@gmail.com</b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
         sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
         request.finish()
         
@@ -135,17 +143,16 @@ class Downloader(object):
             if not feed_id:
                 feed_id = 0
                 s_url = url
-            log.info('Stat: ip={request.ip} feed_id={request.feed_id} url="{request.url}" error="{request.ex_msg}"', request=RequestStat(
-                    ip = request.getHeader('x-real-ip') or request.client.host,
-                    feed_id = feed_id,
-                    post_cnt=0,
-                    new_post_cnt=0,
-                    url=s_url,
-                    ex_msg=error.getErrorMessage(),
-                    ex_callstack=error.getTraceback()
-                ),
-                stat=True
-            )
+            if self.stat_tool:
+                self.stat_tool.trace(
+                        ip = request.getHeader('x-real-ip') or request.client.host,
+                        feed_id = feed_id,
+                        post_cnt=0,
+                        new_post_cnt=0,
+                        url=s_url,
+                        ex_msg=error.getErrorMessage(),
+                        ex_callstack=error.getTraceback()
+                    )
         except:
             traceback.print_exc(file=sys.stdout)
 
@@ -208,13 +215,14 @@ class Site(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
+        self.limiter = limiter
 
         self.downloader = Downloader(debug)
-        self.feed = Feed(db_creds, log)
+        self.feed = Feed(db_creds)
 
     def startRequest(self, request, url, feed_config = None):
         agent = BrowserLikeRedirectAgent(
@@ -251,7 +259,7 @@ class Site(resource.Resource):
         elif self.feed_regexp.match(request.uri) is not None: # feed
             feed_id = self.feed_regexp.match(request.uri).groups()[0]
 
-            time_left = check_feed_request_time_limit(request.uri)
+            time_left = self.limiter.check_request_time_limit(request.uri) if self.limiter else 0
             if time_left:
                 request.setResponseCode(429)
                 request.setHeader('Retry-After', str(time_left) + ' seconds')
@@ -271,16 +279,20 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
+        self.debug = debug
+        self.limiter = limiter
 
-    def setMemMonitor(_mem_mon=None)
+        self.log_handler = LogHandler()
+
+    def setMemMonitor(self, _mem_mon=None):
         global mem_mon
         mem_mon = _mem_mon
 
     def run(self):
-        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug)))
+        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter)))
         reactor.run()

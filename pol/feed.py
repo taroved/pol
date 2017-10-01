@@ -13,6 +13,8 @@ from contextlib import closing
 from settings import DATABASES, DOWNLOADER_USER_AGENT
 from twisted.logger import Logger
 
+from .db import get_conn
+
 
 log = Logger()
 
@@ -24,9 +26,8 @@ class Feed(object):
 
     FIELD_IDS = {'title': 1, 'description': 2, 'link': 3}
 
-    def __init__(self, db_creds, log):
+    def __init__(self, db_creds):
         self.db_creds = db_creds
-        self.log = log
 
 
     def save_post(self, conn, created, feed_id, post_fields):

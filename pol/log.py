@@ -22,11 +22,11 @@ class LogHandler(object):
         globalLogBeginner.beginLoggingTo([self.print_log], discardBuffer=True, redirectStandardIO=False)
 
 
-    def print_log(self, event):
-        if event['log_level'].name == 'error' or 'isError' in event and event['isError']:
+    def print_log(event):
+        if 'isError' in event and event['isError']:
+            sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
             sys.stderr.write(formatEventAsClassicLogText(event))
             sys.stderr.flush()
-            sys.stdout.write(bcolors.FAIL + formatEventAsClassicLogText(event) + bcolors.ENDC)
         else:
             sys.stdout.write(formatEventAsClassicLogText(event))
         sys.stdout.flush()
