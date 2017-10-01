@@ -34,33 +34,39 @@ log = Logger()
 
 class Downloader(object):
 
-    def __init__(self, debug, stat_tool=None, mem_mon=None, limiter=None):
+    def __init__(self, feed, debug, snapshot_dir='/tmp', stat_tool=None, mem_mon=None):
+        self.feed = feed
         self.debug = debug
+        self.snapshot_dir = snapshot_dir
         self.stat_tool = stat_tool
         self.mem_mon = mem_mon
-        self.limiter = limiter
 
     def html2json(self, el):
         return [
             el.tag,
             {"tag-id": el.attrib["tag-id"]},
-            [html2json(e) for e in el.getchildren() if isinstance(e, etree.ElementBase)]
+            [self.html2json(e) for e in el.getchildren() if isinstance(e, etree.ElementBase)]
         ]
 
-    def setBaseAndRemoveScriptsAndMore(self, response, url):
-        response.selector.remove_namespaces()
-
-        tree = response.selector.root.getroottree()
-
+    def _saveResponse(self, response, url, tree):
         # save html for extended selectors
         file_name = '%s_%s' % (time.time(), md5(url).hexdigest())
-        file_path = SNAPSHOT_DIR + '/' + file_name
+        file_path = self.snapshot_dir + '/' + file_name
         with open(file_path, 'w') as f:
             f.write(url + '\n')
             for k, v in response.headers.iteritems():
                 for vv in v:
                     f.write('%s: %s\n' % (k, vv))
             f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html'))
+        return file_name
+
+
+    def setBaseAndRemoveScriptsAndMore(self, response, url):
+        response.selector.remove_namespaces()
+
+        tree = response.selector.root.getroottree()
+
+        file_name = self._saveResponse(response, url, tree)
 
         # set base url to html document
         head = tree.xpath("//head")
@@ -125,15 +131,15 @@ class Downloader(object):
         if error.type is PartialDownloadError and error.value.status == '200':
             d = defer.Deferred()
             reactor.callLater(0, d.callback, error.value.response) # error.value.response is response_str
-            d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
-            d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
+            d.addCallback(self.downloadDone, request=request, response=response, feed_config=feed_config)
+            d.addErrback(self.downloadError, request=request, url=url, response=response, feed_config=feed_config)
             return
 
         if self.debug:
             request.write('Downloader error: ' + error.getErrorMessage())
             request.write('Traceback: ' + error.getTraceback())
         else:
-            request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: politepol.com@gmail.com</b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
+            request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
         sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
         request.finish()
         
@@ -157,17 +163,17 @@ class Downloader(object):
             traceback.print_exc(file=sys.stdout)
 
 
-    def downloadStarted(response, request, url, feed_config):
+    def downloadStarted(self, response, request, url, feed_config):
         d = readBody(response)
-        d.addCallback(downloadDone, request=request, response=response, feed_config=feed_config)
-        d.addErrback(downloadError, request=request, url=url, response=response, feed_config=feed_config)
+        d.addCallback(self.downloadDone, request=request, response=response, feed_config=feed_config)
+        d.addErrback(self.downloadError, request=request, url=url, response=response, feed_config=feed_config)
         return response
 
-    def downloadDone(response_str, request, response, feed_config):
+    def downloadDone(self, response_str, request, response, feed_config):
         url = response.request.absoluteURI
 
         print('Response <%s> ready (%s bytes)' % (url, len(response_str)))
-        response = buildScrapyResponse(response, response_str, url)
+        response = self.buildScrapyResponse(response, response_str, url)
 
         response = HttpCompressionMiddleware().process_response(Request(url), response, None)
         response = DecompressionMiddleware().process_response(None, response, None)
@@ -177,36 +183,22 @@ class Downloader(object):
             if feed_config:
                 [response_str, post_cnt, new_post_cnt] = self.feed.buildFeed(response, feed_config)
                 request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
-                log.info('Stat: ip={request.ip} feed_id={request.feed_id} post_cnt={request.post_cnt} new_post_cnt={request.new_post_cnt}', request=RequestStat(
-                        ip=ip,
-                        feed_id=feed_config['id'],
-                        post_cnt=post_cnt,
-                        new_post_cnt=new_post_cnt
-                    ),
-                    stat=True
-                )
+                if self.stat_tool:
+                    self.stat_tool.trace(ip=ip, feed_id=feed_config['id'], post_cnt=post_cnt, new_post_cnt=new_post_cnt)
             else:
-                response_str, file_name = setBaseAndRemoveScriptsAndMore(response, url)
-                log.info('Stat: ip={request.ip} url={request.url}', request=RequestStat(
-                        ip=ip,
-                        feed_id=0,
-                        post_cnt=0,
-                        new_post_cnt=0,
-                        url=url                    
-                    ),
-                    stat=True
-                )
+                response_str, file_name = self.setBaseAndRemoveScriptsAndMore(response, url)
+                if self.stat_tool:
+                    self.stat_tool.trace(ip=ip, feed_id=0, post_cnt=0, new_post_cnt=0, url=url)
 
         request.write(response_str)
         request.finish()
-        run_mem_mon()
+        self.run_mem_mon()
 
-    def run_mem_mon():
-        global mem_mon
-        if mem_mon:
+    def run_mem_mon(self):
+        if self.mem_mon:
             d = defer.Deferred()
             reactor.callLater(0, d.callback, None)
-            d.addCallback(mem_mon.show_diff)
+            d.addCallback(self.mem_mon.show_diff)
             d.addErrback(lambda err: print("Memory Monitor error: %s\nPGC traceback: %s" % (err.getErrorMessage(), err.getTraceback())))
 
 
@@ -215,14 +207,14 @@ class Site(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, mem_mon=None, stat_tool=None):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.limiter = limiter
 
-        self.downloader = Downloader(debug)
         self.feed = Feed(db_creds)
+        self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, mem_mon)
 
     def startRequest(self, request, url, feed_config = None):
         agent = BrowserLikeRedirectAgent(
@@ -279,20 +271,17 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, mem_mon=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.debug = debug
         self.limiter = limiter
+        self.mem_mon = mem_mon
 
         self.log_handler = LogHandler()
 
-    def setMemMonitor(self, _mem_mon=None):
-        global mem_mon
-        mem_mon = _mem_mon
-
     def run(self):
-        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter)))
+        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.mem_mon)))
         reactor.run()

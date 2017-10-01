@@ -39,7 +39,7 @@ class Feed(object):
             for key in ['title', 'description', 'title_link']:
                 if key in post_fields:
                     cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
-                                    values (%s, %s, %s)""", (FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
+                                    values (%s, %s, %s)""", (self.FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
             log.info('Post saved id:{id!r}', id=post_id)
 
     def fill_time(self, feed_id, items):
@@ -66,7 +66,7 @@ class Feed(object):
                                where p.md5sum in (%s)
                                and p.feed_id=%s""" % (quoted_hashes, feed_id,))
                 rows = cur.fetchall()
-                self.log.debug('Selected {count!r} posts', count=len(rows))
+                log.debug('Selected {count!r} posts', count=len(rows))
                 for row in rows:
                     md5hash = row[0]
                     created = row[1]
@@ -81,7 +81,7 @@ class Feed(object):
                     item['time'] = cur_time
                     self.save_post(conn, cur_time, feed_id, item)
                     new_post_cnt += 1
-                    cur_time -= datetime.timedelta(minutes=POST_TIME_DISTANCE)
+                    cur_time -= datetime.timedelta(minutes=self.POST_TIME_DISTANCE)
         return new_post_cnt
 
     def _build_link(self, html, doc_url, url):
@@ -110,7 +110,7 @@ class Feed(object):
                         if feed_config['required'][field_name]:
                             required_found += 1
                         if field_name == 'link':
-                            item['link'] = _build_link(response.body_as_unicode(), feed_config['uri'], item[field_name])
+                            item['link'] = self._build_link(response.body_as_unicode(), feed_config['uri'], item[field_name])
 
             if required_count == required_found:
                 items.append(item)
@@ -125,7 +125,7 @@ class Feed(object):
                 "Source page url: " + feed_config['uri'],
             language="en",
         )
-        new_post_cnt = fill_time(feed_config['id'], items)
+        new_post_cnt = self.fill_time(feed_config['id'], items)
 
         for item in items:
             title = item['title'] if 'title' in item else ''
