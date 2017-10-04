@@ -8,7 +8,7 @@ import re
 from lxml import etree
 
 from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
+from twisted.internet import reactor, endpoints, defer
 from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
@@ -34,12 +34,12 @@ log = Logger()
 
 class Downloader(object):
 
-    def __init__(self, feed, debug, snapshot_dir='/tmp', stat_tool=None, mem_mon=None):
+    def __init__(self, feed, debug, snapshot_dir='/tmp', stat_tool=None, memon=None):
         self.feed = feed
         self.debug = debug
         self.snapshot_dir = snapshot_dir
         self.stat_tool = stat_tool
-        self.mem_mon = mem_mon
+        self.memon = memon
 
     def html2json(self, el):
         return [
@@ -142,7 +142,7 @@ class Downloader(object):
             request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
         sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
         request.finish()
-        
+
         try:
             feed_id = feed_config and feed_config['id']
             s_url = None
@@ -192,13 +192,13 @@ class Downloader(object):
 
         request.write(response_str)
         request.finish()
-        self.run_mem_mon()
+        self.run_memon()
 
-    def run_mem_mon(self):
-        if self.mem_mon:
+    def run_memon(self):
+        if self.memon:
             d = defer.Deferred()
             reactor.callLater(0, d.callback, None)
-            d.addCallback(self.mem_mon.show_diff)
+            d.addCallback(self.memon.show_diff)
             d.addErrback(lambda err: print("Memory Monitor error: %s\nPGC traceback: %s" % (err.getErrorMessage(), err.getTraceback())))
 
 
@@ -207,14 +207,14 @@ class Site(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, mem_mon=None, stat_tool=None):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.limiter = limiter
 
         self.feed = Feed(db_creds)
-        self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, mem_mon)
+        self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, memon)
 
     def startRequest(self, request, url, feed_config = None):
         agent = BrowserLikeRedirectAgent(
@@ -237,7 +237,7 @@ class Site(resource.Resource):
         )
         print('Request <GET %s> started' % (url,))
         d.addCallback(self.downloader.downloadStarted, request=request, url=url, feed_config=feed_config)
-        d.addErrback(self.downloader.downloadError, request=request, url=url)
+        d.addErrback(self.downloader.downloadError, request=request, url=url, feed_config=feed_config)
 
     def render_GET(self, request):
         '''
@@ -271,17 +271,18 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, mem_mon=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.debug = debug
         self.limiter = limiter
-        self.mem_mon = mem_mon
+        self.memon = memon
+        self.stat_tool=stat_tool
 
         self.log_handler = LogHandler()
 
     def run(self):
-        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.mem_mon)))
+        endpoints.serverFromString(reactor, "tcp:%s" % self.port).listen(server.Site(Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool)))
         reactor.run()
