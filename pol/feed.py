@@ -134,7 +134,7 @@ class Feed(object):
             if 'link' in item:
                 link = item['link']
             else:
-                link = url_hash_regexp.sub('#' + md5((title+desc).encode('utf-8')).hexdigest(), feed_config['uri'])
+                link = self.url_hash_regexp.sub('#' + md5((title+desc).encode('utf-8')).hexdigest(), feed_config['uri'])
             feed.add_item(
                 title = title,
                 link = link,
