@@ -115,11 +115,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-#STATICFILES_DIRS = (
-#    os.path.join(PROJECT_DIR, "assets"),
-#)
+STATICFILES_DIRS = (
+    os.path.join(PROJECT_DIR, "assets"),
+)
 
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static/')
 
 STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
 
@@ -137,12 +137,12 @@ PIPELINE_COMPILERS = (
 PIPELINE_CSS = {
     'app': {
         'source_filenames': (
-          'frontend/assets/stylesheets/application.css',
-          'frontend/assets/stylesheets/bootstrap_and_overrides.css.less',
-          'frontend/assets/stylesheets/wizard.css.scss',
-          'frontend/assets/stylesheets/google-code-prettify/prettify.css',
+          'frontend/stylesheets/application.css',
+          'frontend/stylesheets/bootstrap_and_overrides.css.less',
+          'frontend/stylesheets/wizard.css.scss',
+          'frontend/stylesheets/google-code-prettify/prettify.css',
         ),
-        'output_filename': 'frontend/css/app.css',
+        'output_filename': 'frontend/stylesheets/app.css',
         'extra_context': {
             'media': 'all',
         },
@@ -152,16 +152,16 @@ PIPELINE_CSS = {
 PIPELINE_JS = {
     'app': {
         'source_filenames': (
-          'frontend/assets/js/jquery.js',
-          'frontend/assets/js/jquery.browser.js',
-          'frontend/assets/js/jquery.jfeed.js',
-          'frontend/assets/js/bootstrap.js',
-          'frontend/assets/js/bootstrap_and_overrides.js',
-          'frontend/assets/js/xregexp-all.js',
-          'frontend/assets/js/google-code-prettify/prettify.js',
-          'frontend/assets/js/setup-tool.js',
-          'frontend/assets/js/setup-tool-ext.js',
-          'frontend/assets/js/help.js',
+          'frontend/js/jquery.js',
+          'frontend/js/jquery.browser.js',
+          'frontend/js/jquery.jfeed.js',
+          'frontend/js/bootstrap.js',
+          'frontend/js/bootstrap_and_overrides.js',
+          'frontend/js/xregexp-all.js',
+          'frontend/js/google-code-prettify/prettify.js',
+          'frontend/js/setup-tool.js',
+          'frontend/js/setup-tool-ext.js',
+          'frontend/js/help.js',
         ),
         'output_filename': 'frontend/js/app.js',
     }
@@ -173,5 +173,4 @@ FEED1_PAGE_URL = '/feed1/'
 DOWNLOADER_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36'
 # limit of seconds in which user can access separate feed
 FEED_REQUEST_PERIOD_LIMIT = 0
-
 SNAPSHOT_DIR = '/tmp'
