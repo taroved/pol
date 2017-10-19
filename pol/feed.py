@@ -52,7 +52,7 @@ class Feed(object):
             h = md5('')
             for key in ['title', 'description', 'link']:
                 if key in item:
-                    h.update(item[key].encode('utf-8')) 
+                    h.update(item[key].encode('utf-8'))
             item['md5'] = h.hexdigest()
 
         #fetch dates from db
@@ -88,12 +88,12 @@ class Feed(object):
         base_url = w3lib.html.get_base_url(html, doc_url)
         return w3lib.url.urljoin_rfc(base_url, url).decode('utf-8')
 
-    def buildFeed(self, response, feed_config):
-        response.selector.remove_namespaces()
+    def buildFeed(self, selector, page_unicode, feed_config):
+        selector.remove_namespaces()
 
-        selector = response.selector
+        selector = selector
         tree = selector.root.getroottree()
-        # get data from html 
+        # get data from html
         items = []
         for node in selector.xpath(feed_config['xpath']):
             item = {}
@@ -110,7 +110,7 @@ class Feed(object):
                         if feed_config['required'][field_name]:
                             required_found += 1
                         if field_name == 'link':
-                            item['link'] = self._build_link(response.body_as_unicode(), feed_config['uri'], item[field_name])
+                            item['link'] = self._build_link(page_unicode, feed_config['uri'], item[field_name])
 
             if required_count == required_found:
                 items.append(item)
@@ -145,7 +145,7 @@ class Feed(object):
             )
         return [feed.writeString('utf-8'), len(items), new_post_cnt]
 
-    def getFeedData(self, request, feed_id):
+    def getFeedData(self, feed_id):
         # get url, xpathes
         feed = {}
 
