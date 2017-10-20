@@ -2,6 +2,7 @@ from __future__ import print_function
 from datetime import datetime
 from hashlib import md5
 import json
+import pickle
 import time, sys, traceback
 import re
 from urlparse import urlparse
@@ -180,21 +181,24 @@ class Downloader(object):
         print('Response <%s> ready (%s bytes)' % (url, len(response_str)))
         response = self.buildScrapyResponse(response, response_str, url)
 
-        response = HttpCompressionMiddleware().process_response(Request(url), response, None)
+        if selector_defer:
+            selector_defer.callback(response)
+        else:
+            self.writeResponse(request, response, feed_config)
+            self.run_memon()
+
+    def writeResponse(self, request, response, feed_config):
+        response = HttpCompressionMiddleware().process_response(Request(response.url), response, None)
         response = DecompressionMiddleware().process_response(None, response, None)
 
-        if selector_defer:
-            selector_defer.callback(response.selector)
-        else:
-            if (isinstance(response, TextResponse)):
-                ip = request.getHeader('x-real-ip') or request.client.host
-                response_str = self.prepare_response_str(response.selector, response.headers, response.body_as_unicode(), url, feed_config, ip)
-                if feed_config:
-                    request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
+        if (isinstance(response, TextResponse)):
+            ip = request.getHeader('x-real-ip') or request.client.host
+            response_str = self.prepare_response_str(response.selector, response.headers, response.body_as_unicode(), response.url, feed_config, ip)
+            if feed_config:
+                request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
 
-            request.write(response_str)
-            request.finish()
-            self.run_memon()
+        request.write(response_str)
+        request.finish()
 
     def prepare_response_str(self, selector, headers, page_unicode, url, feed_config, ip=None):
         if feed_config:
@@ -231,15 +235,12 @@ class Site(resource.Resource):
         self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, memon)
 
     def startRequest(self, request, url, feed_config = None, selector_defer=None):
-        response_str = self.tryLocalPage(url)
-        if response_str:
-            response_str = response_str.decode('utf-8')
-            selector = Selector(text=response_str)
-            response_str = self.downloader.prepare_response_str(selector, {}, response_str, url, feed_config)
-            request.setHeader(b"Content-Type", b'text/xml; charset=utf-8')
-            request.write(response_str)
-            request.finish()
-            print('Request <GET %s> local' % (url,))
+        sresponse = self.tryLocalPage(url)
+        if sresponse:
+            if selector_defer:
+                selector_defer.callback(sresponse)
+            else:
+                self.downloader.writeResponse(request, sresponse, feed_config)
         else:
             agent = BrowserLikeRedirectAgent(
                 Agent(reactor,
@@ -268,7 +269,7 @@ class Site(resource.Resource):
         domain = urlparse(url).netloc
         try:
             with open('/home/taroved/pages/' + m + '.' + domain) as f:
-                return f.read()
+                return pickle.load(f)
         except IOError:
             return None
         return None
