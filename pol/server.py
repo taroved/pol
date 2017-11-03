@@ -225,11 +225,12 @@ class Site(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.limiter = limiter
+        self.prefetch_dir = prefetch_dir
 
         self.feed = Feed(db_creds)
         self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, memon)
@@ -238,7 +239,7 @@ class Site(resource.Resource):
         sresponse = self.tryLocalPage(url)
         if sresponse:
             if selector_defer:
-                selector_defer.callback(sresponse)
+                reactor.callLater(0, selector_defer.callback, sresponse)
             else:
                 self.downloader.writeResponse(request, sresponse, feed_config)
         else:
@@ -265,13 +266,14 @@ class Site(resource.Resource):
             d.addErrback(self.downloader.downloadError, request=request, url=url, feed_config=feed_config, selector_defer=selector_defer)
 
     def tryLocalPage(self, url):
-        m = md5(url).hexdigest()
-        domain = urlparse(url).netloc
-        try:
-            with open('/home/taroved/pages/' + m + '.' + domain) as f:
-                return pickle.load(f)
-        except IOError:
-            return None
+        if self.prefetch_dir:
+            m = md5(url).hexdigest()
+            domain = urlparse(url).netloc
+            try:
+                with open(self.prefetch_dir + '/' + m + '.' + domain) as f:
+                    return pickle.load(f)
+            except IOError:
+                pass
         return None
 
     def render_GET(self, request):
@@ -306,7 +308,7 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
@@ -315,10 +317,11 @@ class Server(object):
         self.limiter = limiter
         self.memon = memon
         self.stat_tool=stat_tool
+        self.prefetch_dir = prefetch_dir
 
         self.log_handler = LogHandler()
 
-        self.site = Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool)
+        self.site = Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir)
 
     def requestSelector(self, url=None, feed_config=None):
         d = defer.Deferred()
