@@ -184,10 +184,10 @@ class Downloader(object):
         if selector_defer:
             selector_defer.callback(response)
         else:
-            self.writeResponse(request, response, feed_config)
+            self.writeResponse(request, response, feed_config, response_str)
             self.run_memon()
 
-    def writeResponse(self, request, response, feed_config):
+    def writeResponse(self, request, response, feed_config, response_str='PolitePol: Local page processing is failed'):
         response = HttpCompressionMiddleware().process_response(Request(response.url), response, None)
         response = DecompressionMiddleware().process_response(None, response, None)
 
