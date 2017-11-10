@@ -146,16 +146,15 @@ class Downloader(object):
                 request.write('Traceback: ' + error.getTraceback())
             else:
                 request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
-            sys.stderr.write('\n'.join([str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(), 'Traceback: ' + error.getTraceback()]))
             request.finish()
 
             try:
-                feed_id = feed_config and feed_config['id']
-                s_url = None
-                if not feed_id:
-                    feed_id = 0
-                    s_url = url
                 if self.stat_tool:
+                    feed_id = feed_config and feed_config['id']
+                    s_url = None
+                    if not feed_id:
+                        feed_id = 0
+                        s_url = url
                     self.stat_tool.trace(
                             ip = request.getHeader('x-real-ip') or request.client.host,
                             feed_id = feed_id,
@@ -165,6 +164,10 @@ class Downloader(object):
                             ex_msg=error.getErrorMessage(),
                             ex_callstack=error.getTraceback()
                         )
+                else:
+                    sys.stderr.write('\n'.join(
+                        [str(datetime.utcnow()), request.uri, url, 'Downloader error: ' + error.getErrorMessage(),
+                         'Traceback: ' + error.getTraceback()]))
             except:
                 traceback.print_exc(file=sys.stdout)
 
