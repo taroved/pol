@@ -47,7 +47,7 @@ class Downloader(object):
     def html2json(self, el):
         return [
             el.tag,
-            {"tag-id": el.attrib["tag-id"]},
+            {k: v for (k,v) in el.items()},  # attributes
             [self.html2json(e) for e in el.getchildren() if isinstance(e, etree.ElementBase)]
         ]
 
