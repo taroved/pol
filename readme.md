@@ -5,7 +5,7 @@
 
 This is source code of RSS feed generator website with user friendly interface.
 
-## Installation of development server for Ubuntu and Debian
+## Installation of development server for Ubuntu
 
 Install required packages
 ```
