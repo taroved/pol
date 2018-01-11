@@ -49,7 +49,7 @@ sudo service nginx reload
 Install and setup mysql. **Use password 'toor' for root user**
 ```
 sudo apt-get install mysql-server
-mysql -uroot -ptoor -e 'CREATE DATABASE pol DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;'
+mysql -uroot -ptoor -e 'CREATE DATABASE pol DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;'
 ```
 
 Create django config
