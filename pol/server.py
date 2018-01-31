@@ -228,14 +228,14 @@ class Site(resource.Resource):
 
     feed_regexp = re.compile('^/feed1?/(\d{1,10})$')
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
         self.limiter = limiter
         self.prefetch_dir = prefetch_dir
 
-        self.feed = Feed(db_creds)
+        self.feed = feed or Feed(db_creds)
         self.downloader = Downloader(self.feed, debug, snapshot_dir, stat_tool, memon)
 
     def startRequest(self, request, url, feed_config = None, selector_defer=None):
@@ -311,7 +311,7 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
@@ -324,7 +324,7 @@ class Server(object):
 
         self.log_handler = LogHandler()
 
-        self.site = Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir)
+        self.site = Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir, feed)
 
     def requestSelector(self, url=None, feed_config=None):
         d = defer.Deferred()
