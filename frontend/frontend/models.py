@@ -22,8 +22,3 @@ class Post(models.Model):
 
     class Meta:
         index_together = ['feed', 'md5sum']
-
-class PostField(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    field = models.ForeignKey(Field, on_delete=models.CASCADE)
-    text = models.TextField(max_length=64*1024-1)

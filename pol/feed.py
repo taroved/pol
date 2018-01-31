@@ -34,12 +34,7 @@ class Feed(object):
         with conn as cur:
             cur.execute("""insert into frontend_post (md5sum, created, feed_id)
                             values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
-
             post_id = conn.insert_id()
-            for key in ['title', 'description', 'title_link']:
-                if key in post_fields:
-                    cur.execute("""insert into frontend_postfield (field_id, post_id, `text`)
-                                    values (%s, %s, %s)""", (self.FIELD_IDS[key], post_id, post_fields[key].encode('utf-8')))
             log.info('Post saved id:{id!r}', id=post_id)
 
     def fill_time(self, feed_id, items):
