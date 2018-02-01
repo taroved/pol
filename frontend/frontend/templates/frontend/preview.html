@@ -18,7 +18,7 @@
   <div class="media-body">
     <h4 class="media-heading">{% trans 'subscribe.your_feed' %}:</h4>
     <h3>
-      <a href="{{ feed_url }}" target="_blank">http://politepol.com{{ feed_url }}</a>
+      <a href="{{ feed_url }}" target="_blank">{{ feed_url }}</a>
     </h3>
   </div>
 
@@ -28,7 +28,7 @@
   <script type="text/javascript">
       function tryGetFeed() {
           $.getFeed({
-              url: '{{ feed1_url }}',
+              url: '{{ feed_url }}',
               success: function (feed) {
                   if ('items' in feed) {
                       $('#preview').empty()
@@ -59,10 +59,10 @@
                   }
               },
               failure: function () {
-                  $('#preview').text('Something wrong. Reloaad the page or contact us by email: politepol.com@gmail.com');
+                  $('#preview').text('Something wrong. Reload the page or contact us by email: politepol.com@gmail.com');
               },
               error: function () {
-                  $('#preview').text('Something wrong. Reloaad the page or contact us by email: politepol.com@gmail.com');
+                  $('#preview').text('Something wrong. Reload the page or contact us by email: politepol.com@gmail.com');
               }
           });
       }
