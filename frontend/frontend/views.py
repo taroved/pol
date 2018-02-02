@@ -204,7 +204,7 @@ def preview(request, feed_id):
     if request.method == 'GET': 
         return render(request, 'frontend/preview.html',
                         {
-                            'feed_url': request.build_absolute_uri(FEED_PAGE_URL + feed_id)
+                            'feed_url': FEED_PAGE_URL + feed_id
                         })
 
     return HttpResponseBadRequest('Only GET method supported')
