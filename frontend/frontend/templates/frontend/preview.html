@@ -30,7 +30,7 @@
   <script type="text/javascript">
       function tryGetFeed() {
           $.getFeed({
-              url: '{{ feed_url }}',
+              url: '{{ feed_url }}?sanitize=Y',
               success: function (feed) {
                   if ('items' in feed) {
                       $('#preview').empty()
