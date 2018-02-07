@@ -205,7 +205,7 @@ class Downloader(object):
             self.writeResponse(sresponse)
             self.run_memon()
 
-    def writeResponse(self, sresponse, response_str='PolitePol: Local page processing is failed'):
+    def writeResponse(self, sresponse): #, response_str='PolitePol: Local page processing is failed'
         sresponse = HttpCompressionMiddleware().process_response(Request(sresponse.url), sresponse, None)
         sresponse = DecompressionMiddleware().process_response(None, sresponse, None)
 
@@ -216,6 +216,8 @@ class Downloader(object):
             response_str = self.prepare_response_str(sresponse.selector, sresponse.headers, sresponse.body_as_unicode(), sresponse.url, ip)
             if self.feed_config:
                 response_headers = {b"Content-Type": b'text/xml; charset=utf-8'}
+        else: # images and such
+            response_str = sresponse.body
 
         for k, v in response_headers.items():
             self.request.setHeader(k, v)
@@ -346,7 +348,7 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, site=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, sitecls=None, downloadercls=None):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
@@ -359,7 +361,10 @@ class Server(object):
 
         self.log_handler = LogHandler()
 
-        self.site = site or Site(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir, feed)
+        if not sitecls:
+            sitecls = Site
+
+        self.site = sitecls(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir, feed, downloadercls=downloadercls)
 
     def requestSelector(self, url=None, feed_config=None):
         d = defer.Deferred()
