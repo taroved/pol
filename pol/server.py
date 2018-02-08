@@ -10,7 +10,7 @@ from lxml import etree
 
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints, defer
-from twisted.web.client import Agent, BrowserLikeRedirectAgent, readBody, PartialDownloadError, HTTPConnectionPool
+from twisted.web.client import Agent, BrowserLikeRedirectAgent, PartialDownloadError, HTTPConnectionPool
 from twisted.web.server import NOT_DONE_YET
 from twisted.web.http_headers import Headers
 from twisted.web.http import INTERNAL_SERVER_ERROR
@@ -29,6 +29,7 @@ from scrapy.selector import Selector
 
 from pol.log import LogHandler
 from .feed import Feed
+from .client import ppReadBody, IGNORE_SIZE
 
 from twisted.logger import Logger
 
@@ -38,7 +39,7 @@ log = Logger()
 class Downloader(object):
 
     def __init__(self, feed, debug, snapshot_dir, stat_tool, memon, request,
-                 url, feed_config, selector_defer, sanitize):
+                 url, feed_config, selector_defer, sanitize, max_size):
         self.feed = feed
         self.debug = debug
         self.snapshot_dir = snapshot_dir
@@ -49,6 +50,7 @@ class Downloader(object):
         self.feed_config=feed_config
         self.selector_defer = selector_defer
         self.sanitize = sanitize
+        self.max_size = max_size
 
     def html2json(self, el):
         return [
@@ -188,7 +190,7 @@ class Downloader(object):
     def downloadStarted(self, response):
         self.response = response
 
-        d = readBody(response)
+        d = ppReadBody(response, self.max_size)
         d.addCallback(self.downloadDone)
         d.addErrback(self.downloadError)
         return response
@@ -256,7 +258,7 @@ class Site(resource.Resource):
     feed_regexp = re.compile(b'^/feed/(\d{1,10})')
 
 
-    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, downloadercls=None):
+    def __init__(self, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, downloadercls=None, max_size=IGNORE_SIZE):
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
         self.user_agent = user_agent
@@ -267,12 +269,13 @@ class Site(resource.Resource):
         self.debug = debug
         self.stat_tool = stat_tool
         self.memon= memon
+        self.max_size = max_size
         self.downloadercls = downloadercls or Downloader
 
     def startRequest(self, request, url, feed_config = None, selector_defer=None, sanitize=False):
         downloader = self.downloadercls(self.feed, self.debug, self.snapshot_dir, self.stat_tool, self.memon,
                                         request=request, url=url, feed_config=feed_config,
-                                        selector_defer=selector_defer, sanitize=sanitize)
+                                        selector_defer=selector_defer, sanitize=sanitize, max_size=self.max_size)
 
         sresponse = self.tryLocalPage(url)
         if sresponse:
@@ -348,7 +351,7 @@ class Site(resource.Resource):
 
 class Server(object):
 
-    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, sitecls=None, downloadercls=None):
+    def __init__(self, port, db_creds, snapshot_dir, user_agent, debug=False, limiter=None, memon=None, stat_tool=None, prefetch_dir=None, feed=None, sitecls=None, downloadercls=None, max_size=IGNORE_SIZE):
         self.port = port
         self.db_creds = db_creds
         self.snapshot_dir = snapshot_dir
@@ -364,7 +367,7 @@ class Server(object):
         if not sitecls:
             sitecls = Site
 
-        self.site = sitecls(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir, feed, downloadercls=downloadercls)
+        self.site = sitecls(self.db_creds, self.snapshot_dir, self.user_agent, self.debug, self.limiter, self.memon, self.stat_tool, self.prefetch_dir, feed, downloadercls=downloadercls, max_size=max_size)
 
     def requestSelector(self, url=None, feed_config=None):
         d = defer.Deferred()
