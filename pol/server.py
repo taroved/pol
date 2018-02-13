@@ -181,7 +181,7 @@ class Downloader(object):
                         )
                 else:
                     sys.stderr.write('\n'.join(
-                        [str(datetime.utcnow()), self.request.uri, url, 'Downloader error: ' + error.getErrorMessage(),
+                        [str(datetime.utcnow()), self.request.uri, self.url, 'Downloader error: ' + error.getErrorMessage(),
                          'Traceback: ' + error.getTraceback()]))
             except:
                 traceback.print_exc(file=sys.stdout)
