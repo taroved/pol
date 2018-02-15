@@ -33,9 +33,10 @@ class Feed(object):
     def save_post(self, conn, created, feed_id, post_fields):
         with conn as cur:
             cur.execute("""insert into frontend_post (md5sum, created, feed_id)
-                            values (%s, %s, %s)""", (post_fields['md5'], created, feed_id))
+                            values (unhex(%s), %s, %s)""", (post_fields['md5'], created, feed_id))
             post_id = conn.insert_id()
             log.info('Post saved id:{id!r}', id=post_id)
+            return post_id
 
     def fill_time(self, feed_id, items):
         if not items:
