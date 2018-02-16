@@ -12,10 +12,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL("ALTER TABLE `frontend_post` ADD COLUMN `md5sum2` BINARY(16) DEFAULT 0 NOT NULL;"
+        migrations.RunSQL("ALTER TABLE `frontend_post` ADD COLUMN `md5sum2` BINARY(128) DEFAULT 0 NOT NULL;"
                           "UPDATE `frontend_post` set `md5sum2` = unhex(`md5sum`);"
                           "ALTER TABLE frontend_post DROP COLUMN md5sum;"
-                          "ALTER TABLE frontend_post CHANGE COLUMN md5sum2 md5sum BINARY(16) NOT NULL;"
+                          "ALTER TABLE frontend_post CHANGE COLUMN md5sum2 md5sum BINARY(128) NOT NULL;"
                           "CREATE INDEX md5sum_index USING HASH ON frontend_post (feed_id, md5sum);",
                           state_operations=[
                               migrations.AlterField(
