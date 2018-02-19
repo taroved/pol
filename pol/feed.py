@@ -55,9 +55,9 @@ class Feed(object):
         fetched_dates = {}
         with closing(get_conn(self.db_creds)) as conn:
             with conn as cur:
-                quoted_hashes = ','.join(["'%s'" % (i['md5']) for i in items])
+                quoted_hashes = ','.join(["unhex('%s')" % (i['md5']) for i in items])
 
-                cur.execute("""select p.md5sum, p.created, p.id
+                cur.execute("""select lower(hex(p.md5sum)), p.created, p.id
                                from frontend_post p
                                where p.md5sum in (%s)
                                and p.feed_id=%s""" % (quoted_hashes, feed_id,))
