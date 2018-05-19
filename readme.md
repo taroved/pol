@@ -6,6 +6,7 @@
 This is source code of RSS feed generator website with user friendly interface.
 
 ## Installation of development server for Ubuntu
+(If you have some questions please contact me by github email)
 
 Install required packages
 ```
@@ -46,9 +47,21 @@ sudo cp pol/nginx/default.site-example /etc/nginx/sites-available/default
 sudo service nginx reload
 ```
 
-Install and setup mysql. **Use password 'toor' for root user**
+Install and setup mysql if you didn't yet.
 ```
 sudo apt-get install mysql-server
+
+sudo mysql -u root
+mysql> USE mysql;
+mysql> UPDATE user SET plugin='mysql_native_password' WHERE User='root';
+mysql> FLUSH PRIVILEGES;
+mysql> exit;
+
+sudo mysql_secure_installation
+```
+
+Create database. **Use password 'toor' for root user**
+```
 mysql -uroot -ptoor -e 'CREATE DATABASE pol DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci;'
 ```
 
