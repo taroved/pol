@@ -153,7 +153,7 @@ class Feed(object):
         feed = {}
 
         with closing(get_conn(self.db_creds, dict_result=True)) as conn, conn as cur:
-            cur.execute("""select f.name as feed_name, f.uri, f.js, f.xpath as feed_xpath, fi.name, ff.xpath, fi.required
+            cur.execute("""select f.name as feed_name, f.uri, f.xpath as feed_xpath, fi.name, ff.xpath, fi.required
                            from frontend_feed f
                            right join frontend_feedfield ff on ff.feed_id=f.id
                            left join frontend_field fi on fi.id=ff.field_id
@@ -165,7 +165,6 @@ class Feed(object):
                     feed['id'] = feed_id
                     feed['name'] = row['feed_name']
                     feed['uri'] = row['uri']
-                    feed['js'] = row['js']
                     feed['xpath'] = row['feed_xpath']
                     feed['fields'] = {}
                     feed['required'] = {}
