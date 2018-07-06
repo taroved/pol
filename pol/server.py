@@ -108,7 +108,10 @@ class Downloader(object):
 
         tree = selector.root.getroottree()
 
-        file_name = self._saveResponse(headers, url, tree)
+        if self.snapshot_dir:
+            file_name = self._saveResponse(headers, url, tree)
+        else:
+            file_name = 'DISABLED'
 
         # set base url to html document
         head = tree.xpath("//head")
@@ -135,7 +138,7 @@ class Downloader(object):
                         ))
             body[0].append(script)
 
-        return (etree.tostring(tree, method='html'), file_name)
+        return etree.tostring(tree, method='html')
 
     def buildScrapyResponse(self, response, body, url):
         status = response.code
@@ -241,7 +244,7 @@ class Downloader(object):
             if self.stat_tool:
                 self.stat_tool.trace(ip=ip, feed_id=self.feed_config['id'], post_cnt=post_cnt, new_post_cnt=new_post_cnt)
         else:
-            response_str, file_name = self.setBaseAndRemoveScriptsAndMore(selector, headers, url)
+            response_str = self.setBaseAndRemoveScriptsAndMore(selector, headers, url)
             if self.stat_tool:
                 self.stat_tool.trace(ip=ip, feed_id=0, post_cnt=0, new_post_cnt=0, url=url)
         return response_str
