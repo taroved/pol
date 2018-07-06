@@ -95,6 +95,9 @@ class Downloader(object):
                 if attr.startswith('on'):
                     del bad.attrib[attr]
 
+            # make clickable for mobile
+            bad.attrib['onclick'] = ""
+
             # sanitize forms
             if bad.tag == 'form':
                 bad.attrib['onsubmit'] = "return false"
