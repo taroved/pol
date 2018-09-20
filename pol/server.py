@@ -161,14 +161,6 @@ class Downloader(object):
         if self.selector_defer:
             self.selector_defer.errback(error)
         else:
-            self.request.setResponseCode(INTERNAL_SERVER_ERROR)
-            if self.debug:
-                self.request.write('Downloader error: ' + error.getErrorMessage())
-                self.request.write('Traceback: ' + error.getTraceback())
-            else:
-                self.request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
-            self.request.finish()
-
             try:
                 if self.stat_tool:
                     feed_id = self.feed_config and self.feed_config['id']
@@ -192,6 +184,13 @@ class Downloader(object):
             except:
                 traceback.print_exc(file=sys.stdout)
 
+            self.request.setResponseCode(INTERNAL_SERVER_ERROR)
+            if self.debug:
+                self.request.write('Downloader error: ' + error.getErrorMessage())
+                self.request.write('Traceback: ' + error.getTraceback())
+            else:
+                self.request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
+            self.request.finish()
 
     def downloadStarted(self, response):
         self.response = response
