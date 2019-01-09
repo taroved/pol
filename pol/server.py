@@ -123,7 +123,7 @@ class Downloader(object):
             else:
                 base = etree.Element("base")
                 head.insert(0, base)
-            base.set('href', url)
+            base.set('href', url.decode('utf-8'))
 
         self.sanitizeAndNumerate(selector)
 
