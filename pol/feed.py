@@ -165,10 +165,10 @@ class Feed(object):
                     feed['id'] = feed_id
                     feed['name'] = row['feed_name']
                     feed['uri'] = row['uri']
-                    feed['xpath'] = row['feed_xpath']
+                    feed['xpath'] = row['feed_xpath'].decode('utf-8')
                     feed['fields'] = {}
                     feed['required'] = {}
-                feed['fields'][row['name']] = row['xpath']
+                feed['fields'][row['name']] = row['xpath'].decode('utf-8')
                 feed['required'][row['name']] = row['required']
 
         if feed:
