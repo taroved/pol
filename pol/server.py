@@ -189,7 +189,9 @@ class Downloader(object):
                 self.request.write('Downloader error: ' + error.getErrorMessage())
                 self.request.write('Traceback: ' + error.getTraceback())
             else:
-                self.request.write(self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage())))
+                err_message = self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage()))
+                self.request.write(err_message)
+
             self.request.finish()
 
     def downloadStarted(self, response):

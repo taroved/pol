@@ -80,9 +80,9 @@
 						<div class="control-group info">
 								<label class="control-label">{% trans 'setup.title_xpath' %}:</label>
 								<div class="controls">
-										<select disabled>
-												<option selected="selected">{% trans 'setup.Required' %}</option>
-												<option>{% trans 'setup.Optional' %}</option>
+										<select id="ste-title-required" disabled>
+												<option selected="selected" value="1">{% trans 'setup.Required' %}</option>
+												<option value="0">{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-title" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
 										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
@@ -91,9 +91,9 @@
 						<div class="control-group info">
               <label class="control-label">{% trans 'setup.link_xpath' %}:</label>
 								<div class="controls">
-										<select style="width:100px" disabled>
-												<option>{% trans 'setup.Required' %}</option>
-												<option selected="selected">{% trans 'setup.Optional' %}</option>
+										<select id="ste-link-required" style="width:100px" disabled>
+												<option value="1">{% trans 'setup.Required' %}</option>
+												<option selected="selected" value="0">{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-link" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
 										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
@@ -102,9 +102,9 @@
 						<div class="control-group info">
               <label class="control-label">{% trans 'setup.description_xpath' %}:</label>
 								<div class="controls">
-										<select style="width:100px" disabled>
-												<option selected="selected">{% trans 'setup.Required' %}</option>
-												<option>{% trans 'setup.Optional' %}</option>
+										<select id="ste-description-required" style="width:100px" disabled>
+												<option selected="selected" value="1">{% trans 'setup.Required' %}</option>
+												<option value="0">{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-description" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
 										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>

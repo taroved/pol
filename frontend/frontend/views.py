@@ -94,6 +94,10 @@ def _get_link_xpath(title_xpath):
         xpath = title_xpath[:len(title_xpath)-len('/child::node()')]
         return xpath +'/ancestor-or-self::node()/@href'
 
+_BASIC_TITLE_ID=1
+_BASIC_DESCRIPTION_ID=2
+_BASIC_LINK_ID=3
+
 def _create_feed(url, xpathes, edited=False):
     feed_xpath = xpathes[0]
     item_xpathes = xpathes[1]
@@ -104,11 +108,11 @@ def _create_feed(url, xpathes, edited=False):
     fields = Field.objects.all()
 
     for field in fields:
-        if field.name == 'link' and 'title' in item_xpathes and not edited:
-            ff = FeedField(feed=feed, field=field, xpath= _get_link_xpath(item_xpathes['title']))
+        if field.id == _BASIC_LINK_ID and _BASIC_TITLE_ID in item_xpathes and not edited:
+            ff = FeedField(feed=feed, field=field, xpath= _get_link_xpath(item_xpathes[_BASIC_TITLE_ID][0]))
             ff.save()
-        elif field.name in item_xpathes:
-            ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.name])
+        elif field.id in item_xpathes:
+            ff = FeedField(feed=feed, field=field, xpath=item_xpathes[field.id][0])
             ff.save()
 
     return feed.id
@@ -126,6 +130,15 @@ def setup_create_feed(request):
             return HttpResponseBadRequest('html is invalid')
 
         xpathes = build_xpathes_for_items(item_names, html_json)
+
+        field_xpathes = {}
+        required = True
+        if 'title' in xpathes[1]:
+            field_xpathes[_BASIC_TITLE_ID] = [xpathes[1]['title'], required]
+        if 'description' in xpathes[1]:
+            field_xpathes[_BASIC_DESCRIPTION_ID] = [xpathes[1]['description'], required]
+        xpathes[1] = field_xpathes
+
         feed_id = _create_feed(url, xpathes)
 
         return HttpResponse(reverse('preview', args=(feed_id,)))
@@ -141,16 +154,18 @@ def _validate_selectors(selectors):
     if not isinstance(item_xpathes, dict):
         return False
 
+    item_xpathes = {int(field_id): xpath for field_id, xpath in item_xpathes.iteritems()}
+
     fields = Field.objects.all()
 
     item_xpathes_out = {}
 
     for field in fields:
-        if field.name in item_xpathes:
-            if not isinstance(item_xpathes[field.name], basestring):
+        if field.id in item_xpathes:
+            if not isinstance(item_xpathes[field.id], basestring):
                 return False
             else:
-                item_xpathes_out[field.name] = item_xpathes[field.name]
+                item_xpathes_out[field.id] = [item_xpathes[field.id], field.required]
     return [feed_xpath, item_xpathes_out]
 
 def setup_validate_selectors(request):

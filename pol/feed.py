@@ -113,9 +113,6 @@ class Feed(object):
 
         title = selector.xpath('//title/text()').extract_first()
 
-        if not feed_config['name'] and title:
-            self.update_feed_name(feed_config['id'], title.encode('utf-8'))
-
         #build feed
         feed = Rss201rev2Feed(
             title = title if title else 'PolitePol: ' + feed_config['uri'],
@@ -144,16 +141,12 @@ class Feed(object):
             )
         return [feed.writeString('utf-8'), len(items), new_post_cnt]
 
-    def update_feed_name(self, feed_id, name):
-        with closing(get_conn(self.db_creds)) as conn, conn as cur:
-            cur.execute("""update frontend_feed set name=%s where id=%s""", (name[:255], feed_id))
-
     def getFeedData(self, feed_id):
         # get url, xpathes
         feed = {}
 
         with closing(get_conn(self.db_creds, dict_result=True)) as conn, conn as cur:
-            cur.execute("""select f.name as feed_name, f.uri, f.xpath as feed_xpath, fi.name, ff.xpath, fi.required
+            cur.execute("""select f.uri, f.xpath as feed_xpath, fi.name, ff.xpath, fi.required
                            from frontend_feed f
                            right join frontend_feedfield ff on ff.feed_id=f.id
                            left join frontend_field fi on fi.id=ff.field_id
@@ -163,7 +156,6 @@ class Feed(object):
             for row in rows:
                 if not feed:
                     feed['id'] = feed_id
-                    feed['name'] = row['feed_name']
                     feed['uri'] = row['uri']
                     feed['xpath'] = row['feed_xpath'].decode('utf-8')
                     feed['fields'] = {}
