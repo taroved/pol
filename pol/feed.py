@@ -70,13 +70,18 @@ class Feed(object):
                     fetched_dates[md5hash] = created
 
             cur_time = datetime.datetime.utcnow()
+            saved_times = {}
             for item in items:
                 if item['md5'] in fetched_dates:
                     item['time'] = fetched_dates[item['md5']]
                 else:
-                    item['time'] = cur_time
-                    self.save_post(conn, cur_time, feed_id, item)
-                    new_post_cnt += 1
+                    if item['md5'] in saved_times:
+                        item['time'] = saved_times[item['md5']]
+                    else:
+                        self.save_post(conn, cur_time, feed_id, item)
+                        saved_times[item['md5']] = cur_time
+                        item['time'] = cur_time
+                        new_post_cnt += 1
                     cur_time -= datetime.timedelta(minutes=self.POST_TIME_DISTANCE)
         return new_post_cnt
 
