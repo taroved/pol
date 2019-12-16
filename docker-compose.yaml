@@ -4,13 +4,14 @@ services:
   politepol:
     build:
       context: .
-      args:
-        - DB_NAME=politepol
-        - DB_USER=rooooooooooot
-        - DB_PASSWORD=toooooooooooor
-        - DB_HOST=dbpolitepol
-        - DB_PORT=3306
-        - TIME_ZONE=America\/Fortaleza
+    environment:
+      DB_NAME: 'politepol'
+      DB_USER: 'rooooooooooot'
+      DB_PASSWORD: 'toooooooooooor'
+      DB_HOST: 'dbpolitepol'
+      DB_PORT: '3306'
+      WEB_PORT: '8088'
+      TIME_ZONE: 'America\/Fortaleza'
     image: politepol:latest
     depends_on:
       - 'dbpolitepol'
@@ -20,7 +21,7 @@ services:
     networks:
       - politepol-network
     ports:
-      - "8088:8088"
+      - '8088:8088'
 
   dbpolitepol:
     image: mysql:5.7
@@ -31,8 +32,6 @@ services:
       MYSQL_USER: 'rooooooooooot'
       MYSQL_PASSWORD: 'toooooooooooor'
       MYSQL_ROOT_PASSWORD: 'rootpass'
-    ports:
-      - '3306:3306'
     networks:
       - politepol-network
     volumes:
