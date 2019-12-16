@@ -94,11 +94,7 @@ python manage.py runserver
 popd
 ```
 
-# Docker version
-### RSS feed generator website with user friendly interface
-
-![PolitePol.com](frontend/frontend/assets/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePol.com")
-
+# Installation of Docker
 
 ## Build
 ```
