@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  politepol:
+    build:
+      context: .
+    environment:
+      DB_NAME: 'politepol'
+      DB_USER: 'rooooooooooot'
+      DB_PASSWORD: 'toooooooooooor'
+      DB_HOST: 'dbpolitepol'
+      DB_PORT: '3306'
+      WEB_PORT: '8088'
+      TIME_ZONE: 'America\/Fortaleza'
+    image: politepol:latest
+    depends_on:
+      - 'dbpolitepol'
+    command: ["./wait-for-it.sh", "db:3306", "--", "/bin/bash", "./frontend/start.sh"]
+    container_name: politepol
+    restart: unless-stopped
+    networks:
+      - politepol-network
+    ports:
+      - '8088:8088'
+
+  dbpolitepol:
+    image: mysql:5.7
+    container_name: dbpolitepol
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: 'politepol'
+      MYSQL_USER: 'rooooooooooot'
+      MYSQL_PASSWORD: 'toooooooooooor'
+      MYSQL_ROOT_PASSWORD: 'rootpass'
+    networks:
+      - politepol-network
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+networks:
+  politepol-network:
+    driver: 'bridge'

@@ -94,6 +94,19 @@ python manage.py runserver
 popd
 ```
 
+# Installation of Docker
+
+## Build
+```
+git clone https://github.com/taroved/pol
+cd pol
+docker-compose up -d --build
+```
+
+## Access (port 8088)
+Docker Host IP in browser. Ex:
+http://192.168.0.10:8088
+
 
 ## License
 
