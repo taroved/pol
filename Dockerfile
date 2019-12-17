@@ -22,6 +22,7 @@ RUN cp ./nginx/default.site-example /etc/nginx/sites-available/default \
 RUN cd /var/lib/gems/2.5.0/gems/sass-3.4.22/lib/sass/ \
     && sed -i "s/when\ Fixnum/when\ Integer/" util.rb
 
-WORKDIR ./frontend
+#WORKDIR ./frontend
+RUN chmod +x ./wait-for-it.sh
 
-ENTRYPOINT ["/bin/bash", "start.sh"]
+#ENTRYPOINT ["/bin/bash", "start.sh"]
