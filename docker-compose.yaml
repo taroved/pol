@@ -15,7 +15,7 @@ services:
     image: politepol:latest
     depends_on:
       - 'dbpolitepol'
-    command: ["./wait-for-it.sh", "db:3306", "--", "/bin/bash", "./frontend/start.sh"]
+    command: ["./wait-for-it.sh", "dbpolitepol:3306", "--", "/bin/bash", "./frontend/start.sh"]
     container_name: politepol
     restart: unless-stopped
     networks:
