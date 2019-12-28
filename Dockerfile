@@ -3,7 +3,7 @@ FROM ubuntu:bionic as builder
 RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
     && echo 'APT::Install-Suggests 0;' >> /etc/apt/apt.conf.d/01norecommends \
     && apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y bash vim.tiny wget sudo net-tools ca-certificates unzip apt-transport-https \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y bash mysql-client vim.tiny wget sudo net-tools ca-certificates unzip apt-transport-https \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y python-minimal libmysqlclient-dev libxml2-dev libxslt-dev python-dev libffi-dev gcc libssl-dev gettext \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y python-pip python-setuptools nodejs node-gyp npm ruby nginx \
     && pip install --upgrade pip \
