@@ -1,22 +1,6 @@
 version: "3"
 
 services:
-  dbpolitepol:
-    image: mysql:5.7
-    container_name: dbpolitepol
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: 'politepol'
-      MYSQL_USER: 'rooooooooooot'
-      MYSQL_PASSWORD: 'toooooooooooor'
-      MYSQL_ROOT_PASSWORD: 'rootpass'
-    networks:
-      - politepol-networkk
-    ports:
-      - '3306:3306'
-    volumes:
-      - ./mysql:/var/lib/mysql
-  
   politepol:
     build:
       context: .
@@ -31,48 +15,29 @@ services:
     image: politepol:latest
     depends_on:
       - 'dbpolitepol'
-<<<<<<< HEAD
-        #command: ["./wait-for-it.sh", "dbpolitepol:3306", "--", "/bin/bash", "./frontend/start.sh"]
-    command: ["./wait-for-it.sh", "$$DB_HOST:$$DB_PORT", "--", "/bin/bash", "./frontend/start.sh"]
-=======
     #command: ["./wait-for-it.sh", "dbpolitepol:3306", "--", "/bin/bash", "./frontend/start.sh"]
     command: ["./wait-for-it.sh", "dbpolitepol", "/bin/bash", "./frontend/start.sh"]
->>>>>>> e65602626da439ff0b34d0c9bbe06d5def5d1401
     container_name: politepol
     restart: unless-stopped
     networks:
-      - politepol-networkk
+      - politepol-network
     ports:
       - '8088:8088'
-      
-  tor:
-    image: strm/tor
-    container_name: politepoltor
-    restart: always
-    depends_on:
-      - politepol
-    networks:
-      - politepol-networkk
+
+  dbpolitepol:
+    image: mysql:5.7
+    container_name: dbpolitepol
+    restart: unless-stopped
     environment:
-      LISTEN_PORT: "8088"
-      REDIRECT: "politepol:8088"
-      PRIVATE_KEY: |
-        -----BEGIN RSA PRIVATE KEY-----
-        MIICXAIBAAKBgQDg+QNdw6IRSMH/eI569HaUu5kuFkF/LdKZebuVN02SU8XcunTM
-        endXIHcrQpRp9qYUeX0ZOHnAiFU3rmss+tTPnjkM7CYZLxu/OYPHlR+LHYUZQmqS
-        AZepZI0iMF7i9wOtKobSAMJ1wod8bythvrH8m62JjAkEkYRGljIERn85/wIDAR7b
-        AoGABAoQB0X/SiGoq7744JoSJq2Zr2iOe+veoqbFpEucVGX9gYXZWSygvBo+41P9
-        0MprHxgJFmgJSJ5txdCcEzntfhRoFioccD10xr1EQ3GAgZg98zk+07FAJjoTyywH
-        eMB44ELuLWJCe0SKnhgSXHKTq3/PsN72G0siLn2OW+yt29cCQQD1d59FGYL712zi
-        H4C+N3T6SDG3wYBURNNq7xdrvdvCixFbAuSmxgan2ITFnbV/eClbJrbmOZgp2r+l
-        O5GA6inNAkEA6qBDz0eqW9btMQLbqdRvRHMIJ+YVomR876hZZ1UmyiFw4KGkbNo+
-        wOKTD5BkrnsswnH+vfKPltm9r7wCiXM2+wJAVI/xpCaCzAz6AAMrVj8Ximk17hdk
-        HW9BiThD/nhGsXjXIvCr4ByMJW97ljvvgn8KfhGsckF818Kux47iwf202wJAP02I
-        UsctwtqS74zFnUN1xLCkc/JbQoPua8h9IklxLB2Y6Bfk9QgIJzSNIReB6pL9mFk3
-        vbgIdfY9JQvOn9mh2QJBAJ3OQcJXAz9NzOS863KKIv4WHOvP3h8yJYgAb2CO8rpo
-        6jBZfa9K1bDxpIRtX+TBOQqaZCVtb5IIhsgj0pwmNcw=
-        -----END RSA PRIVATE KEY-----
+      MYSQL_DATABASE: 'politepol'
+      MYSQL_USER: 'rooooooooooot'
+      MYSQL_PASSWORD: 'toooooooooooor'
+      MYSQL_ROOT_PASSWORD: 'rootpass'
+    networks:
+      - politepol-network
+    volumes:
+      - ./mysql:/var/lib/mysql
 
 networks:
-  politepol-networkk:
+  politepol-network:
     driver: 'bridge'
