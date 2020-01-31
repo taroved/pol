@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cp ./frontend/frontend/settings.py.example ./frontend/frontend/settings.py
+
 sed -i -E -e "s/(DEBUG = ).*/\1True/" \
     -e "s/('NAME': ')pol(',)/\1${DB_NAME}\2/" \
     -e "s/('USER': ')root(',)/\1${DB_USER}\2/" \
@@ -13,10 +15,12 @@ sed -i -e 's/listen\ 80/listen\ '${WEB_PORT}'/g' \
     -e 's/\[::\]:80/\[::\]:'${WEB_PORT}'/g' /etc/nginx/sites-available/default \
     && service nginx reload
 
-service nginx start > /dev/null
+echo hello; sleep 500000
 
-/usr/bin/python ./frontend/manage.py migrate 
-/usr/bin/python ./frontend/manage.py loaddata fields.json 
+#service nginx start > /dev/null
 
-/usr/bin/python ./downloader.py &
-/usr/bin/python ./frontend/manage.py runserver
+#/usr/bin/python ./frontend/manage.py migrate 
+#/usr/bin/python ./frontend/manage.py loaddata fields.json 
+
+#/usr/bin/python ./downloader.py &
+#/usr/bin/python ./frontend/manage.py runserver
