@@ -1,4 +1,5 @@
 settings.py
-*.pyc
+*.pyc 
 frontend/frontend/static
 .*
+//Hello World
