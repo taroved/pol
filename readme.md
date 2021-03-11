@@ -37,7 +37,7 @@ sudo ln -s /usr/bin/nodejs /usr/bin/node
 Install sass
 ```
 sudo apt-get install ruby
-sudo su -c "gem install sass -v 3.4.22"
+sudo su -c "gem install sass -v 3.7.4"
 ```
 
 Install and setup nginx
