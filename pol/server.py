@@ -6,6 +6,7 @@ import pickle
 import time, sys, traceback
 import re
 
+import six
 from lxml import etree
 
 from twisted.web import server, resource
@@ -61,14 +62,26 @@ class Downloader(object):
 
     def _saveResponse(self, headers, url, tree):
         # save html for extended selectors
-        file_name = '%s_%s' % (time.time(), md5(url).hexdigest())
+        if six.PY2:
+            file_name = '%s_%s' % (time.time(), md5(url).hexdigest())
+        elif six.PY3:
+            file_name = '%s_%s' % (time.time(), md5(url.encode('utf-8')).hexdigest())
         file_path = self.snapshot_dir + '/' + file_name
         with open(file_path, 'w') as f:
             f.write(url + '\n')
-            for k, v in headers.iteritems():
-                for vv in v:
-                    f.write('%s: %s\n' % (k, vv))
-            f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html'))
+            if six.PY2:
+                for k, v in headers.iteritems():
+                    for vv in v:
+                        f.write('%s: %s\n' % (k, vv))
+            elif six.PY3:
+                for k, v in headers.items():
+                    for vv in v:
+                        f.write('%s: %s\n' % (k, vv))
+
+            if six.PY2:
+                f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html'))
+            elif six.PY3:
+                f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html').decode('utf-8'))
         return file_name
 
     def sanitizeAndNumerate(self, selector, numerate=True, sanitize_anchors=True):
@@ -123,7 +136,10 @@ class Downloader(object):
             else:
                 base = etree.Element("base")
                 head.insert(0, base)
-            base.set('href', url.decode('utf-8'))
+            if six.PY2:
+                base.set('href', url.decode('utf-8'))
+            elif six.PY3:
+                base.set('href', url)
 
         self.sanitizeAndNumerate(selector)
 
@@ -138,7 +154,10 @@ class Downloader(object):
                         ))
             body[0].append(script)
 
-        return etree.tostring(tree, method='html')
+        if six.PY2:
+            return etree.tostring(tree, method='html')
+        elif six.PY3:
+            return etree.tostring(tree, method='html').decode('utf-8')
 
     def buildScrapyResponse(self, response, body, url):
         status = response.code
