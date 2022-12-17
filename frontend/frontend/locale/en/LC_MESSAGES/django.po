@@ -158,7 +158,7 @@ msgstr "Visual constructor"
 
 #: templates/frontend/setup.html:118
 msgid "setup.confirm_loose"
-msgstr "You will loose your changes. Are you shure?"
+msgstr "You will loose your changes. Are you sure?"
 
 #: templates/frontend/setup.html:119
 msgid "setup.extended_tip"
