@@ -5,7 +5,10 @@
 {% block title %}{% trans "index_title" %}{% endblock %}
 
 {% block logo %}
-    <a href="{% url 'index' %}" class="brand">{% trans "brand" %}</a>
+    <a href="{% url 'index' %}" class="brand-pic" style="display: inline-flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+        <img src="{% static 'frontend/images/apple-touch-icon-precomposed.png' %}" width="32" height="32" style="margin-right: 8px;" />
+        <span style="font-size: 18px; font-weight: bold; color: #333;">{% trans "brand" %}</span>
+    </a>
 {% endblock %}
 
 {% block content %}
