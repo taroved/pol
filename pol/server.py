@@ -78,7 +78,9 @@ class Downloader(object):
             # remove scripts and iframes
             if bad.tag in ['script', 'iframe']:
                 bad.getparent().remove(bad)
-            elif numerate:
+                continue
+            
+            if numerate:
                 # set tag-id attribute
                 bad.attrib['tag-id'] = str(i)
                 i += 1
@@ -89,12 +91,13 @@ class Downloader(object):
                 del bad.attrib['href']
 
             # remove html events
-            for attr in bad.attrib:
+            for attr in list(bad.attrib.keys()):
                 if attr.startswith('on'):
                     del bad.attrib[attr]
 
-            # make clickable for mobile
-            bad.attrib['onclick'] = ""
+            # make clickable for mobile (but not for link/style tags)
+            if bad.tag not in ['link', 'style', 'meta']:
+                bad.attrib['onclick'] = ""
 
             # sanitize forms
             if bad.tag == 'form':
