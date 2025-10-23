@@ -97,6 +97,7 @@ def _get_link_xpath(title_xpath):
 _BASIC_TITLE_ID=1
 _BASIC_DESCRIPTION_ID=2
 _BASIC_LINK_ID=3
+_BASIC_DATE_ID=4
 
 def _create_feed(url, xpathes, edited=False):
     feed_xpath = xpathes[0]
@@ -137,6 +138,8 @@ def setup_create_feed(request):
             field_xpathes[_BASIC_TITLE_ID] = [xpathes[1]['title'], required]
         if 'description' in xpathes[1]:
             field_xpathes[_BASIC_DESCRIPTION_ID] = [xpathes[1]['description'], required]
+        if 'date' in xpathes[1]:
+            field_xpathes[_BASIC_DATE_ID] = [xpathes[1]['date'], False]  # date is optional
         xpathes[1] = field_xpathes
 
         feed_id = _create_feed(url, xpathes)

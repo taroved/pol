@@ -22,5 +22,13 @@
     },
     "model": "frontend.field",
     "pk": 3
+},
+{
+    "fields": {
+        "name": "date",
+        "required": 0
+    },
+    "model": "frontend.field",
+    "pk": 4
 }
 ]

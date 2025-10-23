@@ -4,6 +4,13 @@ from scrapy.selector import Selector
 
 from .settings import SNAPSHOT_DIR
 
+# Field ID to name mapping
+FIELD_ID_TO_NAME = {
+    1: 'title',
+    2: 'description',
+    3: 'link',
+    4: 'date'
+}
 
 def build_xpath_results(selectors, file_name):
     feed_xpath = selectors[0]
@@ -66,7 +73,14 @@ def build_xpath_results(selectors, file_name):
                             else:
                                 field_results[field_id]['count'] = 1
 
-                    extracted_posts.append(extracted_post)
+                    # Convert field IDs to field names
+                    extracted_post_named = {}
+                    for field_id, value in extracted_post.items():
+                        if field_id in FIELD_ID_TO_NAME:
+                            extracted_post_named[FIELD_ID_TO_NAME[field_id]] = value
+                        else:
+                            extracted_post_named[str(field_id)] = value
+                    extracted_posts.append(extracted_post_named)
             else:
                 for field_id, xpath_required in field_xpathes.iteritems():
                     xpath, required = xpath_required

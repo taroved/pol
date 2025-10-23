@@ -62,7 +62,7 @@ function updateSelector(name, messages) {
 // show status and error messages
 function updateUIMessages(data) {
     updateSelector('parent', data[0]);
-    ['title', 'description', 'link'].forEach(function(name){
+    ['title', 'description', 'link', 'date'].forEach(function(name){
         if (name in data[1])
             updateSelector(name, data[1][name]);
         else
@@ -77,7 +77,7 @@ function updateUI(config) {
     _config = config;
 
     $('#ste-parent').val(config[0]);
-    ['title', 'description', 'link'].forEach(function(name){
+    ['title', 'description', 'link', 'date'].forEach(function(name){
         $('#ste-'+ name).val(name in config[1] ? config[1][name] : '');
     });
 }
@@ -91,7 +91,7 @@ function getUIConfig() {
         $('#ste-parent').val().trim(),
         {}
     ];
-    ['title', 'description', 'link'].forEach(function(name){
+    ['title', 'description', 'link', 'date'].forEach(function(name){
         var xpath = $('#ste-'+ name).val();
         if (xpath.trim().length > 0)
             cfg[1][name] = xpath;
@@ -103,7 +103,7 @@ function changed() {
     var ch = false;
     if (_config[0] != $('#ste-parent').val())
         ch = true;
-    ['title', 'description', 'link'].every(function(name){
+    ['title', 'description', 'link', 'date'].every(function(name){
         if (name in _config[1]) {
             if (_config[1][name] != $('#ste-'+ name).val())
                 ch = true;
@@ -126,7 +126,7 @@ function showPosts(posts) {
         var $post_dts = $post.find('dl > dt');
         var $post_dds = $post.find('dl > dd');
         
-        ['title', 'link', 'description'].forEach(function(name){
+        ['title', 'link', 'description', 'date'].forEach(function(name){
             if (name in post) {
                 $($post_fields[i]).text(post[name].trim());
                 $($post_fields[i]).addClass('prettyprint');
