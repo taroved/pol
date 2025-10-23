@@ -1,6 +1,7 @@
 from django.db import models
 
 class Feed(models.Model):
+    name = models.CharField(max_length=200, blank=True, null=True)
     uri = models.CharField(max_length=2000)
     xpath = models.CharField(max_length=2000)
     edited = models.BooleanField(default=False)

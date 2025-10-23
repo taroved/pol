@@ -17,6 +17,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Name</th>
                     <th>URL</th>
                     <th>Created</th>
                     <th>Edited</th>
@@ -27,7 +28,14 @@
                 {% for feed in feeds %}
                 <tr>
                     <td>{{ feed.id }}</td>
-                    <td style="max-width: 400px; word-wrap: break-word;">{{ feed.uri }}</td>
+                    <td>
+                        {% if feed.name %}
+                            <strong>{{ feed.name }}</strong>
+                        {% else %}
+                            <span class="text-muted">(no name)</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width: 300px; word-wrap: break-word;">{{ feed.uri }}</td>
                     <td>{{ feed.created|date:"Y-m-d H:i" }}</td>
                     <td>
                         {% if feed.edited %}
