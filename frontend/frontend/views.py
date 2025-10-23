@@ -226,3 +226,10 @@ def preview(request, feed_id):
                         })
 
     return HttpResponseBadRequest('Only GET method supported')
+
+def feeds(request):
+    if request.method == 'GET':
+        feeds = Feed.objects.all().order_by('-created')
+        return render(request, 'frontend/feeds.html', {'feeds': feeds})
+    
+    return HttpResponseBadRequest('Only GET method supported')
