@@ -116,6 +116,10 @@ msgstr "and"
 msgid "setup.description"
 msgstr "Description"
 
+#: templates/frontend/setup.html:67
+msgid "setup.date"
+msgstr "Date"
+
 #: templates/frontend/setup.html:74
 msgid "setup.item_xpath"
 msgstr "Post xpath"
@@ -151,6 +155,10 @@ msgstr "Link xpath"
 #: templates/frontend/setup.html:103
 msgid "setup.description_xpath"
 msgstr "Description xpath"
+
+#: templates/frontend/setup.html:115
+msgid "setup.date_xpath"
+msgstr "Date xpath"
 
 #: templates/frontend/setup.html:116
 msgid "setup.clicker_tip"

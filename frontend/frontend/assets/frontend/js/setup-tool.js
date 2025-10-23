@@ -24,6 +24,8 @@ var styles = {
     'title_calculated': new Style('#78A4F9', 'white'),
     'description_manual': new Style('#2f96b4', 'white'),
     'description_calculated': new Style('#5bc0de', 'white'),
+    'date_manual': new Style('#51a351', 'white'),
+    'date_calculated': new Style('#62c462', 'white'),
     // selection hove style
     'hover': new Style('#FFEB0D', 'black')
 };
@@ -161,11 +163,13 @@ function Item(name, button) {
         switch (that.state) {
             case STATE_INACTIVE:
                 $(button).css('color', '#333');
-                $(button).removeClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
+                var btnClass = that.name == 'title' ? 'btn-primary' : (that.name == 'date' ? 'btn-success' : 'btn-info');
+                $(button).removeClass(btnClass);
                 break;
             case STATE_SELECTING:
                 $(button).css('color', '#FFEB0D');
-                $(button).addClass(that.name == 'title' ? 'btn-primary' : 'btn-info');
+                var btnClass = that.name == 'title' ? 'btn-primary' : (that.name == 'date' ? 'btn-success' : 'btn-info');
+                $(button).addClass(btnClass);
                 break;
             case STATE_SELECTED:
                 $(button).css('color', 'white');
@@ -483,6 +487,7 @@ $(document).ready(function(){
     
     items['title'] = new Item('title', $('#st-title')[0]);
     items['description'] = new Item('description', $('#st-description')[0]);
+    items['date'] = new Item('date', $('#st-date')[0]);
    
     $('#create').click(onCreateButtonClick);
  

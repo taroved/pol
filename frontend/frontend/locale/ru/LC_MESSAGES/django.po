@@ -117,6 +117,10 @@ msgstr "и"
 msgid "setup.description"
 msgstr "Описание"
 
+#: templates/frontend/setup.html:67
+msgid "setup.date"
+msgstr "Дата"
+
 #: templates/frontend/setup.html:74
 msgid "setup.item_xpath"
 msgstr "Xpath поста"
@@ -152,6 +156,10 @@ msgstr "Xpath ссылки"
 #: templates/frontend/setup.html:103
 msgid "setup.description_xpath"
 msgstr "Xpath описания"
+
+#: templates/frontend/setup.html:115
+msgid "setup.date_xpath"
+msgstr "Xpath даты"
 
 #: templates/frontend/setup.html:116
 msgid "setup.clicker_tip"

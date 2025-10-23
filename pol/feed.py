@@ -7,6 +7,7 @@ from hashlib import md5
 
 from feedgenerator import Rss201rev2Feed, Enclosure
 import datetime
+from dateutil import parser as dateutil_parser
 
 import MySQLdb
 from contextlib import closing
@@ -24,7 +25,7 @@ class Feed(object):
 
     POST_TIME_DISTANCE = 15 # minutes, RSS Feed Reader skip same titles created in 10 min interval
 
-    FIELD_IDS = {'title': 1, 'description': 2, 'link': 3}
+    FIELD_IDS = {'title': 1, 'description': 2, 'link': 3, 'date': 4}
 
     def __init__(self, db_creds):
         self.db_creds = db_creds
@@ -89,6 +90,21 @@ class Feed(object):
         base_url = w3lib.html.get_base_url(html, doc_url)
         return w3lib.url.urljoin_rfc(base_url, url).decode('utf-8')
 
+    def _parse_date(self, date_str):
+        """Parse date string to datetime object. Returns None if parsing fails."""
+        if not date_str or not date_str.strip():
+            return None
+        try:
+            # Try to parse the date string using dateutil parser which is quite flexible
+            parsed_date = dateutil_parser.parse(date_str.strip())
+            # Make sure the date has timezone info, if not, assume UTC
+            if parsed_date.tzinfo is None:
+                parsed_date = parsed_date.replace(tzinfo=None)
+            return parsed_date
+        except (ValueError, TypeError, OverflowError):
+            log.warn('Failed to parse date: {date!r}', date=date_str)
+            return None
+
     def buildFeed(self, selector, page_unicode, feed_config):
         selector.remove_namespaces()
 
@@ -100,7 +116,7 @@ class Feed(object):
             item = {}
             required_count = 0
             required_found = 0
-            for field_name in ['title', 'description', 'link']:
+            for field_name in ['title', 'description', 'link', 'date']:
                 if field_name in feed_config['fields']:
                     if feed_config['required'][field_name]:
                         required_count += 1
@@ -131,7 +147,14 @@ class Feed(object):
         for item in items:
             title = item['title'] if 'title' in item else ''
             desc = item['description'] if 'description' in item else ''
-            time = item['time'] if 'time' in item else datetime.datetime.utcnow()
+            
+            # Use extracted date if available, otherwise use the generated time
+            if 'date' in item and item['date']:
+                parsed_date = self._parse_date(item['date'])
+                time = parsed_date if parsed_date else (item['time'] if 'time' in item else datetime.datetime.utcnow())
+            else:
+                time = item['time'] if 'time' in item else datetime.datetime.utcnow()
+            
             if 'link' in item:
                 link = item['link']
             else:

@@ -62,8 +62,9 @@
         <h2 style="display: inline; line-height:inherit" id="setup-tool-string">
             {% trans 'setup.you_are_creating_feed_with' %} 
             <button id="st-title" class="btn btn-large has-tooltip" title="{% trans 'setup.help' %}"
-                data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button> {% trans 'setup.and' %} 
-            <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button>.
+                data-trigger="hover focus manual" data-animation="true">{% trans 'setup.title' %}</button>, 
+            <button id="st-description" class="btn btn-large">{% trans 'setup.description' %}</button> {% trans 'setup.and' %} 
+            <button id="st-date" class="btn btn-large">{% trans 'setup.date' %}</button>.
         </h2>
     </div>
     <div id="st-extended" style="float:left; display:none">
@@ -107,6 +108,17 @@
 												<option value="0">{% trans 'setup.Optional' %}</option>
 										<select>
 										<input type="text" id="ste-description" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
+										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
+								</div>
+						</div>
+						<div class="control-group info">
+              <label class="control-label">{% trans 'setup.date_xpath' %}:</label>
+								<div class="controls">
+										<select id="ste-date-required" style="width:100px" disabled>
+												<option value="1">{% trans 'setup.Required' %}</option>
+												<option selected="selected" value="0">{% trans 'setup.Optional' %}</option>
+										<select>
+										<input type="text" id="ste-date" class="input-xxlarge" placeholder="{% trans 'setup.skipped' %}" autocomplete="off"/>
 										<span class="help-inline" count-tpl="{% trans 'setup.Selected' %}"></span>
 								</div>
 						</div>
@@ -198,6 +210,8 @@ li.ext-result dl {
             <dt>{% trans 'setup.link' %}:</dt>
             <dd><pre class="lang-html"></pre></dd>
             <dt>{% trans 'setup.description' %}:</dt>
+            <dd><pre class="lang-html"></pre></dd>
+            <dt>{% trans 'setup.date' %}:</dt>
             <dd><pre class="lang-html"></pre></dd>
         </dl>
     </li>
