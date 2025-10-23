@@ -13,6 +13,7 @@ urlpatterns = [
     path('setup', views.setup, name='setup'),
     re_path(r'^preview/([0-9]+)$', views.preview, name='preview'),
     path('feeds', views.feeds, name='feeds'),
+    re_path(r'^feeds/delete/([0-9]+)$', views.delete_feed, name='delete_feed'),
     path('contact', views.contact, name='contact'),
     path('admin/', admin.site.urls),
     path('setup_get_selected_ids', views.setup_get_selected_ids, name='setup_get_selected_ids'),

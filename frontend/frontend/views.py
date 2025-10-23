@@ -238,6 +238,17 @@ def feeds(request):
     
     return HttpResponseBadRequest('Only GET method supported')
 
+def delete_feed(request, feed_id):
+    if request.method == 'POST':
+        try:
+            feed = Feed.objects.get(id=feed_id)
+            feed.delete()
+            return HttpResponseRedirect(reverse('feeds'))
+        except Feed.DoesNotExist:
+            return HttpResponseBadRequest('Feed not found')
+    
+    return HttpResponseBadRequest('Only POST method supported')
+
 @xframe_options_exempt
 def downloader_proxy(request):
     """Proxy requests to the downloader service running on port 1234"""
