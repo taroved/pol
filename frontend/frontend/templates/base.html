@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load static %}
 {% load i18n %}
 {% load pipeline %}
 {% get_current_language as LANGUAGE_CODE %}
@@ -47,39 +47,14 @@
   <div class="navbar navbar-fluid-top">
     <div class="navbar-inner">
       <div class="container-fluid">
-        <a class="btn btn-navbar" data-target=".nav-collapse" data-toggle="collapse">
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </a>
         {% block logo %}
             <a href="{% url 'index' %}" class="brand-pic" style="display: inline-flex; align-items: center; padding: 8px 15px; text-decoration: none;">
                 <span style="font-size: 20px; font-weight: bold; color: #333;">pol-ler</span>
             </a>
         {% endblock %}
-
-        <div class="container-fluid nav-collapse">
-          <ul class="nav" style="margin-left: 15px;">
-            <li><a href="{% url 'feeds' %}" style="font-size: 15px;">Feeds</a></li>
-          </ul>
-          <ul class="nav pull-right">
-            <li style="padding: 10px 15px; line-height: 20px;">
-                <span style="font-size: 13px; white-space: nowrap;">
-                {% if LANGUAGE_CODE == 'ru' %}
-                    <a href="/en/" style="color: #0088cc; text-decoration: none;">EN</a>
-                {% else %}
-                    <span style="color: #999;">EN</span>
-                {% endif %}
-                <span style="margin: 0 5px; color: #ccc;">|</span>
-                {% if LANGUAGE_CODE == 'en' %}
-                    <a href="/ru/" style="color: #0088cc; text-decoration: none;">RU</a>
-                {% else %}
-                    <span style="color: #999;">RU</span>
-                {% endif %}
-                </span>
-            </li>
-          </ul>
-        </div>
+        <ul class="nav" style="margin-left: 15px;">
+          <li><a href="{% url 'feeds' %}" style="font-size: 15px;">Feeds</a></li>
+        </ul>
         <!--/.nav-collapse -->
       </div>
     </div>

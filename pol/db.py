@@ -1,10 +1,16 @@
-import MySQLdb
-import MySQLdb.cursors
+import psycopg2
+import psycopg2.extras
 
 
 def get_conn(creds, dict_result=False):
-    cursor = MySQLdb.cursors.DictCursor if dict_result else MySQLdb.cursors.Cursor
-    db = MySQLdb.connect(host=creds['HOST'], port=int(creds['PORT']), user=creds['USER'], passwd=creds['PASSWORD'],
-                         db=creds['NAME'], init_command='SET NAMES utf8mb4', cursorclass=cursor)
-    db.autocommit(True)
+    cursor_factory = psycopg2.extras.RealDictCursor if dict_result else None
+    db = psycopg2.connect(
+        host=creds['HOST'],
+        port=int(creds['PORT']),
+        user=creds['USER'],
+        password=creds['PASSWORD'],
+        dbname=creds['NAME'],
+        cursor_factory=cursor_factory
+    )
+    db.autocommit = True
     return db

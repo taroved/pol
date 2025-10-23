@@ -5,15 +5,16 @@ services:
       context: .
     environment:
       DB_NAME: 'politepol'
-      DB_USER: 'rooooooooooot'
-      DB_PASSWORD: 'toooooooooooor'
+      DB_USER: 'poluser'
+      DB_PASSWORD: 'polpassword'
       DB_HOST: 'db-pol-ler'
-      DB_PORT: '3306'
+      DB_PORT: '5432'
       WEB_PORT: '8088'
-      TIME_ZONE: 'America\/Fortaleza'
+      TIME_ZONE: 'America/Fortaleza'
     image: pol-ler:latest
     depends_on:
-      - 'db-pol-ler'
+      db-pol-ler:
+        condition: service_healthy
     command: ["./wait-for-it.sh", "db-pol-ler", "/bin/bash", "./frontend/start.sh"]
     container_name: pol-ler
     restart: unless-stopped
@@ -23,19 +24,26 @@ services:
       - '8088:8088'
 
   db-pol-ler:
-    image: mysql:5.7
+    image: postgres:16-alpine
     platform: linux/amd64
     container_name: db-pol-ler
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: 'politepol'
-      MYSQL_USER: 'rooooooooooot'
-      MYSQL_PASSWORD: 'toooooooooooor'
-      MYSQL_ROOT_PASSWORD: 'rootpass'
+      POSTGRES_DB: 'politepol'
+      POSTGRES_USER: 'poluser'
+      POSTGRES_PASSWORD: 'polpassword'
     networks:
       - pol-ler-network
     volumes:
-      - ./mysql:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poluser -d politepol"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
 
 networks:
   pol-ler-network:
