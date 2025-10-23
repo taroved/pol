@@ -2,6 +2,7 @@ version: "3"
 
 services:
   politepol:
+    platform: linux/amd64
     build:
       context: .
     environment:
@@ -26,6 +27,7 @@ services:
 
   dbpolitepol:
     image: mysql:5.7
+    platform: linux/amd64
     container_name: dbpolitepol
     restart: unless-stopped
     environment:

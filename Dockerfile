@@ -1,4 +1,4 @@
-FROM ubuntu:bionic as builder
+FROM --platform=linux/amd64 ubuntu:bionic as builder
 
 #SHELL ["/bin/bash", "-c"]
 
