@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   politepol:
     platform: linux/amd64
