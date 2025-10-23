@@ -1,7 +1,7 @@
 (function(){
 
 // skip non setup page
-if (!document.location.href.match('https?://[^/]+/[^/]+/setup\?.+'))
+if (!document.location.href.match('https?://[^/]+/setup\?.+'))
     return;
 
 function save(key, obj) {
@@ -199,8 +199,8 @@ function validateSelectors() {
                 success: function(data){
                     resolve(data)
                 },
-                failure: function(errMsg) {
-                    reject(errMsg);
+                error: function(xhr, status, error) {
+                    reject(error);
                 }
             });
         });
