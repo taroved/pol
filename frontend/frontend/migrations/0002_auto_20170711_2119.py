@@ -25,8 +25,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('text', models.TextField(max_length=65535)),
-                ('field', models.ForeignKey(to='frontend.Field')),
-                ('post', models.ForeignKey(to='frontend.Post')),
+                ('field', models.ForeignKey(to='frontend.Field', on_delete=models.CASCADE)),
+                ('post', models.ForeignKey(to='frontend.Post', on_delete=models.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='post',
             name='feed',
-            field=models.ForeignKey(to='frontend.Feed'),
+            field=models.ForeignKey(to='frontend.Feed', on_delete=models.CASCADE),
         ),
         migrations.AlterIndexTogether(
             name='post',

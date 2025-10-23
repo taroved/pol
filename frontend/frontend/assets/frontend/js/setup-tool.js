@@ -199,7 +199,7 @@ function Item(name, button) {
         loader(true);
         return requestSelection().then(function(data){
             if (!('xpathes' in data && 'ids' in data)) // removed all selections
-                data = [[] ['', []]];
+                data = {ids: {}, xpathes: ['', []]};
 
             // go by items
             for (var name in data.ids) {
@@ -305,8 +305,8 @@ function requestSelection() {
                 success: function(data){
                     resolve(data)
                 },
-                failure: function(errMsg) {
-                    reject(errMsg);
+                error: function(xhr, status, error) {
+                    reject(error);
                 }
             });
         });
@@ -458,8 +458,8 @@ function createFeed() {
                 success: function(data){
                     resolve(data)
                 },
-                failure: function(errMsg) {
-                    reject(errMsg);
+                error: function(xhr, status, error) {
+                    reject(error);
                 }
             });
         });
@@ -481,7 +481,7 @@ window.loader = loader;
 
 $(document).ready(function(){
     // skip non setup page
-    if (!document.location.href.match('https?://[^/]+/[^/]+/setup\?.+'))
+    if (!document.location.href.match('https?://[^/]+/setup\?.+'))
         return;
 
     loader(true);

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from datetime import datetime
 from hashlib import md5
 import json
@@ -6,7 +5,6 @@ import pickle
 import time, sys, traceback
 import re
 
-import six
 from lxml import etree
 
 from twisted.web import server, resource
@@ -21,7 +19,6 @@ from twisted.logger import Logger
 
 from scrapy.http.response.text import TextResponse
 from scrapy.downloadermiddlewares.httpcompression import HttpCompressionMiddleware
-from scrapy.downloadermiddlewares.decompression import DecompressionMiddleware
 from scrapy.http.request import Request
 from scrapy.http import Headers
 from scrapy.responsetypes import responsetypes
@@ -62,26 +59,14 @@ class Downloader(object):
 
     def _saveResponse(self, headers, url, tree):
         # save html for extended selectors
-        if six.PY2:
-            file_name = '%s_%s' % (time.time(), md5(url).hexdigest())
-        elif six.PY3:
-            file_name = '%s_%s' % (time.time(), md5(url.encode('utf-8')).hexdigest())
+        file_name = '%s_%s' % (time.time(), md5(url.encode('utf-8')).hexdigest())
         file_path = self.snapshot_dir + '/' + file_name
         with open(file_path, 'w') as f:
             f.write(url + '\n')
-            if six.PY2:
-                for k, v in headers.iteritems():
-                    for vv in v:
-                        f.write('%s: %s\n' % (k, vv))
-            elif six.PY3:
-                for k, v in headers.items():
-                    for vv in v:
-                        f.write('%s: %s\n' % (k, vv))
-
-            if six.PY2:
-                f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html'))
-            elif six.PY3:
-                f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html').decode('utf-8'))
+            for k, v in headers.items():
+                for vv in v:
+                    f.write('%s: %s\n' % (k, vv))
+            f.write('\n\n' + etree.tostring(tree, encoding='utf-8', method='html').decode('utf-8'))
         return file_name
 
     def sanitizeAndNumerate(self, selector, numerate=True, sanitize_anchors=True):
@@ -93,7 +78,9 @@ class Downloader(object):
             # remove scripts and iframes
             if bad.tag in ['script', 'iframe']:
                 bad.getparent().remove(bad)
-            elif numerate:
+                continue
+            
+            if numerate:
                 # set tag-id attribute
                 bad.attrib['tag-id'] = str(i)
                 i += 1
@@ -104,12 +91,13 @@ class Downloader(object):
                 del bad.attrib['href']
 
             # remove html events
-            for attr in bad.attrib:
+            for attr in list(bad.attrib.keys()):
                 if attr.startswith('on'):
                     del bad.attrib[attr]
 
-            # make clickable for mobile
-            bad.attrib['onclick'] = ""
+            # make clickable for mobile (but not for link/style tags)
+            if bad.tag not in ['link', 'style', 'meta']:
+                bad.attrib['onclick'] = ""
 
             # sanitize forms
             if bad.tag == 'form':
@@ -136,10 +124,7 @@ class Downloader(object):
             else:
                 base = etree.Element("base")
                 head.insert(0, base)
-            if six.PY2:
-                base.set('href', url.decode('utf-8'))
-            elif six.PY3:
-                base.set('href', url)
+            base.set('href', url if isinstance(url, str) else url.decode('utf-8'))
 
         self.sanitizeAndNumerate(selector)
 
@@ -154,14 +139,19 @@ class Downloader(object):
                         ))
             body[0].append(script)
 
-        if six.PY2:
-            return etree.tostring(tree, method='html')
-        elif six.PY3:
-            return etree.tostring(tree, method='html').decode('utf-8')
+        return etree.tostring(tree, method='html').decode('utf-8')
 
     def buildScrapyResponse(self, response, body, url):
         status = response.code
-        headers = Headers({k:','.join(v) for k,v in response.headers.getAllRawHeaders()})
+        # getAllRawHeaders() returns bytes, need to decode them
+        headers = Headers({
+            k.decode('utf-8') if isinstance(k, bytes) else k: 
+            ','.join([h.decode('utf-8') if isinstance(h, bytes) else h for h in v]) 
+            for k, v in response.headers.getAllRawHeaders()
+        })
+        # Ensure url is a string, not bytes
+        if isinstance(url, bytes):
+            url = url.decode('utf-8')
         respcls = responsetypes.from_args(headers=headers, url=url)
         return respcls(url=url, status=status, headers=headers, body=body)
 
@@ -197,19 +187,44 @@ class Downloader(object):
                             ex_callstack=error.getTraceback()
                         )
                 else:
-                    sys.stderr.write('\n'.join(
-                        [str(datetime.utcnow()), self.request.uri, self.url, 'Downloader error: ' + error.getErrorMessage(),
-                         'Traceback: ' + error.getTraceback()]))
+                    error_msg = error.getErrorMessage()
+                    if isinstance(error_msg, bytes):
+                        error_msg = error_msg.decode('utf-8', errors='replace')
+                    traceback_msg = error.getTraceback()
+                    if isinstance(traceback_msg, bytes):
+                        traceback_msg = traceback_msg.decode('utf-8', errors='replace')
+                    request_uri = self.request.uri
+                    if isinstance(request_uri, bytes):
+                        request_uri = request_uri.decode('utf-8', errors='replace')
+                    url = self.url
+                    if isinstance(url, bytes):
+                        url = url.decode('utf-8', errors='replace')
+                    sys.stderr.write('\n'.join([
+                        str(datetime.utcnow()), 
+                        str(request_uri), 
+                        str(url), 
+                        'Downloader error: ' + str(error_msg),
+                        'Traceback: ' + str(traceback_msg)
+                    ]) + '\n')
             except:
                 traceback.print_exc(file=sys.stdout)
 
             self.request.setResponseCode(INTERNAL_SERVER_ERROR)
             if self.debug:
-                self.request.write('Downloader error: ' + error.getErrorMessage())
-                self.request.write('Traceback: ' + error.getTraceback())
+                error_msg = error.getErrorMessage()
+                if isinstance(error_msg, bytes):
+                    error_msg = error_msg.decode('utf-8', errors='replace')
+                traceback_msg = error.getTraceback()
+                if isinstance(traceback_msg, bytes):
+                    traceback_msg = traceback_msg.decode('utf-8', errors='replace')
+                self.request.write(('Downloader error: ' + error_msg).encode('utf-8'))
+                self.request.write(('Traceback: ' + traceback_msg).encode('utf-8'))
             else:
-                err_message = self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error.getErrorMessage()))
-                self.request.write(err_message)
+                error_msg = error.getErrorMessage()
+                if isinstance(error_msg, bytes):
+                    error_msg = error_msg.decode('utf-8', errors='replace')
+                err_message = self.error_html('<h1>PolitePol says: "Something wrong"</h1> <p><b>Try to refresh page or contact us by email: <a href="mailto:politepol.com@gmail.com">politepol.com@gmail.com</a></b>\n(Help us to improve our service with your feedback)</p> <p><i>Scary mantra: %s</i></p>' % escape(error_msg))
+                self.request.write(err_message.encode('utf-8'))
 
             self.request.finish()
 
@@ -233,15 +248,16 @@ class Downloader(object):
             self.writeResponse(sresponse)
             self.run_memon()
 
-    def writeResponse(self, sresponse): #, response_str='PolitePol: Local page processing is failed'
+    def writeResponse(self, sresponse):
         sresponse = HttpCompressionMiddleware().process_response(Request(sresponse.url), sresponse, None)
-        sresponse = DecompressionMiddleware().process_response(None, sresponse, None)
 
         response_headers = self.prepare_response_headers(sresponse.headers)
 
         if (isinstance(sresponse, TextResponse)):
             ip = self.request.getHeader('x-real-ip') or self.request.client.host
-            response_str = self.prepare_response_str(sresponse.selector, sresponse.headers, sresponse.body_as_unicode(), sresponse.url, ip)
+            # Use .text property instead of deprecated body_as_unicode()
+            body_text = sresponse.text if hasattr(sresponse, 'text') else sresponse.body_as_unicode()
+            response_str = self.prepare_response_str(sresponse.selector, sresponse.headers, body_text, sresponse.url, ip)
             if self.feed_config:
                 response_headers = {b"Content-Type": b'text/xml; charset=utf-8'}
         else: # images and such
@@ -250,6 +266,9 @@ class Downloader(object):
         for k, v in response_headers.items():
             self.request.setHeader(k, v)
 
+        # Ensure response_str is bytes for Python 3
+        if isinstance(response_str, str):
+            response_str = response_str.encode('utf-8')
         self.request.write(response_str)
         self.request.finish()
 
@@ -319,7 +338,7 @@ class Site(resource.Resource):
             )
 
             d = agent.request(
-                'GET',
+                b'GET',
                 url,
                 twisted_headers({
                     'Accept': ['text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'],
@@ -334,10 +353,11 @@ class Site(resource.Resource):
 
     def tryLocalPage(self, url):
         if self.prefetch_dir:
-            m = md5(url).hexdigest()
+            from urllib.parse import urlparse
+            m = md5(url.encode('utf-8')).hexdigest()
             domain = urlparse(url).netloc
             try:
-                with open(self.prefetch_dir + '/' + m + '.' + domain) as f:
+                with open(self.prefetch_dir + '/' + m + '.' + domain, 'rb') as f:
                     return pickle.load(f)
             except IOError:
                 pass
@@ -355,6 +375,10 @@ class Site(resource.Resource):
         elif self.feed_regexp.match(request.uri) is not None: # feed
 
             feed_id = self.feed_regexp.match(request.uri).groups()[0]
+            # Decode bytes to string and convert to int for Python 3
+            if isinstance(feed_id, bytes):
+                feed_id = feed_id.decode('utf-8')
+            feed_id = int(feed_id)
             sanitize = request.uri.endswith(b'?sanitize=Y')
 
             time_left = self.limiter.check_request_time_limit(request.uri) if self.limiter else 0
@@ -365,14 +389,14 @@ class Site(resource.Resource):
             else:
                 res = self.feed.getFeedData(feed_id)
 
-                if isinstance(res, basestring): # error message
-                    return res
+                if isinstance(res, str): # error message
+                    return res.encode('utf-8')
 
                 url, feed_config = res
-                self.startRequest(request, url, feed_config, sanitize=sanitize)
+                self.startRequest(request, url if isinstance(url, bytes) else url.encode('utf-8'), feed_config, sanitize=sanitize)
                 return NOT_DONE_YET
         else: # neither page and feed
-            return 'Url is invalid'
+            return b'Url is invalid'
 
 
 class Server(object):

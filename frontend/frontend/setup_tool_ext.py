@@ -18,10 +18,10 @@ def build_xpath_results(selectors, file_name):
 
     fpath = "%s/%s" % (SNAPSHOT_DIR, file_name)
 
-    with open(fpath) as f:
+    with open(fpath, 'r', encoding='utf-8') as f:
         data = f.read()
 
-    html = data.decode('utf-8').split('\n\n', 1)[1]
+    html = data.split('\n\n', 1)[1]
 
     feed_result = None
     field_results = {}
@@ -39,7 +39,7 @@ def build_xpath_results(selectors, file_name):
             for elem in post_elems:
                 selected_required = True
                 extracted_post = {}
-                for field_id, xpath_required in field_xpathes.iteritems():
+                for field_id, xpath_required in field_xpathes.items():
                     xpath, required = xpath_required
                     if not (field_id in field_results):
                         field_results[field_id] = {}
@@ -56,10 +56,10 @@ def build_xpath_results(selectors, file_name):
                                 extracted_post[field_id] = u''.join(extracts)
                     except ValueError as ex:
                         success = False
-                        field_results[field_id]['error'] = ex.message
+                        field_results[field_id]['error'] = str(ex)
 
                 if selected_required:
-                    for field_id, xpath_required in field_xpathes.iteritems():
+                    for field_id, xpath_required in field_xpathes.items():
                         xpath, required = xpath_required
                         if not required:
                             if field_id in extracted_post:
@@ -82,7 +82,7 @@ def build_xpath_results(selectors, file_name):
                             extracted_post_named[str(field_id)] = value
                     extracted_posts.append(extracted_post_named)
             else:
-                for field_id, xpath_required in field_xpathes.iteritems():
+                for field_id, xpath_required in field_xpathes.items():
                     xpath, required = xpath_required
                     xpath = xpath.strip()
                     try:
@@ -90,12 +90,12 @@ def build_xpath_results(selectors, file_name):
                     except ValueError as ex:
                         if not (field_id in field_results):
                             field_results[field_id] = {}
-                        field_results[field_id]['error'] = ex.message
+                        field_results[field_id]['error'] = str(ex)
                         success = False
 
 
     except ValueError as ex:
-        feed_result = {'error': ex.message}
+        feed_result = {'error': str(ex)}
         success = False
 
     return [[feed_result, field_results], extracted_posts, success]

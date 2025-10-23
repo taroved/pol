@@ -9,7 +9,7 @@ from feedgenerator import Rss201rev2Feed, Enclosure
 import datetime
 from dateutil import parser as dateutil_parser
 
-import MySQLdb
+import psycopg2
 from contextlib import closing
 from settings import DATABASES, DOWNLOADER_USER_AGENT
 from twisted.logger import Logger
@@ -32,12 +32,12 @@ class Feed(object):
 
 
     def save_post(self, conn, created, feed_id, post_fields):
-        with conn as cur:
-            cur.execute("""insert into frontend_post (md5sum, created, feed_id)
-                            values (unhex(%s), %s, %s)""", (post_fields['md5'], created, feed_id))
-            post_id = conn.insert_id()
-            log.info('Post saved id:{id!r}', id=post_id)
-            return post_id
+        cur = conn.cursor()
+        cur.execute("""insert into frontend_post (md5sum, created, feed_id)
+                        values (%s, %s, %s) RETURNING id""", (post_fields['md5'], created, feed_id))
+        post_id = cur.fetchone()[0]
+        log.info('Post saved id:{id!r}', id=post_id)
+        return post_id
 
     def fill_time(self, feed_id, items):
         if not items:
@@ -46,7 +46,7 @@ class Feed(object):
         new_post_cnt = 0
         for item in items:
             #create md5
-            h = md5('')
+            h = md5(b'')
             for key in ['title', 'description', 'link']:
                 if key in item:
                     h.update(item[key].encode('utf-8'))
@@ -55,20 +55,22 @@ class Feed(object):
         #fetch dates from db
         fetched_dates = {}
         with closing(get_conn(self.db_creds)) as conn:
-            with conn as cur:
-                quoted_hashes = ','.join(["unhex('%s')" % (i['md5']) for i in items])
-
-                cur.execute("""select lower(hex(p.md5sum)), p.created, p.id
-                               from frontend_post p
-                               where p.md5sum in (%s)
-                               and p.feed_id=%s""" % (quoted_hashes, feed_id,))
-                rows = cur.fetchall()
-                log.debug('Selected {count!r} posts', count=len(rows))
-                for row in rows:
-                    md5hash = row[0]
-                    created = row[1]
-                    post_id = row[2]
-                    fetched_dates[md5hash] = created
+            cur = conn.cursor()
+            # Use parameterized query with PostgreSQL
+            placeholders = ','.join(['%s'] * len(items))
+            hashes = [i['md5'] for i in items]
+            
+            cur.execute("""select p.md5sum, p.created, p.id
+                           from frontend_post p
+                           where p.md5sum in ({})
+                           and p.feed_id=%s""".format(placeholders), hashes + [feed_id])
+            rows = cur.fetchall()
+            log.debug('Selected {count!r} posts', count=len(rows))
+            for row in rows:
+                md5hash = row[0]
+                created = row[1]
+                post_id = row[2]
+                fetched_dates[md5hash] = created
 
             cur_time = datetime.datetime.utcnow()
             saved_times = {}
@@ -87,8 +89,12 @@ class Feed(object):
         return new_post_cnt
 
     def _build_link(self, html, doc_url, url):
+        from urllib.parse import urljoin
         base_url = w3lib.html.get_base_url(html, doc_url)
-        return w3lib.url.urljoin_rfc(base_url, url).decode('utf-8')
+        # Use urllib.parse.urljoin instead of deprecated w3lib.url.urljoin_rfc
+        result = urljoin(base_url, url)
+        # In Python 3, result is already a string
+        return result if isinstance(result, str) else result.decode('utf-8')
 
     def _parse_date(self, date_str):
         """Parse date string to datetime object. Returns None if parsing fails."""
@@ -173,7 +179,8 @@ class Feed(object):
         # get url, xpathes
         feed = {}
 
-        with closing(get_conn(self.db_creds, dict_result=True)) as conn, conn as cur:
+        with closing(get_conn(self.db_creds, dict_result=True)) as conn:
+            cur = conn.cursor()
             cur.execute("""select f.uri, f.xpath as feed_xpath, fi.name, ff.xpath, fi.required
                            from frontend_feed f
                            right join frontend_feedfield ff on ff.feed_id=f.id
@@ -185,10 +192,12 @@ class Feed(object):
                 if not feed:
                     feed['id'] = feed_id
                     feed['uri'] = row['uri']
-                    feed['xpath'] = row['feed_xpath'].decode('utf-8')
+                    # In Python 3 with PostgreSQL, strings are already decoded
+                    feed['xpath'] = row['feed_xpath'] if isinstance(row['feed_xpath'], str) else row['feed_xpath'].decode('utf-8')
                     feed['fields'] = {}
                     feed['required'] = {}
-                feed['fields'][row['name']] = row['xpath'].decode('utf-8')
+                xpath_val = row['xpath'] if isinstance(row['xpath'], str) else row['xpath'].decode('utf-8')
+                feed['fields'][row['name']] = xpath_val
                 feed['required'][row['name']] = row['required']
 
         if feed:
