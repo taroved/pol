@@ -434,6 +434,7 @@ function onCreateButtonClick() {
 
 function createFeed() {
     var selectors = null;
+    var feedName = $('#feed-name').val();
     if (ET.active()) {
         selectors = ET.getUIConfig();
     }
@@ -449,8 +450,8 @@ function createFeed() {
                 type: 'POST',
                 url: ET.active() ? "/setup_create_feed_ext" :"/setup_create_feed",
                 data: JSON.stringify(ET.active()
-                                     ? { selectors: selectors, snapshot_time: snapshot_time, url:$('#create').data('page-url') }
-                                     : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url') }
+                                     ? { selectors: selectors, snapshot_time: snapshot_time, url:$('#create').data('page-url'), name: feedName }
+                                     : { html: iframeHtmlJson, names: name_ids, url:$('#create').data('page-url'), name: feedName }
                                     ),
                 contentType: "application/json; charset=utf-8",
                 headers: {"X-CSRFToken": getCookie('csrftoken')},

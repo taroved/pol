@@ -8,7 +8,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Polite Pol{% endblock %}</title>
+  <title>{% block title %}pol-ler{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}{% trans "meta_desc" %}{% endblock %}" />
   <meta name="keywords" content="{% block meta_keywords %}{% trans "meta_keywords" %}{% endblock %}" />
   <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
@@ -53,17 +53,31 @@
           <span class="icon-bar"></span>
         </a>
         {% block logo %}
-            <a href="{% url 'index' %}" class="brand-pic"><img src="{% static 'frontend/images/apple-touch-icon-precomposed.png' %}" width="40" height="40" /></a>
+            <a href="{% url 'index' %}" class="brand-pic" style="display: inline-flex; align-items: center; padding: 8px 15px; text-decoration: none;">
+                <span style="font-size: 20px; font-weight: bold; color: #333;">pol-ler</span>
+            </a>
         {% endblock %}
 
         <div class="container-fluid nav-collapse">
+          <ul class="nav" style="margin-left: 15px;">
+            <li><a href="{% url 'feeds' %}" style="font-size: 15px;">Feeds</a></li>
+          </ul>
           <ul class="nav pull-right">
-            <li>{% if LANGUAGE_CODE == 'ru' %} <a href="/en/" class="lang"><span class="lang">English</span></a> {% else %} <span class="lang">English</span> {% endif %}
-
-            <li>{% if LANGUAGE_CODE == 'en' %} <a href="/ru/" class="lang"><span class="lang">Русский</span></a> {% else %} <span class="lang">Русский</span> {% endif %}
-            <li class="divider-vertical"></li>
-            <li><a href="{% url 'contact' %}">{% trans "contact" %}</a></li>
-            <!--%= render 'devise/menu/login_items' %-->
+            <li style="padding: 10px 15px; line-height: 20px;">
+                <span style="font-size: 13px; white-space: nowrap;">
+                {% if LANGUAGE_CODE == 'ru' %}
+                    <a href="/en/" style="color: #0088cc; text-decoration: none;">EN</a>
+                {% else %}
+                    <span style="color: #999;">EN</span>
+                {% endif %}
+                <span style="margin: 0 5px; color: #ccc;">|</span>
+                {% if LANGUAGE_CODE == 'en' %}
+                    <a href="/ru/" style="color: #0088cc; text-decoration: none;">RU</a>
+                {% else %}
+                    <span style="color: #999;">RU</span>
+                {% endif %}
+                </span>
+            </li>
           </ul>
         </div>
         <!--/.nav-collapse -->

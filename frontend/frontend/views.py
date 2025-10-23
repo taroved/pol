@@ -99,11 +99,11 @@ _BASIC_DESCRIPTION_ID=2
 _BASIC_LINK_ID=3
 _BASIC_DATE_ID=4
 
-def _create_feed(url, xpathes, edited=False):
+def _create_feed(url, xpathes, edited=False, name=None):
     feed_xpath = xpathes[0]
     item_xpathes = xpathes[1]
 
-    feed = Feed(uri=url, xpath=feed_xpath, edited=edited)
+    feed = Feed(uri=url, xpath=feed_xpath, edited=edited, name=name)
     feed.save()
 
     fields = Field.objects.all()
@@ -126,6 +126,7 @@ def setup_create_feed(request):
         html_json = obj['html']
         item_names = obj['names']
         url = obj['url']
+        name = obj.get('name', None)
 
         if not _validate_html(html_json):
             return HttpResponseBadRequest('html is invalid')
@@ -142,7 +143,7 @@ def setup_create_feed(request):
             field_xpathes[_BASIC_DATE_ID] = [xpathes[1]['date'], False]  # date is optional
         xpathes[1] = field_xpathes
 
-        feed_id = _create_feed(url, xpathes)
+        feed_id = _create_feed(url, xpathes, name=name)
 
         return HttpResponse(reverse('preview', args=(feed_id,)))
 
@@ -200,6 +201,7 @@ def setup_create_feed_ext(request):
 
         selectors = obj['selectors']
         file_name = obj['snapshot_time']
+        name = obj.get('name', None)
 
         if not re.match('^\d{10}\.\d+_[\da-f]{32}', file_name):
             return HttpResponseBadRequest('"snapshot_time" is invalid')
@@ -213,7 +215,7 @@ def setup_create_feed_ext(request):
 
         if success:
             url = obj['url']
-            feed_id = _create_feed(url, validated_selectors, True)
+            feed_id = _create_feed(url, validated_selectors, True, name=name)
             return HttpResponse(json.dumps({'success': True, 'url': reverse('preview', args=(feed_id,))}))
         else:
             return HttpResponse(json.dumps({'success': False, 'messages': messages}))
@@ -225,4 +227,11 @@ def preview(request, feed_id):
                             'feed_url': FEED_PAGE_URL + feed_id
                         })
 
+    return HttpResponseBadRequest('Only GET method supported')
+
+def feeds(request):
+    if request.method == 'GET':
+        feeds = Feed.objects.all().order_by('-created')
+        return render(request, 'frontend/feeds.html', {'feeds': feeds})
+    
     return HttpResponseBadRequest('Only GET method supported')

@@ -23,6 +23,7 @@ urlpatterns = i18n_patterns(
     url(r'^$', views.index, name='index'),
     url(r'^setup$', views.setup, name='setup'),
     url(r'^preview/([0-9]+)$', views.preview, name='preview'),
+    url(r'^feeds$', views.feeds, name='feeds'),
     url(r'^contact$', views.contact, name='contact'),
     url(r'^admin/', include(admin.site.urls)),
 )
