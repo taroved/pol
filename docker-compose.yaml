@@ -1,5 +1,5 @@
 services:
-  politepol:
+  pol-ler:
     platform: linux/amd64
     build:
       context: .
@@ -7,26 +7,25 @@ services:
       DB_NAME: 'politepol'
       DB_USER: 'rooooooooooot'
       DB_PASSWORD: 'toooooooooooor'
-      DB_HOST: 'dbpolitepol'
+      DB_HOST: 'db-pol-ler'
       DB_PORT: '3306'
       WEB_PORT: '8088'
       TIME_ZONE: 'America\/Fortaleza'
-    image: politepol:latest
+    image: pol-ler:latest
     depends_on:
-      - 'dbpolitepol'
-    #command: ["./wait-for-it.sh", "dbpolitepol:3306", "--", "/bin/bash", "./frontend/start.sh"]
-    command: ["./wait-for-it.sh", "dbpolitepol", "/bin/bash", "./frontend/start.sh"]
-    container_name: politepol
+      - 'db-pol-ler'
+    command: ["./wait-for-it.sh", "db-pol-ler", "/bin/bash", "./frontend/start.sh"]
+    container_name: pol-ler
     restart: unless-stopped
     networks:
-      - politepol-network
+      - pol-ler-network
     ports:
       - '8088:8088'
 
-  dbpolitepol:
+  db-pol-ler:
     image: mysql:5.7
     platform: linux/amd64
-    container_name: dbpolitepol
+    container_name: db-pol-ler
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: 'politepol'
@@ -34,10 +33,10 @@ services:
       MYSQL_PASSWORD: 'toooooooooooor'
       MYSQL_ROOT_PASSWORD: 'rootpass'
     networks:
-      - politepol-network
+      - pol-ler-network
     volumes:
       - ./mysql:/var/lib/mysql
 
 networks:
-  politepol-network:
+  pol-ler-network:
     driver: 'bridge'
