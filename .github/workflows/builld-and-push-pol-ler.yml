@@ -1,0 +1,57 @@
+name: Build and Push pol-ler to ECR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'versions.env'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPO: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+  IMAGE_NAME: k3s/pol-ler
+  SERVICE_PATH: .
+
+jobs:
+  build-and-push-pol-ler:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read service version from versions.env
+        id: version
+        uses: ./.github/actions/read-version
+        with:
+          service_name: ${{ env.IMAGE_NAME }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-ecr-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag and push Docker image
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "master" ]]; then
+            TAG="${{ steps.version.outputs.version }}"
+          else
+            RAW_BRANCH="${GITHUB_REF##*/}"
+            # Replace slashes and other invalid characters with dashes
+            TAG=$(echo "$RAW_BRANCH" | tr '/:._' '-')
+          fi
+      
+          echo "Using tag: $TAG"
+          docker build -t $ECR_REPO/$IMAGE_NAME:$TAG ./$SERVICE_PATH --platform linux/amd64
+          docker push $ECR_REPO/$IMAGE_NAME:$TAG

@@ -1,5 +1,4 @@
 settings.py
 *.pyc
 frontend/frontend/static
-.*
 mysql/

@@ -1,0 +1,19 @@
+name: "Read Version from versions.env"
+description: "Reads the version for a given service"
+inputs:
+  service_name:
+    description: "Name of the service"
+    required: true
+outputs:
+  version:
+    description: "Version of the service"
+    value: ${{ steps.set_version.outputs.version }}
+runs:
+  using: "composite"
+  steps:
+    - id: set_version
+      shell: bash
+      run: |
+        VERSION=$(grep "^${{ inputs.service_name }}=" versions.env | cut -d= -f2)
+        echo "version=$VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
