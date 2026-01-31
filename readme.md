@@ -3,7 +3,7 @@
 
 ### Warning: This source code is outdated! Use full featured version on [politepaul.com](http://politepaul.com "RSS Feed Generator")
 
-![politepaul.com](frontend/frontend/assets/frontend/images/apple-touch-icon-144x144-precomposed.png "politepaul.com")
+![PolitePol](frontend/frontend/assets/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePol")
 
 This is source code of RSS feed generator website with user friendly interface.
 
