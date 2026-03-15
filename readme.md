@@ -1,9 +1,9 @@
-# [PolitePol](http://politepaul.com "RSS Feed Generator")
+# [PolitePaul](http://politepaul.com "RSS Feed Generator")
 # RSS feed generator website with user friendly interface
 
 ### Warning: This source code is outdated! Use full featured version on [politepaul.com](http://politepaul.com "RSS Feed Generator")
 
-![PolitePol](frontend/frontend/assets/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePol")
+![PolitePaul](frontend/frontend/assets/frontend/images/apple-touch-icon-144x144-precomposed.png "PolitePaul")
 
 This is source code of RSS feed generator website with user friendly interface.
 
